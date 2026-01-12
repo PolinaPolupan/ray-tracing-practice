@@ -3,7 +3,6 @@
 //
 
 #include "integrators.h"
-#include "Color.h"
 #include "hittable/HitRecord.h"
 #include "material/Material.h"
 #include "material/ScatterRecord.h"
