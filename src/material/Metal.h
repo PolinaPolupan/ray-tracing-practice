@@ -12,14 +12,14 @@ class Metal final : public Material {
 public:
     explicit Metal(const Color& albedo, const double fuzz) : albedo(albedo), fuzz(fuzz < 1 ? fuzz : 1)  {}
 
-    [[nodiscard]] bool scatter(const ray& rIn, const HitRecord& rec, const ScatterRecord& sRec) const override {
+    [[nodiscard]] bool scatter(const Ray& rIn, const HitRecord& rec, const ScatterRecord& sRec) const override {
         Vec3 reflected = reflect(rIn.direction(), rec.normal);
         reflected = unit_vector(reflected) + (fuzz * random_unit_vector());
 
         sRec.attenuation = albedo;
         sRec.pdfPtr = nullptr;
         sRec.skipPdf = true;
-        sRec.skipPdfRay = ray(rec.p, reflected, rIn.time());
+        sRec.skipPdfRay = Ray(rec.p, reflected, rIn.time());
 
         return true;
     }

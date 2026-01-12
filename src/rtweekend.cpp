@@ -2,9 +2,8 @@
 
 #include "rtweekend.h"
 
-#include "hittable/shape.h"
+#include "hittable/Hittable.h"
 #include "cameras.h"
-#include "integrators.h"
 #include "hittable/Quad.h"
 #include "hittable/RotateY.h"
 #include "hittable/Sphere.h"
@@ -31,7 +30,7 @@ void cornell_box() {
     world.add(make_shared<Quad>(Point3(0,0,555), Vec3(555,0,0), Vec3(0,555,0), white));
 
     // Box
-    shared_ptr<shape> box1 = box(Point3(0,0,0), Point3(165,330,165), white);
+    shared_ptr<Hittable> box1 = box(Point3(0,0,0), Point3(165,330,165), white);
     box1 = make_shared<RotateY>(box1, 15);
     box1 = make_shared<Translate>(box1, Vec3(265,0,295));
     world.add(box1);
@@ -46,12 +45,13 @@ void cornell_box() {
     lights.add(make_shared<Quad>(Point3(343,554,332), Vec3(-130,0,0), Vec3(0,0,-105), empty_material));
     lights.add(make_shared<Sphere>(Point3(190, 90, 190), 90, empty_material));
 
-    camera cam;
-
+    Camera cam;
 
     cam.aspect_ratio      = 1.0;
     cam.image_width       = 600;
-    cam.samples_per_pixel = 100;
+    cam.samples_per_pixel = 10;
+    cam.max_depth         = 10;
+    cam.background        = Color(0,0,0);
 
     cam.vfov     = 40;
     cam.lookfrom = Point3(278, 278, -800);
@@ -60,10 +60,7 @@ void cornell_box() {
 
     cam.defocus_angle = 0;
 
-    integrator integrator(cam);
-    integrator.samples_per_pixel = 100;
-
-    integrator.render(world, lights);
+    cam.render(world, lights);
 }
 
 int main() {

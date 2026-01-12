@@ -4,19 +4,18 @@
 
 #ifndef DIELECTRIC_H
 #define DIELECTRIC_H
-#include "Material.h"
 
 class Dielectric final : public Material {
 public:
     explicit Dielectric(const double refraction_index) : refraction_index(refraction_index) {}
 
-    [[nodiscard]] bool scatter(const ray& rIn, const HitRecord& rec, const ScatterRecord& sRec) const override {
+    [[nodiscard]] bool scatter(const Ray& rIn, const HitRecord& rec, const ScatterRecord& sRec) const override {
         sRec.attenuation = Color(1.0, 1.0, 1.0);
         sRec.pdfPtr = nullptr;
         sRec.skipPdf = true;
         const double ri = rec.front_face ? (1.0/refraction_index) : refraction_index;
 
-        const Vec3 unit_direction = unit_vector(rIn.d());
+        const Vec3 unit_direction = unit_vector(rIn.direction());
         const double cos_theta = std::fmin(dot(-unit_direction, rec.normal), 1.0);
         const double sin_theta = std::sqrt(1.0 - cos_theta*cos_theta);
 
@@ -28,7 +27,7 @@ public:
         else
             direction = refract(unit_direction, rec.normal, ri);
 
-        sRec.skipPdfRay = ray(rec.p, direction, rIn.time());
+        sRec.skipPdfRay = Ray(rec.p, direction, rIn.time());
 
         return true;
     }

@@ -6,11 +6,11 @@
 #define BVHNODE_H
 #include <algorithm>
 
-#include "shape.h"
+#include "Hittable.h"
 #include "HittableList.h"
 
 
-class BVHNode final : public shape {
+class BVHNode final : public Hittable {
 public:
     explicit BVHNode(HittableList list) : BVHNode(list.objects, 0, list.objects.size()) {
         // There's a C++ subtlety here. This constructor (without span indices) creates an
@@ -19,7 +19,7 @@ public:
         // persist the resulting bounding volume hierarchy.
     }
 
-    BVHNode(std::vector<shared_ptr<shape>>& objects, size_t start, size_t end) {
+    BVHNode(std::vector<shared_ptr<Hittable>>& objects, size_t start, size_t end) {
         // Build the bounding box of the span of source objects.
         bbox = AABB::empty;
         for (size_t object_index=start; object_index < end; object_index++)
@@ -47,7 +47,7 @@ public:
         }
     }
 
-    bool intersect(const ray& r, const Interval ray_t, HitRecord& rec) const override {
+    bool intersect(const Ray& r, const Interval ray_t, HitRecord& rec) const override {
         if (!bbox.hit(r, ray_t))
             return false;
 
@@ -60,25 +60,25 @@ public:
     [[nodiscard]] AABB bounds() const override { return bbox; }
 
 private:
-    shared_ptr<shape> left;
-    shared_ptr<shape> right;
+    shared_ptr<Hittable> left;
+    shared_ptr<Hittable> right;
     AABB bbox;
 
-    static bool box_compare(const shared_ptr<shape>& a, const shared_ptr<shape> &b, const int axis_index) {
+    static bool box_compare(const shared_ptr<Hittable>& a, const shared_ptr<Hittable> &b, const int axis_index) {
         const auto a_axis_interval = a->bounds().axis_interval(axis_index);
         const auto b_axis_interval = b->bounds().axis_interval(axis_index);
         return a_axis_interval.min < b_axis_interval.min;
     }
 
-    static bool box_x_compare(const shared_ptr<shape> &a, const shared_ptr<shape> &b) {
+    static bool box_x_compare(const shared_ptr<Hittable> &a, const shared_ptr<Hittable> &b) {
         return box_compare(a, b, 0);
     }
 
-    static bool box_y_compare(const shared_ptr<shape> &a, const shared_ptr<shape> &b) {
+    static bool box_y_compare(const shared_ptr<Hittable> &a, const shared_ptr<Hittable> &b) {
         return box_compare(a, b, 1);
     }
 
-    static bool box_z_compare(const shared_ptr<shape> &a, const shared_ptr<shape> &b) {
+    static bool box_z_compare(const shared_ptr<Hittable> &a, const shared_ptr<Hittable> &b) {
         return box_compare(a, b, 2);
     }
 };

@@ -13,7 +13,7 @@ public:
     mutable Color attenuation;
     mutable std::shared_ptr<PDF> pdfPtr;
     mutable bool skipPdf;
-    mutable ray skipPdfRay;
+    mutable Ray skipPdfRay;
 };
 
 

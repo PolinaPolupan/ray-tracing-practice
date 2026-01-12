@@ -4,31 +4,31 @@
 
 #ifndef CONSTANTMEDIUM_H
 #define CONSTANTMEDIUM_H
-#include "shape.h"
+#include "Hittable.h"
 #include "material/Isotropic.h"
 
 
 class Texture;
 
-class ConstantMedium final : public shape {
+class ConstantMedium final : public Hittable {
 public:
-    ConstantMedium(const shared_ptr<shape> &boundary, const double density, const shared_ptr<Texture>& tex)
+    ConstantMedium(const shared_ptr<Hittable> &boundary, const double density, const shared_ptr<Texture>& tex)
       : boundary(boundary), neg_inv_density(-1/density),
         phase_function(make_shared<Isotropic>(tex))
     {}
 
-    ConstantMedium(const shared_ptr<shape> &boundary, const double density, const Color& albedo)
+    ConstantMedium(const shared_ptr<Hittable> &boundary, const double density, const Color& albedo)
       : boundary(boundary), neg_inv_density(-1/density),
         phase_function(make_shared<Isotropic>(albedo))
     {}
 
-    bool intersect(const ray& r, const Interval ray_t, HitRecord& rec) const override {
+    bool hit(const Ray& r, const Interval ray_t, HitRecord& rec) const override {
         HitRecord rec1, rec2;
 
-        if (!boundary->intersect(r, Interval::universe, rec1))
+        if (!boundary->hit(r, Interval::universe, rec1))
             return false;
 
-        if (!boundary->intersect(r, Interval(rec1.t+0.0001, infinity), rec2))
+        if (!boundary->hit(r, Interval(rec1.t+0.0001, infinity), rec2))
             return false;
 
         if (rec1.t < ray_t.min) rec1.t = ray_t.min;
@@ -57,10 +57,10 @@ public:
         return true;
     }
 
-    [[nodiscard]] AABB bounds() const override { return boundary->bounds(); }
+    [[nodiscard]] AABB boundingBox() const override { return boundary->boundingBox(); }
 
 private:
-    shared_ptr<shape> boundary;
+    shared_ptr<Hittable> boundary;
     double neg_inv_density;
     shared_ptr<Material> phase_function;
 };

@@ -4,17 +4,17 @@
 
 #ifndef HITTABLEPDF_H
 #define HITTABLEPDF_H
-#include "hittable/HittableList.h"
+#include "PDF.h"
+#include "../hittable/Hittable.h"
 
-
-class HittablePdf final : public PDF {
+class HittablePdf: public PDF {
 public:
-    HittablePdf(const HittableList& objects, const Point3& origin)
+    HittablePdf(const Hittable& objects, const Point3& origin)
       : objects(objects), origin(origin)
     {}
 
     [[nodiscard]] double value(const Vec3& direction) const override {
-        return objects.pdf(origin, direction);
+        return objects.pdfValue(origin, direction);
     }
 
     [[nodiscard]] Vec3 generate() const override {
@@ -22,7 +22,7 @@ public:
     }
 
 private:
-    const HittableList& objects;
+    const Hittable& objects;
     Point3 origin;
 
 };

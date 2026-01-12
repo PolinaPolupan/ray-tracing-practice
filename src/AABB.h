@@ -1,9 +1,7 @@
 #ifndef AABB_H
 #define AABB_H
 #include "Interval.h"
-#include "ray.h"
-#include "Vec3.h"
-
+#include "Ray.h"
 
 class AABB {
 public:
@@ -46,9 +44,9 @@ public:
         return y.size() > z.size() ? 1 : 2;
     }
 
-    [[nodiscard]] bool hit(const ray& r, Interval ray_t) const {
-        const Point3& ray_orig = r.o();
-        const Vec3&   ray_dir  = r.d();
+    [[nodiscard]] bool hit(const Ray& r, Interval ray_t) const {
+        const Point3& ray_orig = r.origin();
+        const Vec3&   ray_dir  = r.direction();
 
         for (int axis = 0; axis < 3; axis++) {
             const Interval& ax = axis_interval(axis);
@@ -83,8 +81,8 @@ private:
     }
 };
 
-inline const AABB AABB::empty    = AABB(Interval::empty,    Interval::empty,    Interval::empty);
-inline const AABB AABB::universe = AABB(Interval::universe, Interval::universe, Interval::universe);
+const AABB AABB::empty    = AABB(Interval::empty,    Interval::empty,    Interval::empty);
+const AABB AABB::universe = AABB(Interval::universe, Interval::universe, Interval::universe);
 
 inline AABB operator+(const AABB& bbox, const Vec3& offset) {
     return {bbox.x + offset.x(), bbox.y + offset.y(), bbox.z + offset.z()};

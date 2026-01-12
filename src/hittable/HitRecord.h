@@ -4,7 +4,7 @@
 
 #ifndef HITRECORD_H
 #define HITRECORD_H
-#include "ray.h"
+#include "Ray.h"
 #include "Vec3.h"
 
 
@@ -20,11 +20,11 @@ public:
     double v;
     bool front_face{};
 
-    void set_face_normal(const ray& r, const Vec3& outward_normal) {
+    void set_face_normal(const Ray& r, const Vec3& outward_normal) {
         // Sets the hit record normal vector.
         // NOTE: the parameter `outward_normal` is assumed to have unit length.
 
-        front_face = dot(r.d(), outward_normal) < 0;
+        front_face = dot(r.direction(), outward_normal) < 0;
         normal = front_face ? outward_normal : -outward_normal;
     }
 };

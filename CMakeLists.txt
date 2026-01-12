@@ -16,8 +16,8 @@ add_executable (inOneWeekend
         src/rtweekend.cpp
         src/Vec3.h
         src/Color.h
-        src/ray.h
-        src/hittable/shape.h
+        src/Ray.h
+        src/hittable/Hittable.h
         src/hittable/Sphere.h
         src/rtweekend.h
         src/Interval.h
@@ -49,11 +49,6 @@ add_executable (inOneWeekend
         src/pdf/HittablePdf.h
         src/pdf/MixturePdf.h
         src/material/ScatterRecord.h
-        src/integrators.cpp
-        src/integrators.h
-        src/film.cpp
-        src/film.h
-        src/cameras.cpp
         src/cameras.h)
 
 target_include_directories(inOneWeekend PRIVATE

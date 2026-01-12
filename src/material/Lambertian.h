@@ -13,15 +13,15 @@ public:
     explicit Lambertian(const Color& albedo) : tex(make_shared<SolidColor>(albedo)) {}
     explicit Lambertian(const shared_ptr<Texture> &tex) : tex(tex) {}
 
-    [[nodiscard]] bool scatter(const ray& rIn, const HitRecord& rec, const ScatterRecord& sRec) const override {
+    [[nodiscard]] bool scatter(const Ray& rIn, const HitRecord& rec, const ScatterRecord& sRec) const override {
         sRec.attenuation = tex->value(rec.u, rec.v, rec.p);
         sRec.pdfPtr = make_shared<CosinePdf>(rec.normal);
         sRec.skipPdf = false;
         return true;
     }
 
-    [[nodiscard]] double scatteringPdf(const ray& r_in, const HitRecord& rec, const ray& scattered) const override {
-        const auto cos_theta = dot(rec.normal, unit_vector(scattered.d()));
+    [[nodiscard]] double scatteringPdf(const Ray& r_in, const HitRecord& rec, const Ray& scattered) const override {
+        const auto cos_theta = dot(rec.normal, unit_vector(scattered.direction()));
         return cos_theta < 0 ? 0 : cos_theta/pi;
     }
 

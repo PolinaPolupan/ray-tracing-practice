@@ -1,9 +1,8 @@
 #ifndef SPHERE_H
 #define SPHERE_H
-#include "ONB.h"
 
 
-class Sphere final : public shape {
+class Sphere final : public Hittable {
 public:
     // Stationary Sphere
     Sphere(const Point3& static_center, double radius, const shared_ptr<Material> &mat)
@@ -21,13 +20,13 @@ public:
         bbox = AABB(box1, box2);
     }
 
-    [[nodiscard]] AABB bounds() const override { return bbox; }
+    [[nodiscard]] AABB boundingBox() const override { return bbox; }
 
-    bool intersect(const ray& r, const Interval ray_t, HitRecord& rec) const override {
+    bool hit(const Ray& r, const Interval ray_t, HitRecord& rec) const override {
         Point3 current_center = center.at(r.time());
-        Vec3 oc = current_center - r.o();
-        const auto a = r.d().length_squared();
-        const auto h = dot(r.d(), oc);
+        Vec3 oc = current_center - r.origin();
+        const auto a = r.direction().length_squared();
+        const auto h = dot(r.direction(), oc);
         const auto c = oc.length_squared() - radius*radius;
 
         const auto discriminant = h*h - a*c;
@@ -54,10 +53,10 @@ public:
         return true;
     }
 
-    [[nodiscard]] double pdf(const Point3& origin, const Vec3& direction) const override {
+    [[nodiscard]] double pdfValue(const Point3& origin, const Vec3& direction) const override {
         // This method only works for stationary spheres.
         HitRecord rec;
-        if (!this->intersect(ray(origin, direction), Interval(0.001, infinity), rec))
+        if (!this->hit(Ray(origin, direction), Interval(0.001, infinity), rec))
             return 0;
 
         const auto dist_squared = (center.at(0) - origin).length_squared();
@@ -75,7 +74,7 @@ public:
     }
 
 private:
-    ray center;
+    Ray center;
     double radius;
     shared_ptr<Material> mat;
     AABB bbox;

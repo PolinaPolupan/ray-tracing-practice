@@ -9,7 +9,7 @@
 #include "HittableList.h"
 
 
-class Quad final : public shape {
+class Quad final : public Hittable {
 public:
     Quad(const Point3& Q, const Vec3& u, const Vec3& v, const std::shared_ptr<Material> &mat)
       : Q(Q), u(u), v(v), mat(mat)
@@ -31,17 +31,17 @@ public:
         bbox = AABB(bbox_diagonal1, bbox_diagonal2);
     }
 
-    [[nodiscard]] AABB bounds() const override { return bbox; }
+    [[nodiscard]] AABB boundingBox() const override { return bbox; }
 
-    bool intersect(const ray& r, const Interval ray_t, HitRecord& rec) const override {
-        const auto denom = dot(normal, r.d());
+    bool hit(const Ray& r, const Interval ray_t, HitRecord& rec) const override {
+        const auto denom = dot(normal, r.direction());
 
         // No hit if the ray is parallel to the plane.
         if (std::fabs(denom) < 1e-8)
             return false;
 
         // Return false if the hit point parameter t is outside the ray interval.
-        const auto t = (D - dot(normal, r.o())) / denom;
+        const auto t = (D - dot(normal, r.origin())) / denom;
         if (!ray_t.contains(t))
             return false;
 
@@ -76,9 +76,9 @@ public:
         return true;
     }
 
-    [[nodiscard]] double pdf(const Point3& origin, const Vec3& direction) const override {
+    [[nodiscard]] double pdfValue(const Point3& origin, const Vec3& direction) const override {
         HitRecord rec;
-        if (!this->intersect(ray(origin, direction), Interval(0.001, infinity), rec))
+        if (!this->hit(Ray(origin, direction), Interval(0.001, infinity), rec))
             return 0;
 
         const auto distance_squared = rec.t * rec.t * direction.length_squared();
