@@ -51,7 +51,7 @@ void cornell_box() {
 
     cam.aspect_ratio      = 1.0;
     cam.image_width       = 600;
-    cam.samples_per_pixel = 100;
+    cam.samples_per_pixel = 10;
 
     cam.vfov     = 40;
     cam.lookfrom = Point3(278, 278, -800);
@@ -62,7 +62,7 @@ void cornell_box() {
 
     integrator integrator(cam);
 
-    integrator.samples_per_pixel = 100;
+    integrator.samples_per_pixel = 10;
 
     integrator.render(world, lights);
 }
