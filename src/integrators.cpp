@@ -34,7 +34,7 @@ void integrator::render(const HittableList& world, const HittableList& lights) {
                     pixel_color += ray_color(r, max_depth, world, lights);
                 }
             }
-            write_color(std::cout, pixel_samples_scale * pixel_color);
+            cam.write_color(std::cout, pixel_samples_scale * pixel_color);
         }
     }
 
