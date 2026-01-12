@@ -6,6 +6,7 @@
 
 #include "ray.h"
 
+
 void camera::init() {
     image_height = static_cast<int>(image_width / aspect_ratio);
     image_height = (image_height < 1) ? 1 : image_height;
@@ -59,6 +60,10 @@ ray camera::gen_ray(const int i, const int j, const int s_i, const int s_j) cons
     auto ray_time = random_double();
 
     return {ray_origin, ray_direction, ray_time};
+}
+
+void camera::write_color(std::ostream &out, const Color &pixel_color) const {
+    film_->write_color(out, pixel_color);
 }
 
 Vec3 camera::sample_square_stratified(const int s_i, const int s_j) const {

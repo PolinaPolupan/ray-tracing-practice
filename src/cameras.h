@@ -1,6 +1,7 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#include "film.h"
 #include "Vec3.h"
 
 class ray;
@@ -31,9 +32,13 @@ public:
     double recip_sqrt_spp = 0;       // 1 / sqrt_spp
 
 public:
+    explicit camera(film* film): film_(film) {}
+
     void init();
 
     [[nodiscard]] ray gen_ray(int i, int j, int s_i, int s_j) const;
+
+    void write_color(std::ostream& out, const Color& pixel_color) const;
 
 private:
     [[nodiscard]] Vec3 sample_square_stratified(int s_i, int s_j) const;
@@ -48,6 +53,9 @@ private:
         auto p = random_in_unit_disk();
         return center + (p[0] * defocus_disk_u) + (p[1] * defocus_disk_v);
     }
+
+private:
+    film* film_;
 };
 
 #endif

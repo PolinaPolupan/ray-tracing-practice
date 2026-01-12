@@ -15,7 +15,6 @@ project ("Ray Tracing In One Week")
 add_executable (inOneWeekend
         src/rtweekend.cpp
         src/Vec3.h
-        src/Color.h
         src/ray.h
         src/hittable/shape.h
         src/hittable/Sphere.h

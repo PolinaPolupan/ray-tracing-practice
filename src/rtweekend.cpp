@@ -46,8 +46,8 @@ void cornell_box() {
     lights.add(make_shared<Quad>(Point3(343,554,332), Vec3(-130,0,0), Vec3(0,0,-105), empty_material));
     lights.add(make_shared<Sphere>(Point3(190, 90, 190), 90, empty_material));
 
-    camera cam;
-
+    film film;
+    camera cam(&film);
 
     cam.aspect_ratio      = 1.0;
     cam.image_width       = 600;
@@ -61,6 +61,7 @@ void cornell_box() {
     cam.defocus_angle = 0;
 
     integrator integrator(cam);
+
     integrator.samples_per_pixel = 100;
 
     integrator.render(world, lights);
