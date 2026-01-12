@@ -62,7 +62,7 @@ void cornell_box() {
 
     integrator integrator(cam);
 
-    integrator.samples_per_pixel = 100;
+    integrator.samples_per_pixel = 10;
 
     integrator.render(world, lights);
 }
