@@ -53,7 +53,9 @@ add_executable (inOneWeekend
         src/film.cpp
         src/film.h
         src/cameras.cpp
-        src/cameras.h)
+        src/cameras.h
+        src/sampling.cpp
+        src/sampling.h)
 
 target_include_directories(inOneWeekend PRIVATE
         ${CMAKE_SOURCE_DIR}/src

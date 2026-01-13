@@ -6,9 +6,9 @@
 #define CHECKERTEXTURE_H
 #include <memory>
 
-#include "Color.h"
 #include "SolidColor.h"
 #include "Texture.h"
+#include "Vec3.h"
 
 
 class CheckerTexture final : public Texture {
@@ -17,9 +17,9 @@ public:
       : inv_scale(1.0 / scale), even(even), odd(odd) {}
 
     CheckerTexture(const double scale, const Color& c1, const Color& c2)
-      : CheckerTexture(scale, make_shared<SolidColor>(c1), make_shared<SolidColor>(c2)) {}
+      : CheckerTexture(scale, std::make_shared<SolidColor>(c1), std::make_shared<SolidColor>(c2)) {}
 
-    Color value(const double u, const double v, const Point3& p) const override {
+    [[nodiscard]] Color value(const double u, const double v, const Point3& p) const override {
         const auto xInteger = static_cast<int>(std::floor(inv_scale * p.x()));
         const auto yInteger = static_cast<int>(std::floor(inv_scale * p.y()));
         const auto zInteger = static_cast<int>(std::floor(inv_scale * p.z()));

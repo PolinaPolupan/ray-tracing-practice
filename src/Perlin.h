@@ -5,6 +5,7 @@
 #ifndef PERLIN_H
 #define PERLIN_H
 #include "rtweekend.h"
+#include "sampling.h"
 #include "Vec3.h"
 
 class Perlin {

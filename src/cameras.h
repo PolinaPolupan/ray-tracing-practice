@@ -41,20 +41,6 @@ public:
     void write_color(std::ostream& out, const Color& pixel_color) const;
 
 private:
-    [[nodiscard]] Vec3 sample_square_stratified(int s_i, int s_j) const;
-
-    [[nodiscard]] Vec3 sample_square() {
-        // Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
-        return {random_double() - 0.5, random_double() - 0.5, 0};
-    }
-
-    [[nodiscard]] Point3 defocus_disk_sample() const {
-        // Returns a random point in the camera defocus disk.
-        auto p = random_in_unit_disk();
-        return center + (p[0] * defocus_disk_u) + (p[1] * defocus_disk_v);
-    }
-
-private:
     film* film_;
 };
 

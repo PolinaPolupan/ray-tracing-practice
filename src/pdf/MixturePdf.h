@@ -4,6 +4,7 @@
 
 #ifndef MIXTUREPDF_H
 #define MIXTUREPDF_H
+#include "sampling.h"
 
 
 class MixturePdf final : public PDF {

@@ -5,6 +5,7 @@
 #ifndef DIELECTRIC_H
 #define DIELECTRIC_H
 #include "Material.h"
+#include "sampling.h"
 
 class Dielectric final : public Material {
 public:

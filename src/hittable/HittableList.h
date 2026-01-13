@@ -5,6 +5,7 @@
 #ifndef HITTABLELIST_H
 #define HITTABLELIST_H
 
+#include "sampling.h"
 #include "shape.h"
 
 

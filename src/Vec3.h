@@ -44,14 +44,6 @@ class Vec3 {
         return e[0]*e[0] + e[1]*e[1] + e[2]*e[2];
     }
 
-    static Vec3 random() {
-        return {random_double(), random_double(), random_double()};
-    }
-
-    static Vec3 random(const double min, const double max) {
-        return {random_double(min,max), random_double(min,max), random_double(min,max)};
-    }
-
     [[nodiscard]] bool near_zero() const {
         // Return true if the vector is close to zero in all dimensions.
         constexpr auto s = 1e-8;
@@ -103,26 +95,8 @@ inline Vec3 cross(const Vec3& u, const Vec3& v) {
     };
 }
 
-
 inline Vec3 unit_vector(const Vec3& v) {
     return v / v.length();
-}
-
-static Vec3 random_unit_vector() {
-    while (true) {
-        auto p = Vec3::random(-1,1);
-        const auto lensq = p.length_squared();
-        if (1e-160 < lensq && lensq <= 1)
-            return p / sqrt(lensq);
-    }
-}
-
-inline Vec3 random_on_hemisphere(const Vec3& normal) {
-    const Vec3 on_unit_sphere = random_unit_vector();
-    if (dot(on_unit_sphere, normal) > 0.0) // In the same hemisphere as the normal
-        return on_unit_sphere;
-    else
-        return -on_unit_sphere;
 }
 
 inline Vec3 reflect(const Vec3& v, const Vec3& n) {
@@ -134,26 +108,6 @@ inline Vec3 refract(const Vec3& uv, const Vec3& n, const double etai_over_etat) 
     const Vec3 r_out_perp =  etai_over_etat * (uv + cos_theta*n);
     const Vec3 r_out_parallel = -std::sqrt(std::fabs(1.0 - r_out_perp.length_squared())) * n;
     return r_out_perp + r_out_parallel;
-}
-
-inline Vec3 random_in_unit_disk() {
-    while (true) {
-        auto p = Vec3(random_double(-1,1), random_double(-1,1), 0);
-        if (p.length_squared() < 1)
-            return p;
-    }
-}
-
-inline Vec3 random_cosine_direction() {
-    const auto r1 = random_double();
-    const auto r2 = random_double();
-
-    const auto phi = 2*pi*r1;
-    auto x = std::cos(phi) * std::sqrt(r2);
-    auto y = std::sin(phi) * std::sqrt(r2);
-    auto z = std::sqrt(1-r2);
-
-    return {x, y, z};
 }
 
 using Color = Vec3;
