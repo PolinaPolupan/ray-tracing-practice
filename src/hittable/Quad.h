@@ -26,14 +26,14 @@ public:
 
     void bounding_box() {
         // Compute the bounding box of all four vertices.
-        const auto bbox_diagonal1 = AABB(Q, Q + u + v);
-        const auto bbox_diagonal2 = AABB(Q + u, Q + v);
-        bbox = AABB(bbox_diagonal1, bbox_diagonal2);
+        const auto bbox_diagonal1 = bounds3d(Q, Q + u + v);
+        const auto bbox_diagonal2 = bounds3d(Q + u, Q + v);
+        bbox = bounds3d(bbox_diagonal1, bbox_diagonal2);
     }
 
-    [[nodiscard]] AABB bounds() const override { return bbox; }
+    [[nodiscard]] bounds3d bounds() const override { return bbox; }
 
-    bool intersect(const ray& r, const Interval ray_t, HitRecord& rec) const override {
+    bool intersect(const ray& r, const interval ray_t, HitRecord& rec) const override {
         const auto denom = dot(normal, r.d());
 
         // No hit if the ray is parallel to the plane.
@@ -64,7 +64,7 @@ public:
     }
 
     static bool isInterior(const double a, const double b, HitRecord& rec) {
-        const auto unit_interval = Interval(0, 1);
+        const auto unit_interval = interval(0, 1);
         // Given the hit point in plane coordinates, return false if it is outside the
         // primitive, otherwise set the hit record UV coordinates and return true.
 
@@ -78,7 +78,7 @@ public:
 
     [[nodiscard]] double pdf(const Point3& origin, const Vec3& direction) const override {
         HitRecord rec;
-        if (!this->intersect(ray(origin, direction), Interval(0.001, infinity), rec))
+        if (!this->intersect(ray(origin, direction), interval(0.001, infinity), rec))
             return 0;
 
         const auto distance_squared = rec.t * rec.t * direction.length_squared();
@@ -97,7 +97,7 @@ private:
     Vec3 u, v;
     Vec3 w;
     shared_ptr<Material> mat;
-    AABB bbox;
+    bounds3d bbox;
     Vec3 normal;
     double D;
     double area;

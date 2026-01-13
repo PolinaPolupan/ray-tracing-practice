@@ -16,8 +16,8 @@ public:
         if (image.height() <= 0) return {0,1,1};
 
         // Clamp input texture coordinates to [0,1] x [1,0]
-        u = Interval(0,1).clamp(u);
-        v = 1.0 - Interval(0,1).clamp(v);  // Flip V to image coordinates
+        u = interval(0,1).clamp(u);
+        v = 1.0 - interval(0,1).clamp(v);  // Flip V to image coordinates
 
         const auto i = static_cast<int>(u * image.width());
         const auto j = static_cast<int>(v * image.height());

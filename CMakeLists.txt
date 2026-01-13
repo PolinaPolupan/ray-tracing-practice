@@ -19,12 +19,12 @@ add_executable (inOneWeekend
         src/hittable/shape.h
         src/hittable/Sphere.h
         src/rtweekend.h
-        src/Interval.h
+        src/interval.h
         src/material/Material.h
         src/material/Lambertian.h
         src/material/Metal.h
         src/material/Dielectric.h
-        src/AABB.h
+        src/bounds3d.h
         src/hittable/BVHNode.h
         src/texture/Texture.h
         src/texture/SolidColor.h

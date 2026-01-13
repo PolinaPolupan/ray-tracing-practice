@@ -1,39 +1,39 @@
 #ifndef AABB_H
 #define AABB_H
-#include "Interval.h"
+#include "interval.h"
 #include "ray.h"
 #include "Vec3.h"
 
 
-class AABB {
+class bounds3d {
 public:
-    Interval x, y, z;
+    interval x, y, z;
 
-    AABB() = default; // The default AABB is empty, since intervals are empty by default.
+    bounds3d() = default; // The default AABB is empty, since intervals are empty by default.
 
-    AABB(const Interval& x, const Interval& y, const Interval& z)
+    bounds3d(const interval& x, const interval& y, const interval& z)
       : x(x), y(y), z(z) {
         padToMinimums();
     }
 
-    AABB(const Point3& a, const Point3& b) {
+    bounds3d(const Point3& a, const Point3& b) {
         // Treat the two points a and b as extrema for the bounding box, so we don't require a
         // particular minimum/maximum coordinate order.
 
-        x = (a[0] <= b[0]) ? Interval(a[0], b[0]) : Interval(b[0], a[0]);
-        y = (a[1] <= b[1]) ? Interval(a[1], b[1]) : Interval(b[1], a[1]);
-        z = (a[2] <= b[2]) ? Interval(a[2], b[2]) : Interval(b[2], a[2]);
+        x = (a[0] <= b[0]) ? interval(a[0], b[0]) : interval(b[0], a[0]);
+        y = (a[1] <= b[1]) ? interval(a[1], b[1]) : interval(b[1], a[1]);
+        z = (a[2] <= b[2]) ? interval(a[2], b[2]) : interval(b[2], a[2]);
 
         padToMinimums();
     }
 
-    AABB(const AABB& box0, const AABB& box1) {
-        x = Interval(box0.x, box1.x);
-        y = Interval(box0.y, box1.y);
-        z = Interval(box0.z, box1.z);
+    bounds3d(const bounds3d& box0, const bounds3d& box1) {
+        x = interval(box0.x, box1.x);
+        y = interval(box0.y, box1.y);
+        z = interval(box0.z, box1.z);
     }
 
-    [[nodiscard]] const Interval& axis_interval(const int n) const {
+    [[nodiscard]] const interval& axis_interval(const int n) const {
         if (n == 1) return y;
         if (n == 2) return z;
         return x;
@@ -46,12 +46,12 @@ public:
         return y.size() > z.size() ? 1 : 2;
     }
 
-    [[nodiscard]] bool hit(const ray& r, Interval ray_t) const {
+    [[nodiscard]] bool intersect(const ray& r, interval ray_t) const {
         const Point3& ray_orig = r.o();
         const Vec3&   ray_dir  = r.d();
 
         for (int axis = 0; axis < 3; axis++) {
-            const Interval& ax = axis_interval(axis);
+            const interval& ax = axis_interval(axis);
             const double adinv = 1.0 / ray_dir[axis];
 
             const auto t0 = (ax.min - ray_orig[axis]) * adinv;
@@ -71,7 +71,7 @@ public:
         return true;
     }
 
-    static const AABB empty, universe;
+    static const bounds3d empty, universe;
 
 private:
     void padToMinimums() {
@@ -83,14 +83,14 @@ private:
     }
 };
 
-inline const AABB AABB::empty    = AABB(Interval::empty,    Interval::empty,    Interval::empty);
-inline const AABB AABB::universe = AABB(Interval::universe, Interval::universe, Interval::universe);
+inline const bounds3d bounds3d::empty    = bounds3d(interval::empty,    interval::empty,    interval::empty);
+inline const bounds3d bounds3d::universe = bounds3d(interval::universe, interval::universe, interval::universe);
 
-inline AABB operator+(const AABB& bbox, const Vec3& offset) {
+inline bounds3d operator+(const bounds3d& bbox, const Vec3& offset) {
     return {bbox.x + offset.x(), bbox.y + offset.y(), bbox.z + offset.z()};
 }
 
-inline AABB operator+(const Vec3& offset, const AABB& bbox) {
+inline bounds3d operator+(const Vec3& offset, const bounds3d& bbox) {
     return bbox + offset;
 }
 

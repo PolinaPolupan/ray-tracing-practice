@@ -4,7 +4,7 @@
 
 #include "film.h"
 
-#include "Interval.h"
+#include "interval.h"
 
 double film::linear_to_gamma(const double linear_component) {
     if (linear_component > 0)
@@ -29,7 +29,7 @@ void film::write_color(std::ostream &out, const Color &pixel_color) {
     b = linear_to_gamma(b);
 
     // Translate the [0,1] component values to the byte range [0,255].
-    static const Interval intensity(0.000, 0.999);
+    static const interval intensity(0.000, 0.999);
     const int rbyte = static_cast<int>(256 * intensity.clamp(r));
     const int gbyte = static_cast<int>(256 * intensity.clamp(g));
     const int bbyte = static_cast<int>(256 * intensity.clamp(b));

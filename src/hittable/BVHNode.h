@@ -21,9 +21,9 @@ public:
 
     BVHNode(std::vector<shared_ptr<shape>>& objects, size_t start, size_t end) {
         // Build the bounding box of the span of source objects.
-        bbox = AABB::empty;
+        bbox = bounds3d::empty;
         for (size_t object_index=start; object_index < end; object_index++)
-            bbox = AABB(bbox, objects[object_index]->bounds());
+            bbox = bounds3d(bbox, objects[object_index]->bounds());
 
         const int axis = bbox.longestAxis();
 
@@ -47,22 +47,22 @@ public:
         }
     }
 
-    bool intersect(const ray& r, const Interval ray_t, HitRecord& rec) const override {
-        if (!bbox.hit(r, ray_t))
+    bool intersect(const ray& r, const interval ray_t, HitRecord& rec) const override {
+        if (!bbox.intersect(r, ray_t))
             return false;
 
         const bool hit_left = left->intersect(r, ray_t, rec);
-        const bool hit_right = right->intersect(r, Interval(ray_t.min, hit_left ? rec.t : ray_t.max), rec);
+        const bool hit_right = right->intersect(r, interval(ray_t.min, hit_left ? rec.t : ray_t.max), rec);
 
         return hit_left || hit_right;
     }
 
-    [[nodiscard]] AABB bounds() const override { return bbox; }
+    [[nodiscard]] bounds3d bounds() const override { return bbox; }
 
 private:
     shared_ptr<shape> left;
     shared_ptr<shape> right;
-    AABB bbox;
+    bounds3d bbox;
 
     static bool box_compare(const shared_ptr<shape>& a, const shared_ptr<shape> &b, const int axis_index) {
         const auto a_axis_interval = a->bounds().axis_interval(axis_index);

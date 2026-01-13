@@ -13,7 +13,7 @@ public:
         bbox = object->bounds() + offset;
     }
 
-    bool intersect(const ray& r, const Interval ray_t, HitRecord& rec) const override {
+    bool intersect(const ray& r, const interval ray_t, HitRecord& rec) const override {
         // Move the ray backwards by the offset
         ray offset_r(r.o() - offset, r.d(), r.time());
 
@@ -27,12 +27,12 @@ public:
         return true;
     }
 
-    [[nodiscard]] AABB bounds() const override { return bbox; }
+    [[nodiscard]] bounds3d bounds() const override { return bbox; }
 
 private:
     shared_ptr<shape> object;
     Vec3 offset;
-    AABB bbox;
+    bounds3d bbox;
 };
 
 #endif //TRANSLATE_H

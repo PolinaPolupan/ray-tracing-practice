@@ -22,13 +22,13 @@ public:
         phase_function(make_shared<Isotropic>(albedo))
     {}
 
-    bool intersect(const ray& r, const Interval ray_t, HitRecord& rec) const override {
+    bool intersect(const ray& r, const interval ray_t, HitRecord& rec) const override {
         HitRecord rec1, rec2;
 
-        if (!boundary->intersect(r, Interval::universe, rec1))
+        if (!boundary->intersect(r, interval::universe, rec1))
             return false;
 
-        if (!boundary->intersect(r, Interval(rec1.t+0.0001, infinity), rec2))
+        if (!boundary->intersect(r, interval(rec1.t+0.0001, infinity), rec2))
             return false;
 
         if (rec1.t < ray_t.min) rec1.t = ray_t.min;
@@ -57,7 +57,7 @@ public:
         return true;
     }
 
-    [[nodiscard]] AABB bounds() const override { return boundary->bounds(); }
+    [[nodiscard]] bounds3d bounds() const override { return boundary->bounds(); }
 
 private:
     shared_ptr<shape> boundary;

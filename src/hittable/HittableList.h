@@ -19,16 +19,16 @@ public:
 
     void add(const shared_ptr<shape>& object) {
         objects.push_back(object);
-        bbox = AABB(bbox, object->bounds());
+        bbox = bounds3d(bbox, object->bounds());
     }
 
-    bool intersect(const ray& r, const Interval ray_t, HitRecord& rec) const override {
+    bool intersect(const ray& r, const interval ray_t, HitRecord& rec) const override {
         HitRecord temp_rec;
         bool hit_anything = false;
         auto closest_so_far = ray_t.max;
 
         for (const auto& object : objects) {
-            if (object->intersect(r, Interval(ray_t.min, closest_so_far), temp_rec)) {
+            if (object->intersect(r, interval(ray_t.min, closest_so_far), temp_rec)) {
                 hit_anything = true;
                 closest_so_far = temp_rec.t;
                 rec = temp_rec;
@@ -38,7 +38,7 @@ public:
         return hit_anything;
     }
 
-    [[nodiscard]] AABB bounds() const override { return bbox; }
+    [[nodiscard]] bounds3d bounds() const override { return bbox; }
 
     [[nodiscard]] double pdf(const Point3& origin, const Vec3& direction) const override {
         const auto weight = 1.0 / objects.size();
@@ -56,7 +56,7 @@ public:
     }
 
 private:
-    AABB bbox;
+    bounds3d bbox;
 };
 
 

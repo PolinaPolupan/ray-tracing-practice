@@ -37,10 +37,10 @@ public:
             }
         }
 
-        bbox = AABB(min, max);
+        bbox = bounds3d(min, max);
     }
 
-    bool intersect(const ray& r, const Interval ray_t, HitRecord& rec) const override {
+    bool intersect(const ray& r, const interval ray_t, HitRecord& rec) const override {
 
         // Transform the ray from world space to object space.
 
@@ -80,13 +80,13 @@ public:
         return true;
     }
 
-    [[nodiscard]] AABB bounds() const override { return bbox; }
+    [[nodiscard]] bounds3d bounds() const override { return bbox; }
 
 private:
     shared_ptr<shape> object;
     double sin_theta;
     double cos_theta;
-    AABB bbox;
+    bounds3d bbox;
 };
 
 #endif //ROTATEY_H

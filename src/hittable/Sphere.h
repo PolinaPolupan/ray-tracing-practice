@@ -9,21 +9,21 @@ public:
     Sphere(const Point3& static_center, double radius, const shared_ptr<Material> &mat)
       : center(static_center, Vec3(0,0,0)), radius(std::fmax(0,radius)), mat(mat) {
         const auto rvec = Vec3(radius, radius, radius);
-        bbox = AABB(static_center - rvec, static_center + rvec);
+        bbox = bounds3d(static_center - rvec, static_center + rvec);
     }
 
     // Moving Sphere
     Sphere(const Point3& center1, const Point3& center2, const double radius, const shared_ptr<Material> &mat)
       : center(center1, center2 - center1), radius(std::fmax(0,radius)), mat(mat) {
         const auto rvec = Vec3(radius, radius, radius);
-        const AABB box1(center.at(0) - rvec, center.at(0) + rvec);
-        const AABB box2(center.at(1) - rvec, center.at(1) + rvec);
-        bbox = AABB(box1, box2);
+        const bounds3d box1(center.at(0) - rvec, center.at(0) + rvec);
+        const bounds3d box2(center.at(1) - rvec, center.at(1) + rvec);
+        bbox = bounds3d(box1, box2);
     }
 
-    [[nodiscard]] AABB bounds() const override { return bbox; }
+    [[nodiscard]] bounds3d bounds() const override { return bbox; }
 
-    bool intersect(const ray& r, const Interval ray_t, HitRecord& rec) const override {
+    bool intersect(const ray& r, const interval ray_t, HitRecord& rec) const override {
         Point3 current_center = center.at(r.time());
         Vec3 oc = current_center - r.o();
         const auto a = r.d().length_squared();
@@ -57,7 +57,7 @@ public:
     [[nodiscard]] double pdf(const Point3& origin, const Vec3& direction) const override {
         // This method only works for stationary spheres.
         HitRecord rec;
-        if (!this->intersect(ray(origin, direction), Interval(0.001, infinity), rec))
+        if (!this->intersect(ray(origin, direction), interval(0.001, infinity), rec))
             return 0;
 
         const auto dist_squared = (center.at(0) - origin).length_squared();
@@ -78,7 +78,7 @@ private:
     ray center;
     double radius;
     shared_ptr<Material> mat;
-    AABB bbox;
+    bounds3d bbox;
 
 private:
     static void get_sphere_uv(const Point3& p, double& u, double& v) {
