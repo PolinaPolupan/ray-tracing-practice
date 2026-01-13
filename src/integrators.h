@@ -18,7 +18,7 @@ public:
     void render(const HittableList& world, const HittableList& lights);
 
 private:
-    [[nodiscard]] Vec3 ray_color(const ray& r, int depth, const HittableList& world, const HittableList& lights) const;
+    [[nodiscard]] Vec3 li(const ray& r, int depth, const HittableList& world, const HittableList& lights) const;
 
 public:
     camera cam;
