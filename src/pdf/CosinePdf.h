@@ -19,7 +19,7 @@ public:
     }
 
     [[nodiscard]] Vec3 generate() const override {
-        return uvw.transform(random_cosine_direction());
+        return uvw.transform(sample_uniform_hemisphere());
     }
 
 private:

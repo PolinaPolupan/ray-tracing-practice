@@ -58,9 +58,8 @@ ray camera::gen_ray(const int i, const int j, const int s_i, const int s_j) cons
 
     auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample(center, defocus_disk_u, defocus_disk_v);
     const auto ray_direction = pixel_sample - ray_origin;
-    auto ray_time = random_double();
 
-    return {ray_origin, ray_direction, ray_time};
+    return {ray_origin, ray_direction};
 }
 
 void camera::write_color(std::ostream &out, const Color &pixel_color) const {

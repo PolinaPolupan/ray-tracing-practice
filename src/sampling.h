@@ -7,8 +7,23 @@
 #include "Vec3.h"
 
 
-class sampling {
+class sampler {
+public:
+    virtual ~sampler() = default;
 
+    virtual double gen_1d() = 0;
+    virtual double gen_2d() = 0;
+};
+
+class independent_sampler: public sampler {
+public:
+    double gen_1d() override {
+        std::uniform_real_distribution<double> distribution(0.0, 1.0);
+        return distribution(generator);
+    }
+
+private:
+    std::mt19937 generator;
 };
 
 inline double random_double() {
@@ -35,7 +50,7 @@ inline Vec3 random_in_unit_disk() {
     }
 }
 
-inline Vec3 random_cosine_direction() {
+inline Vec3 sample_uniform_hemisphere() {
     const auto r1 = random_double();
     const auto r2 = random_double();
 
@@ -49,23 +64,6 @@ inline Vec3 random_cosine_direction() {
 
 inline Vec3 random(const double min, const double max) {
     return {random_double(min,max), random_double(min,max), random_double(min,max)};
-}
-
-inline Vec3 random_unit_vector() {
-    while (true) {
-        auto p = random(-1,1);
-        const auto lensq = p.length_squared();
-        if (1e-160 < lensq && lensq <= 1)
-            return p / sqrt(lensq);
-    }
-}
-
-inline Vec3 random_on_hemisphere(const Vec3& normal) {
-    const Vec3 on_unit_sphere = random_unit_vector();
-    if (dot(on_unit_sphere, normal) > 0.0) // In the same hemisphere as the normal
-        return on_unit_sphere;
-    else
-        return -on_unit_sphere;
 }
 
 [[nodiscard]] Vec3 sample_square_stratified(int s_i, int s_j, double recip_sqrt_spp);
