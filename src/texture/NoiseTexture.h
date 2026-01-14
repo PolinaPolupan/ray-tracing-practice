@@ -13,7 +13,7 @@ class NoiseTexture final : public Texture {
 public:
     explicit NoiseTexture(const double scale) : scale(scale) {}
 
-    [[nodiscard]] color value(double u, double v, const point3d& p) const override {
+    [[nodiscard]] color value(double u, double v, const point3& p) const override {
         return color(.5, .5, .5) * (1 + std::sin(scale * p.z() + 10 * noise.turb(p, 7)));
     }
 

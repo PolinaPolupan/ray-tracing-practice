@@ -9,7 +9,7 @@
 
 class HittablePdf final : public PDF {
 public:
-    HittablePdf(const HittableList& objects, const point3d& origin)
+    HittablePdf(const HittableList& objects, const point3& origin)
       : objects(objects), origin(origin)
     {}
 
@@ -23,7 +23,7 @@ public:
 
 private:
     const HittableList& objects;
-    point3d origin;
+    point3 origin;
 
 };
 

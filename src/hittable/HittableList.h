@@ -41,7 +41,7 @@ public:
 
     [[nodiscard]] bounds3 bounds() const override { return bbox; }
 
-    [[nodiscard]] double pdf(const point3d& origin, const vec3& direction) const override {
+    [[nodiscard]] double pdf(const point3& origin, const vec3& direction) const override {
         const auto weight = 1.0 / objects.size();
         auto sum = 0.0;
 
@@ -51,7 +51,7 @@ public:
         return sum;
     }
 
-    [[nodiscard]] vec3 random(const point3d& origin) const override {
+    [[nodiscard]] vec3 random(const point3& origin) const override {
         const auto int_size = static_cast<int>(objects.size());
         return objects[random_int(0, int_size-1)]->random(origin);
     }

@@ -12,7 +12,7 @@ public:
 
     SolidColor(const double red, const double green, const double blue) : SolidColor(color(red,green,blue)) {}
 
-    [[nodiscard]] color value(double u, double v, const point3d& p) const override {
+    [[nodiscard]] color value(double u, double v, const point3& p) const override {
         return albedo;
     }
 

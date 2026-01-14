@@ -5,14 +5,14 @@
 class Sphere final : public shape {
 public:
     // Stationary Sphere
-    Sphere(const point3d& static_center, double radius, const shared_ptr<Material> &mat)
+    Sphere(const point3& static_center, double radius, const shared_ptr<Material> &mat)
       : center(static_center, vec3(0,0,0)), radius(std::fmax(0,radius)), mat(mat) {
         const auto rvec = vec3(radius, radius, radius);
         bbox = bounds3(static_center - rvec, static_center + rvec);
     }
 
     // Moving Sphere
-    Sphere(const point3d& center1, const point3d& center2, const double radius, const shared_ptr<Material> &mat)
+    Sphere(const point3& center1, const point3& center2, const double radius, const shared_ptr<Material> &mat)
       : center(center1, center2 - center1), radius(std::fmax(0,radius)), mat(mat) {
         const auto rvec = vec3(radius, radius, radius);
         const bounds3 box1(center.at(0) - rvec, center.at(0) + rvec);
@@ -23,7 +23,7 @@ public:
     [[nodiscard]] bounds3 bounds() const override { return bbox; }
 
     bool intersect(const ray& r, const interval ray_t, HitRecord& rec) const override {
-        point3d current_center = center.at(r.time());
+        point3 current_center = center.at(r.time());
         vec3 oc = current_center - r.o();
         const auto a = r.d().length_squared();
         const auto h = dot(r.d(), oc);
@@ -53,7 +53,7 @@ public:
         return true;
     }
 
-    [[nodiscard]] double pdf(const point3d& origin, const vec3& direction) const override {
+    [[nodiscard]] double pdf(const point3& origin, const vec3& direction) const override {
         // This method only works for stationary spheres.
         HitRecord rec;
         if (!this->intersect(ray(origin, direction), interval(0.001, infinity), rec))
@@ -66,7 +66,7 @@ public:
         return  1 / solid_angle;
     }
 
-    [[nodiscard]] vec3 random(const point3d& origin) const override {
+    [[nodiscard]] vec3 random(const point3& origin) const override {
         const vec3 direction = center.at(0) - origin;
         auto distance_squared = direction.length_squared();
         const orthonormal_base uvw(direction);
@@ -80,7 +80,7 @@ private:
     bounds3 bbox;
 
 private:
-    static void get_sphere_uv(const point3d& p, double& u, double& v) {
+    static void get_sphere_uv(const point3& p, double& u, double& v) {
         // p: a given point on the sphere of radius one, centered at the origin.
         // u: returned value [0,1] of angle around the Y axis from X=-1.
         // v: returned value [0,1] of angle from Y=-1 to Y=+1.

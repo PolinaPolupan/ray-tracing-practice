@@ -11,11 +11,11 @@ public:
 
     [[nodiscard]] virtual bounds3 bounds() const = 0;
 
-    [[nodiscard]] virtual double pdf(const point3d& origin, const vec3& direction) const {
+    [[nodiscard]] virtual double pdf(const point3& origin, const vec3& direction) const {
         return 0.0;
     }
 
-    [[nodiscard]] virtual vec3 random(const point3d& origin) const {
+    [[nodiscard]] virtual vec3 random(const point3& origin) const {
         return {1,0,0};
     }
 };

@@ -14,8 +14,8 @@ public:
         cos_theta = std::cos(radians);
         bbox = object->bounds();
 
-        point3d min(infinity,  infinity,  infinity);
-        point3d max(-infinity, -infinity, -infinity);
+        point3 min(infinity,  infinity,  infinity);
+        point3 max(-infinity, -infinity, -infinity);
 
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < 2; j++) {
@@ -44,7 +44,7 @@ public:
 
         // Transform the ray from world space to object space.
 
-        const auto origin = point3d(
+        const auto origin = point3(
             (cos_theta * r.o().x()) - (sin_theta * r.o().z()),
             r.o().y(),
             (sin_theta * r.o().x()) + (cos_theta * r.o().z())
@@ -65,7 +65,7 @@ public:
 
         // Transform the intersection from object space back to world space.
 
-        rec.p = point3d(
+        rec.p = point3(
             (cos_theta * rec.p.x()) + (sin_theta * rec.p.z()),
             rec.p.y(),
             (-sin_theta * rec.p.x()) + (cos_theta * rec.p.z())

@@ -19,7 +19,7 @@ public:
     CheckerTexture(const double scale, const color& c1, const color& c2)
       : CheckerTexture(scale, std::make_shared<SolidColor>(c1), std::make_shared<SolidColor>(c2)) {}
 
-    [[nodiscard]] color value(const double u, const double v, const point3d& p) const override {
+    [[nodiscard]] color value(const double u, const double v, const point3& p) const override {
         const auto xInteger = static_cast<int>(std::floor(inv_scale * p.x()));
         const auto yInteger = static_cast<int>(std::floor(inv_scale * p.y()));
         const auto zInteger = static_cast<int>(std::floor(inv_scale * p.z()));

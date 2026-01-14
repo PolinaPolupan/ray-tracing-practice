@@ -11,7 +11,7 @@ class Material;
 
 class HitRecord {
 public:
-    point3d p;
+    point3 p;
     vec3 normal;
     shared_ptr<Material> mat;
     double t{};

@@ -18,7 +18,7 @@ public:
         return false;
     }
 
-    [[nodiscard]] virtual color emitted(const ray& r_in, const HitRecord& rec, double u, double v, const point3d& p) const {
+    [[nodiscard]] virtual color emitted(const ray& r_in, const HitRecord& rec, double u, double v, const point3& p) const {
         return {0,0,0};
     }
 };

@@ -153,7 +153,7 @@ bounds3::bounds3(const interval& x_, const interval& y_, const interval& z_)
     padToMinimums();
 }
 
-bounds3::bounds3(const point3d& a, const point3d& b) {
+bounds3::bounds3(const point3& a, const point3& b) {
     x = interval(std::min(a[0], b[0]), std::max(a[0], b[0]));
     y = interval(std::min(a[1], b[1]), std::max(a[1], b[1]));
     z = interval(std::min(a[2], b[2]), std::max(a[2], b[2]));
