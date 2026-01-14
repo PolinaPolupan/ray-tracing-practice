@@ -4,7 +4,6 @@
 
 #ifndef MIXTUREPDF_H
 #define MIXTUREPDF_H
-#include "sampling.h"
 
 
 class MixturePdf final : public PDF {
@@ -14,11 +13,11 @@ public:
         p[1] = p1;
     }
 
-    [[nodiscard]] double value(const Vec3& direction) const override {
+    [[nodiscard]] double value(const vec3d& direction) const override {
         return 0.5 * p[0]->value(direction) + 0.5 * p[1]->value(direction);
     }
 
-    [[nodiscard]] Vec3 generate() const override {
+    [[nodiscard]] vec3d generate() const override {
         if (random_double() < 0.5)
             return p[0]->generate();
         return p[1]->generate();

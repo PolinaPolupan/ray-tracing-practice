@@ -11,7 +11,7 @@ class ImageTexture final : public Texture {
 public:
     explicit ImageTexture(const char* filename) : image(filename) {}
 
-    [[nodiscard]] Color value(double u, double v, const Point3& p) const override {
+    [[nodiscard]] color value(double u, double v, const point3d& p) const override {
         // If we have no texture data, then return solid cyan as a debugging aid.
         if (image.height() <= 0) return {0,1,1};
 

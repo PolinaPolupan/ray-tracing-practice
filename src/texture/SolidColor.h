@@ -8,16 +8,16 @@
 
 class SolidColor final : public Texture {
 public:
-    explicit SolidColor(const Color& albedo) : albedo(albedo) {}
+    explicit SolidColor(const color& albedo) : albedo(albedo) {}
 
-    SolidColor(const double red, const double green, const double blue) : SolidColor(Color(red,green,blue)) {}
+    SolidColor(const double red, const double green, const double blue) : SolidColor(color(red,green,blue)) {}
 
-    [[nodiscard]] Color value(double u, double v, const Point3& p) const override {
+    [[nodiscard]] color value(double u, double v, const point3d& p) const override {
         return albedo;
     }
 
 private:
-    Color albedo;
+    color albedo;
 };
 
 #endif //SOLIDCOLOR_H

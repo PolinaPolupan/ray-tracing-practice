@@ -4,7 +4,7 @@
 
 #ifndef NOISETEXTURE_H
 #define NOISETEXTURE_H
-#include "Color.h"
+#include "math.h"
 #include "Perlin.h"
 #include "Texture.h"
 
@@ -13,8 +13,8 @@ class NoiseTexture final : public Texture {
 public:
     explicit NoiseTexture(const double scale) : scale(scale) {}
 
-    [[nodiscard]] Color value(double u, double v, const Point3& p) const override {
-        return Color(.5, .5, .5) * (1 + std::sin(scale * p.z() + 10 * noise.turb(p, 7)));
+    [[nodiscard]] color value(double u, double v, const point3d& p) const override {
+        return color(.5, .5, .5) * (1 + std::sin(scale * p.z() + 10 * noise.turb(p, 7)));
     }
 
 private:

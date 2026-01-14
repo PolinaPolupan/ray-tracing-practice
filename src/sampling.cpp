@@ -4,7 +4,7 @@
 
 #include "sampling.h"
 
-Vec3 sample_square_stratified(int s_i, int s_j, double recip_sqrt_spp) {
+vec3d sample_square_stratified(const int s_i, const int s_j, const double recip_sqrt_spp) {
     // Returns the vector to a random point in the square sub-pixel specified by grid
     // indices s_i and s_j, for an idealized unit square pixel [-.5,-.5] to [+.5,+.5].
 

@@ -30,8 +30,8 @@ void camera::init() {
     v = cross(w, u);
 
     // Calculate the vectors across the horizontal and down the vertical viewport edges.
-    const Vec3 viewport_u = viewport_width * u;    // Vector across viewport horizontal edge
-    const Vec3 viewport_v = viewport_height * -v;  // Vector down viewport vertical edge
+    const vec3d viewport_u = viewport_width * u;    // Vector across viewport horizontal edge
+    const vec3d viewport_v = viewport_height * -v;  // Vector down viewport vertical edge
 
     // Calculate the horizontal and vertical delta vectors from pixel to pixel.
     pixel_delta_u = viewport_u / image_width;
@@ -62,7 +62,7 @@ ray camera::gen_ray(const int i, const int j, const int s_i, const int s_j) cons
     return {ray_origin, ray_direction};
 }
 
-void camera::write_color(std::ostream &out, const Color &pixel_color) const {
+void camera::write_color(std::ostream &out, const color &pixel_color) const {
     film_->write_color(out, pixel_color);
 }
 

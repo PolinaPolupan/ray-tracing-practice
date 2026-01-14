@@ -1,27 +1,29 @@
 #ifndef RAY_H
 #define RAY_H
 
-#include "Vec3.h"
+#include "math.h"
+
+class vec3d;
 
 class ray {
 public:
     ray() = default;
 
-    ray(const Point3& o, const Vec3& d, const double t)
+    ray(const point3d& o, const vec3d& d, const double t)
         : o_(o), d_(d), time_(t) {}
 
-    ray(const Point3& o, const Vec3& d)
+    ray(const point3d& o, const vec3d& d)
         : o_(o), d_(d) {}
 
-    [[nodiscard]] Point3 o() const { return o_; }
-    [[nodiscard]] Vec3 d() const { return d_; }
+    [[nodiscard]] point3d o() const { return o_; }
+    [[nodiscard]] vec3d d() const { return d_; }
     [[nodiscard]] double time() const { return time_; }
 
-    [[nodiscard]] Point3 at(const double t) const { return o_ + t*d_; }
+    [[nodiscard]] point3d at(const double t) const { return o_ + t*d_; }
 
 private:
-    Point3 o_;
-    Vec3 d_;
+    point3d o_{};
+    vec3d d_{};
     double time_{};
 };
 

@@ -9,21 +9,21 @@
 
 class HittablePdf final : public PDF {
 public:
-    HittablePdf(const HittableList& objects, const Point3& origin)
+    HittablePdf(const HittableList& objects, const point3d& origin)
       : objects(objects), origin(origin)
     {}
 
-    [[nodiscard]] double value(const Vec3& direction) const override {
+    [[nodiscard]] double value(const vec3d& direction) const override {
         return objects.pdf(origin, direction);
     }
 
-    [[nodiscard]] Vec3 generate() const override {
+    [[nodiscard]] vec3d generate() const override {
         return objects.random(origin);
     }
 
 private:
     const HittableList& objects;
-    Point3 origin;
+    point3d origin;
 
 };
 

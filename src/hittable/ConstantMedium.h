@@ -4,6 +4,7 @@
 
 #ifndef CONSTANTMEDIUM_H
 #define CONSTANTMEDIUM_H
+#include "sampling.h"
 #include "shape.h"
 #include "material/Isotropic.h"
 
@@ -17,7 +18,7 @@ public:
         phase_function(make_shared<Isotropic>(tex))
     {}
 
-    ConstantMedium(const shared_ptr<shape> &boundary, const double density, const Color& albedo)
+    ConstantMedium(const shared_ptr<shape> &boundary, const double density, const color& albedo)
       : boundary(boundary), neg_inv_density(-1/density),
         phase_function(make_shared<Isotropic>(albedo))
     {}
@@ -40,7 +41,7 @@ public:
         if (rec1.t < 0)
             rec1.t = 0;
 
-        const auto ray_length = r.direction().length();
+        const auto ray_length = r.d().length();
         const auto distance_inside_boundary = (rec2.t - rec1.t) * ray_length;
         const auto hit_distance = neg_inv_density * std::log(random_double());
 
@@ -50,7 +51,7 @@ public:
         rec.t = rec1.t + hit_distance / ray_length;
         rec.p = r.at(rec.t);
 
-        rec.normal = Vec3(1,0,0);  // arbitrary
+        rec.normal = vec3d(1,0,0);  // arbitrary
         rec.front_face = true;     // also arbitrary
         rec.mat = phase_function;
 

@@ -26,7 +26,7 @@ void integrator::render(const HittableList& world, const HittableList& lights) {
     for (int j = 0; j < cam.image_height; j++) {
         std::clog << "\rScanlines remaining: " << (cam.image_height - j) << ' ' << std::flush;
         for (int i = 0; i < cam.image_width; i++) {
-            Color pixel_color(0,0,0);
+            color pixel_color(0,0,0);
             for (int s_j = 0; s_j < sqrt_spp; s_j++) {
                 for (int s_i = 0; s_i < sqrt_spp; s_i++) {
                     ray r = cam.gen_ray(i, j, s_i, s_j);
@@ -40,7 +40,7 @@ void integrator::render(const HittableList& world, const HittableList& lights) {
     std::clog << "\rDone.                 \n";
 }
 
-Color integrator::li(const ray &r, int depth, const HittableList &world, const HittableList &lights) const {
+color integrator::li(const ray &r, int depth, const HittableList &world, const HittableList &lights) const {
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0)
         return {0,0,0};
@@ -52,7 +52,7 @@ Color integrator::li(const ray &r, int depth, const HittableList &world, const H
         return background;
 
     ScatterRecord sRec;
-    const Color color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
+    const color color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
 
     if (!rec.mat->scatter(r, rec, sRec))
         return color_from_emission;
@@ -69,8 +69,8 @@ Color integrator::li(const ray &r, int depth, const HittableList &world, const H
 
     const double scattering_pdf = rec.mat->scatteringPdf(r, rec, scattered);
 
-    const Color sample_color = li(scattered, depth-1, world, lights);
-    const Color color_from_scatter =
+    const color sample_color = li(scattered, depth-1, world, lights);
+    const color color_from_scatter =
         (sRec.attenuation * scattering_pdf * sample_color) / pdf_value;
 
     return color_from_emission + color_from_scatter;

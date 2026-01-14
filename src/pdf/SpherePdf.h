@@ -10,11 +10,11 @@ class SpherePdf final : public PDF {
 public:
     SpherePdf() = default;
 
-    [[nodiscard]] double value(const Vec3& direction) const override {
+    [[nodiscard]] double value(const vec3d& direction) const override {
         return 1/(4 * pi);
     }
 
-    [[nodiscard]] Vec3 generate() const override {
+    [[nodiscard]] vec3d generate() const override {
         return random_unit_vector();
     }
 };

@@ -5,9 +5,11 @@
 #ifndef TRANSLATE_H
 #define TRANSLATE_H
 
+#include "shape.h"
+
 class Translate final : public shape {
 public:
-    Translate(const shared_ptr<shape>& object, const Vec3& offset)
+    Translate(const shared_ptr<shape>& object, const vec3d& offset)
      : object(object), offset(offset)
     {
         bbox = object->bounds() + offset;
@@ -31,7 +33,7 @@ public:
 
 private:
     shared_ptr<shape> object;
-    Vec3 offset;
+    vec3d offset;
     bounds3d bbox;
 };
 

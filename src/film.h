@@ -5,13 +5,14 @@
 #ifndef FILM_H
 #define FILM_H
 
-#include "Vec3.h"
+#include "math.h"
+
 
 class film {
 public:
     double linear_to_gamma(double linear_component);
 
-    void write_color(std::ostream& out, const Color& pixel_color);
+    void write_color(std::ostream& out, const color& pixel_color);
 };
 
 

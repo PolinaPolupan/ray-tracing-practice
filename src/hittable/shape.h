@@ -1,9 +1,6 @@
 #ifndef HITTABLE_H
 #define HITTABLE_H
-#include "bounds3d.h"
 #include "HitRecord.h"
-#include "interval.h"
-#include "ray.h"
 
 
 class shape {
@@ -14,11 +11,11 @@ public:
 
     [[nodiscard]] virtual bounds3d bounds() const = 0;
 
-    [[nodiscard]] virtual double pdf(const Point3& origin, const Vec3& direction) const {
+    [[nodiscard]] virtual double pdf(const point3d& origin, const vec3d& direction) const {
         return 0.0;
     }
 
-    [[nodiscard]] virtual Vec3 random(const Point3& origin) const {
+    [[nodiscard]] virtual vec3d random(const point3d& origin) const {
         return {1,0,0};
     }
 };

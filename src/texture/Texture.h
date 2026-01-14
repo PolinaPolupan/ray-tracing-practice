@@ -11,7 +11,7 @@ class Texture {
 public:
     virtual ~Texture() = default;
 
-    virtual Color value(double u, double v, const Point3& p) const = 0;
+    [[nodiscard]] virtual color value(double u, double v, const point3d& p) const = 0;
 };
 
 
