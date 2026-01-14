@@ -5,6 +5,10 @@
 
 class ray;
 
+struct point2 {
+    double x, y;
+};
+
 class vec3 {
 public:
     double e[3];
@@ -45,7 +49,7 @@ vec3 refract(const vec3& uv, const vec3& n, double etai_over_etat);
 
 std::ostream& operator<<(std::ostream& out, const vec3& v);
 
-using point3d = vec3;
+using point3 = vec3;
 using color   = vec3;
 
 /* ---------------- interval ---------------- */
@@ -78,7 +82,7 @@ public:
 
     bounds3();
     bounds3(const interval& x, const interval& y, const interval& z);
-    bounds3(const point3d& a, const point3d& b);
+    bounds3(const point3& a, const point3& b);
     bounds3(const bounds3& box0, const bounds3& box1);
 
     [[nodiscard]] const interval& axis_interval(int n) const;

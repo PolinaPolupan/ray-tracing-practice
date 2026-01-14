@@ -14,7 +14,7 @@ public:
     virtual ~sampler() = default;
 
     virtual double gen_1d() = 0;
-    virtual double gen_2d() = 0;
+    virtual point2 gen_2d() = 0;
 };
 
 class independent_sampler: public sampler {
@@ -75,7 +75,7 @@ inline vec3 random(const double min, const double max) {
     return {random_double() - 0.5, random_double() - 0.5, 0};
 }
 
-[[nodiscard]] inline point3d defocus_disk_sample(const point3d &center, const vec3 &defocus_disk_u, const vec3 &defocus_disk_v) {
+[[nodiscard]] inline point3 defocus_disk_sample(const point3 &center, const vec3 &defocus_disk_u, const vec3 &defocus_disk_v) {
     // Returns a random point in the camera defocus disk.
     auto p = random_in_unit_disk();
     return center + (p[0] * defocus_disk_u) + (p[1] * defocus_disk_v);
