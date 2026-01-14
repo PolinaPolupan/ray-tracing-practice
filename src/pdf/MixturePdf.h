@@ -13,11 +13,11 @@ public:
         p[1] = p1;
     }
 
-    [[nodiscard]] double value(const vec3d& direction) const override {
+    [[nodiscard]] double value(const vec3& direction) const override {
         return 0.5 * p[0]->value(direction) + 0.5 * p[1]->value(direction);
     }
 
-    [[nodiscard]] vec3d generate() const override {
+    [[nodiscard]] vec3 generate() const override {
         if (random_double() < 0.5)
             return p[0]->generate();
         return p[1]->generate();

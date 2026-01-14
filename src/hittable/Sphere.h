@@ -6,25 +6,25 @@ class Sphere final : public shape {
 public:
     // Stationary Sphere
     Sphere(const point3d& static_center, double radius, const shared_ptr<Material> &mat)
-      : center(static_center, vec3d(0,0,0)), radius(std::fmax(0,radius)), mat(mat) {
-        const auto rvec = vec3d(radius, radius, radius);
-        bbox = bounds3d(static_center - rvec, static_center + rvec);
+      : center(static_center, vec3(0,0,0)), radius(std::fmax(0,radius)), mat(mat) {
+        const auto rvec = vec3(radius, radius, radius);
+        bbox = bounds3(static_center - rvec, static_center + rvec);
     }
 
     // Moving Sphere
     Sphere(const point3d& center1, const point3d& center2, const double radius, const shared_ptr<Material> &mat)
       : center(center1, center2 - center1), radius(std::fmax(0,radius)), mat(mat) {
-        const auto rvec = vec3d(radius, radius, radius);
-        const bounds3d box1(center.at(0) - rvec, center.at(0) + rvec);
-        const bounds3d box2(center.at(1) - rvec, center.at(1) + rvec);
-        bbox = bounds3d(box1, box2);
+        const auto rvec = vec3(radius, radius, radius);
+        const bounds3 box1(center.at(0) - rvec, center.at(0) + rvec);
+        const bounds3 box2(center.at(1) - rvec, center.at(1) + rvec);
+        bbox = bounds3(box1, box2);
     }
 
-    [[nodiscard]] bounds3d bounds() const override { return bbox; }
+    [[nodiscard]] bounds3 bounds() const override { return bbox; }
 
     bool intersect(const ray& r, const interval ray_t, HitRecord& rec) const override {
         point3d current_center = center.at(r.time());
-        vec3d oc = current_center - r.o();
+        vec3 oc = current_center - r.o();
         const auto a = r.d().length_squared();
         const auto h = dot(r.d(), oc);
         const auto c = oc.length_squared() - radius*radius;
@@ -45,7 +45,7 @@ public:
 
         rec.t = root;
         rec.p = r.at(rec.t);
-        const vec3d outward_normal = (rec.p - current_center) / radius;
+        const vec3 outward_normal = (rec.p - current_center) / radius;
         rec.set_face_normal(r, outward_normal);
         get_sphere_uv(outward_normal, rec.u, rec.v);
         rec.mat = mat;
@@ -53,7 +53,7 @@ public:
         return true;
     }
 
-    [[nodiscard]] double pdf(const point3d& origin, const vec3d& direction) const override {
+    [[nodiscard]] double pdf(const point3d& origin, const vec3& direction) const override {
         // This method only works for stationary spheres.
         HitRecord rec;
         if (!this->intersect(ray(origin, direction), interval(0.001, infinity), rec))
@@ -66,8 +66,8 @@ public:
         return  1 / solid_angle;
     }
 
-    [[nodiscard]] vec3d random(const point3d& origin) const override {
-        const vec3d direction = center.at(0) - origin;
+    [[nodiscard]] vec3 random(const point3d& origin) const override {
+        const vec3 direction = center.at(0) - origin;
         auto distance_squared = direction.length_squared();
         const orthonormal_base uvw(direction);
         return uvw.transform(random_to_sphere(radius, distance_squared));
@@ -77,7 +77,7 @@ private:
     ray center;
     double radius;
     shared_ptr<Material> mat;
-    bounds3d bbox;
+    bounds3 bbox;
 
 private:
     static void get_sphere_uv(const point3d& p, double& u, double& v) {
@@ -95,7 +95,7 @@ private:
         v = theta / pi;
     }
 
-    static vec3d random_to_sphere(const double radius, const double distance_squared) {
+    static vec3 random_to_sphere(const double radius, const double distance_squared) {
         const auto r1 = random_double();
         const auto r2 = random_double();
         auto z = 1 + r2*(std::sqrt(1-radius*radius/distance_squared) - 1);

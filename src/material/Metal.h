@@ -13,7 +13,7 @@ public:
     explicit Metal(const color& albedo, const double fuzz) : albedo(albedo), fuzz(fuzz < 1 ? fuzz : 1)  {}
 
     [[nodiscard]] bool scatter(const ray& rIn, const HitRecord& rec, const ScatterRecord& sRec) const override {
-        vec3d reflected = reflect(rIn.d(), rec.normal);
+        vec3 reflected = reflect(rIn.d(), rec.normal);
         reflected = unit_vector(reflected) + (fuzz * random_unit_vector());
 
         sRec.attenuation = albedo;

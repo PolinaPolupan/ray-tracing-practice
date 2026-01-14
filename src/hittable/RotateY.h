@@ -27,7 +27,7 @@ public:
                     const auto newx =  cos_theta*x + sin_theta*z;
                     const auto newz = -sin_theta*x + cos_theta*z;
 
-                    vec3d tester(newx, y, newz);
+                    vec3 tester(newx, y, newz);
 
                     for (int c = 0; c < 3; c++) {
                         min[c] = std::fmin(min[c], tester[c]);
@@ -37,7 +37,7 @@ public:
             }
         }
 
-        bbox = bounds3d(min, max);
+        bbox = bounds3(min, max);
     }
 
     bool intersect(const ray& r, const interval ray_t, HitRecord& rec) const override {
@@ -50,7 +50,7 @@ public:
             (sin_theta * r.o().x()) + (cos_theta * r.o().z())
         );
 
-        const auto direction = vec3d(
+        const auto direction = vec3(
             (cos_theta * r.d().x()) - (sin_theta * r.d().z()),
             r.d().y(),
             (sin_theta * r.d().x()) + (cos_theta * r.d().z())
@@ -71,7 +71,7 @@ public:
             (-sin_theta * rec.p.x()) + (cos_theta * rec.p.z())
         );
 
-        rec.normal = vec3d(
+        rec.normal = vec3(
             (cos_theta * rec.normal.x()) + (sin_theta * rec.normal.z()),
             rec.normal.y(),
             (-sin_theta * rec.normal.x()) + (cos_theta * rec.normal.z())
@@ -80,13 +80,13 @@ public:
         return true;
     }
 
-    [[nodiscard]] bounds3d bounds() const override { return bbox; }
+    [[nodiscard]] bounds3 bounds() const override { return bbox; }
 
 private:
     shared_ptr<shape> object;
     double sin_theta;
     double cos_theta;
-    bounds3d bbox;
+    bounds3 bbox;
 };
 
 #endif //ROTATEY_H

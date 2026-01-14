@@ -21,9 +21,9 @@ public:
 
     BVHNode(std::vector<shared_ptr<shape>>& objects, size_t start, size_t end) {
         // Build the bounding box of the span of source objects.
-        bbox = bounds3d::empty;
+        bbox = bounds3::empty;
         for (size_t object_index=start; object_index < end; object_index++)
-            bbox = bounds3d(bbox, objects[object_index]->bounds());
+            bbox = bounds3(bbox, objects[object_index]->bounds());
 
         const int axis = bbox.longestAxis();
 
@@ -57,12 +57,12 @@ public:
         return hit_left || hit_right;
     }
 
-    [[nodiscard]] bounds3d bounds() const override { return bbox; }
+    [[nodiscard]] bounds3 bounds() const override { return bbox; }
 
 private:
     shared_ptr<shape> left;
     shared_ptr<shape> right;
-    bounds3d bbox;
+    bounds3 bbox;
 
     static bool box_compare(const shared_ptr<shape>& a, const shared_ptr<shape> &b, const int axis_index) {
         const auto a_axis_interval = a->bounds().axis_interval(axis_index);

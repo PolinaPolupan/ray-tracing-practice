@@ -30,8 +30,8 @@ void camera::init() {
     v = cross(w, u);
 
     // Calculate the vectors across the horizontal and down the vertical viewport edges.
-    const vec3d viewport_u = viewport_width * u;    // Vector across viewport horizontal edge
-    const vec3d viewport_v = viewport_height * -v;  // Vector down viewport vertical edge
+    const vec3 viewport_u = viewport_width * u;    // Vector across viewport horizontal edge
+    const vec3 viewport_v = viewport_height * -v;  // Vector down viewport vertical edge
 
     // Calculate the horizontal and vertical delta vectors from pixel to pixel.
     pixel_delta_u = viewport_u / image_width;

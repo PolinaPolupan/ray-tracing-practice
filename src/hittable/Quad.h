@@ -11,7 +11,7 @@
 
 class Quad final : public shape {
 public:
-    Quad(const point3d& Q, const vec3d& u, const vec3d& v, const std::shared_ptr<Material> &mat)
+    Quad(const point3d& Q, const vec3& u, const vec3& v, const std::shared_ptr<Material> &mat)
       : Q(Q), u(u), v(v), mat(mat)
     {
         const auto n = cross(u, v);
@@ -26,12 +26,12 @@ public:
 
     void bounding_box() {
         // Compute the bounding box of all four vertices.
-        const auto bbox_diagonal1 = bounds3d(Q, Q + u + v);
-        const auto bbox_diagonal2 = bounds3d(Q + u, Q + v);
-        bbox = bounds3d(bbox_diagonal1, bbox_diagonal2);
+        const auto bbox_diagonal1 = bounds3(Q, Q + u + v);
+        const auto bbox_diagonal2 = bounds3(Q + u, Q + v);
+        bbox = bounds3(bbox_diagonal1, bbox_diagonal2);
     }
 
-    [[nodiscard]] bounds3d bounds() const override { return bbox; }
+    [[nodiscard]] bounds3 bounds() const override { return bbox; }
 
     bool intersect(const ray& r, const interval ray_t, HitRecord& rec) const override {
         const auto denom = dot(normal, r.d());
@@ -46,7 +46,7 @@ public:
             return false;
 
         const auto intersection = r.at(t);
-        const vec3d planar_hitpt_vector = intersection - Q;
+        const vec3 planar_hitpt_vector = intersection - Q;
         const auto alpha = dot(w, cross(planar_hitpt_vector, v));
         const auto beta = dot(w, cross(u, planar_hitpt_vector));
 
@@ -76,7 +76,7 @@ public:
         return true;
     }
 
-    [[nodiscard]] double pdf(const point3d& origin, const vec3d& direction) const override {
+    [[nodiscard]] double pdf(const point3d& origin, const vec3& direction) const override {
         HitRecord rec;
         if (!this->intersect(ray(origin, direction), interval(0.001, infinity), rec))
             return 0;
@@ -87,18 +87,18 @@ public:
         return distance_squared / (cosine * area);
     }
 
-    [[nodiscard]] vec3d random(const point3d& origin) const override {
+    [[nodiscard]] vec3 random(const point3d& origin) const override {
         const auto p = Q + (random_double() * u) + (random_double() * v);
         return p - origin;
     }
 
 private:
     point3d Q;
-    vec3d u, v;
-    vec3d w;
+    vec3 u, v;
+    vec3 w;
     shared_ptr<Material> mat;
-    bounds3d bbox;
-    vec3d normal;
+    bounds3 bbox;
+    vec3 normal;
     double D;
     double area;
 };
@@ -113,9 +113,9 @@ inline shared_ptr<HittableList> box(const point3d& a, const point3d& b, const sh
     const auto min = point3d(std::fmin(a.x(),b.x()), std::fmin(a.y(),b.y()), std::fmin(a.z(),b.z()));
     const auto max = point3d(std::fmax(a.x(),b.x()), std::fmax(a.y(),b.y()), std::fmax(a.z(),b.z()));
 
-    auto dx = vec3d(max.x() - min.x(), 0, 0);
-    auto dy = vec3d(0, max.y() - min.y(), 0);
-    auto dz = vec3d(0, 0, max.z() - min.z());
+    auto dx = vec3(max.x() - min.x(), 0, 0);
+    auto dy = vec3(0, max.y() - min.y(), 0);
+    auto dz = vec3(0, 0, max.z() - min.z());
 
     sides->add(make_shared<Quad>(point3d(min.x(), min.y(), max.z()),  dx,  dy, mat)); // front
     sides->add(make_shared<Quad>(point3d(max.x(), min.y(), max.z()), -dz,  dy, mat)); // right

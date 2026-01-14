@@ -10,14 +10,14 @@
 
 class CosinePdf final : public PDF {
 public:
-    explicit CosinePdf(const vec3d& w) : uvw(w) {}
+    explicit CosinePdf(const vec3& w) : uvw(w) {}
 
-    [[nodiscard]] double value(const vec3d& direction) const override {
+    [[nodiscard]] double value(const vec3& direction) const override {
         const auto cosine_theta = dot(unit_vector(direction), uvw.w());
         return std::fmax(0, cosine_theta/pi);
     }
 
-    [[nodiscard]] vec3d generate() const override {
+    [[nodiscard]] vec3 generate() const override {
         return uvw.transform(sample_uniform_hemisphere());
     }
 

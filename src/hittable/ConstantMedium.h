@@ -51,14 +51,14 @@ public:
         rec.t = rec1.t + hit_distance / ray_length;
         rec.p = r.at(rec.t);
 
-        rec.normal = vec3d(1,0,0);  // arbitrary
+        rec.normal = vec3(1,0,0);  // arbitrary
         rec.front_face = true;     // also arbitrary
         rec.mat = phase_function;
 
         return true;
     }
 
-    [[nodiscard]] bounds3d bounds() const override { return boundary->bounds(); }
+    [[nodiscard]] bounds3 bounds() const override { return boundary->bounds(); }
 
 private:
     shared_ptr<shape> boundary;

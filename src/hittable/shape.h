@@ -9,13 +9,13 @@ public:
 
     virtual bool intersect(const ray& r, interval ray_t, HitRecord& rec) const = 0;
 
-    [[nodiscard]] virtual bounds3d bounds() const = 0;
+    [[nodiscard]] virtual bounds3 bounds() const = 0;
 
-    [[nodiscard]] virtual double pdf(const point3d& origin, const vec3d& direction) const {
+    [[nodiscard]] virtual double pdf(const point3d& origin, const vec3& direction) const {
         return 0.0;
     }
 
-    [[nodiscard]] virtual vec3d random(const point3d& origin) const {
+    [[nodiscard]] virtual vec3 random(const point3d& origin) const {
         return {1,0,0};
     }
 };

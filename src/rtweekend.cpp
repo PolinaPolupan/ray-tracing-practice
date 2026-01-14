@@ -23,17 +23,17 @@ void cornell_box() {
     auto green = make_shared<Lambertian>(color(.12, .45, .15));
     auto light = make_shared<DiffuseLight>(color(15, 15, 15));
 
-    world.add(make_shared<Quad>(point3d(555,0,0), vec3d(0,555,0), vec3d(0,0,555), green));
-    world.add(make_shared<Quad>(point3d(0,0,0), vec3d(0,555,0), vec3d(0,0,555), red));
-    world.add(make_shared<Quad>(point3d(343, 554, 332), vec3d(-130,0,0), vec3d(0,0,-105), light));
-    world.add(make_shared<Quad>(point3d(0,0,0), vec3d(555,0,0), vec3d(0,0,555), white));
-    world.add(make_shared<Quad>(point3d(555,555,555), vec3d(-555,0,0), vec3d(0,0,-555), white));
-    world.add(make_shared<Quad>(point3d(0,0,555), vec3d(555,0,0), vec3d(0,555,0), white));
+    world.add(make_shared<Quad>(point3d(555,0,0), vec3(0,555,0), vec3(0,0,555), green));
+    world.add(make_shared<Quad>(point3d(0,0,0), vec3(0,555,0), vec3(0,0,555), red));
+    world.add(make_shared<Quad>(point3d(343, 554, 332), vec3(-130,0,0), vec3(0,0,-105), light));
+    world.add(make_shared<Quad>(point3d(0,0,0), vec3(555,0,0), vec3(0,0,555), white));
+    world.add(make_shared<Quad>(point3d(555,555,555), vec3(-555,0,0), vec3(0,0,-555), white));
+    world.add(make_shared<Quad>(point3d(0,0,555), vec3(555,0,0), vec3(0,555,0), white));
 
     // Box
     shared_ptr<shape> box1 = box(point3d(0,0,0), point3d(165,330,165), white);
     box1 = make_shared<RotateY>(box1, 15);
-    box1 = make_shared<Translate>(box1, vec3d(265,0,295));
+    box1 = make_shared<Translate>(box1, vec3(265,0,295));
     world.add(box1);
 
     // Glass Sphere
@@ -43,7 +43,7 @@ void cornell_box() {
     // Light Sources
     HittableList lights;
     auto empty_material = shared_ptr<Material>();
-    lights.add(make_shared<Quad>(point3d(343,554,332), vec3d(-130,0,0), vec3d(0,0,-105), empty_material));
+    lights.add(make_shared<Quad>(point3d(343,554,332), vec3(-130,0,0), vec3(0,0,-105), empty_material));
     lights.add(make_shared<Sphere>(point3d(190, 90, 190), 90, empty_material));
 
     film film;
@@ -56,7 +56,7 @@ void cornell_box() {
     cam.vfov     = 40;
     cam.lookfrom = point3d(278, 278, -800);
     cam.lookat   = point3d(278, 278, 0);
-    cam.vup      = vec3d(0,1,0);
+    cam.vup      = vec3(0,1,0);
 
     cam.defocus_angle = 0;
 

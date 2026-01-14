@@ -44,15 +44,15 @@ inline int random_int(const int min, const int max) {
     return static_cast<int>(random_double(min, max + 1));
 }
 
-inline vec3d random_in_unit_disk() {
+inline vec3 random_in_unit_disk() {
     while (true) {
-        auto p = vec3d(random_double(-1,1), random_double(-1,1), 0);
+        auto p = vec3(random_double(-1,1), random_double(-1,1), 0);
         if (p.length_squared() < 1)
             return p;
     }
 }
 
-inline vec3d sample_uniform_hemisphere() {
+inline vec3 sample_uniform_hemisphere() {
     const auto r1 = random_double();
     const auto r2 = random_double();
 
@@ -64,18 +64,18 @@ inline vec3d sample_uniform_hemisphere() {
     return {x, y, z};
 }
 
-inline vec3d random(const double min, const double max) {
+inline vec3 random(const double min, const double max) {
     return {random_double(min,max), random_double(min,max), random_double(min,max)};
 }
 
-[[nodiscard]] vec3d sample_square_stratified(int s_i, int s_j, double recip_sqrt_spp);
+[[nodiscard]] vec3 sample_square_stratified(int s_i, int s_j, double recip_sqrt_spp);
 
-[[nodiscard]] inline vec3d sample_square() {
+[[nodiscard]] inline vec3 sample_square() {
     // Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
     return {random_double() - 0.5, random_double() - 0.5, 0};
 }
 
-[[nodiscard]] inline point3d defocus_disk_sample(const point3d &center, const vec3d &defocus_disk_u, const vec3d &defocus_disk_v) {
+[[nodiscard]] inline point3d defocus_disk_sample(const point3d &center, const vec3 &defocus_disk_u, const vec3 &defocus_disk_v) {
     // Returns a random point in the camera defocus disk.
     auto p = random_in_unit_disk();
     return center + (p[0] * defocus_disk_u) + (p[1] * defocus_disk_v);

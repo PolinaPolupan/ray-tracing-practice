@@ -5,24 +5,24 @@
 
 class ray;
 
-class vec3d {
+class vec3 {
 public:
     double e[3];
 
-    vec3d();
-    vec3d(double e0, double e1, double e2);
+    vec3();
+    vec3(double e0, double e1, double e2);
 
     [[nodiscard]] double x() const { return e[0]; }
     [[nodiscard]] double y() const { return e[1]; }
     [[nodiscard]] double z() const { return e[2]; }
 
-    vec3d operator-() const;
+    vec3 operator-() const;
     double operator[](const int i) const { return e[i]; }
     double& operator[](const int i) { return e[i]; }
 
-    vec3d& operator+=(const vec3d& v);
-    vec3d& operator*=(double t);
-    vec3d& operator/=(double t);
+    vec3& operator+=(const vec3& v);
+    vec3& operator*=(double t);
+    vec3& operator/=(double t);
 
     [[nodiscard]] double length() const;
     [[nodiscard]] double length_squared() const;
@@ -30,23 +30,23 @@ public:
 };
 
 /* free functions */
-vec3d operator+(const vec3d& u, const vec3d& v);
-vec3d operator-(const vec3d& u, const vec3d& v);
-vec3d operator*(double t, const vec3d& v);
-vec3d operator*(const vec3d& v, double t);
-vec3d operator*(const vec3d& u, const vec3d& v);
-vec3d operator/(const vec3d& v, double t);
+vec3 operator+(const vec3& u, const vec3& v);
+vec3 operator-(const vec3& u, const vec3& v);
+vec3 operator*(double t, const vec3& v);
+vec3 operator*(const vec3& v, double t);
+vec3 operator*(const vec3& u, const vec3& v);
+vec3 operator/(const vec3& v, double t);
 
-double dot(const vec3d& u, const vec3d& v);
-vec3d cross(const vec3d& u, const vec3d& v);
-vec3d unit_vector(const vec3d& v);
-vec3d reflect(const vec3d& v, const vec3d& n);
-vec3d refract(const vec3d& uv, const vec3d& n, double etai_over_etat);
+double dot(const vec3& u, const vec3& v);
+vec3 cross(const vec3& u, const vec3& v);
+vec3 unit_vector(const vec3& v);
+vec3 reflect(const vec3& v, const vec3& n);
+vec3 refract(const vec3& uv, const vec3& n, double etai_over_etat);
 
-std::ostream& operator<<(std::ostream& out, const vec3d& v);
+std::ostream& operator<<(std::ostream& out, const vec3& v);
 
-using point3d = vec3d;
-using color   = vec3d;
+using point3d = vec3;
+using color   = vec3;
 
 /* ---------------- interval ---------------- */
 
@@ -72,42 +72,42 @@ interval operator+(double displacement, const interval& ival);
 
 /* ---------------- bounds3d ---------------- */
 
-class bounds3d {
+class bounds3 {
 public:
     interval x, y, z;
 
-    bounds3d();
-    bounds3d(const interval& x, const interval& y, const interval& z);
-    bounds3d(const point3d& a, const point3d& b);
-    bounds3d(const bounds3d& box0, const bounds3d& box1);
+    bounds3();
+    bounds3(const interval& x, const interval& y, const interval& z);
+    bounds3(const point3d& a, const point3d& b);
+    bounds3(const bounds3& box0, const bounds3& box1);
 
     [[nodiscard]] const interval& axis_interval(int n) const;
     [[nodiscard]] int longestAxis() const;
     [[nodiscard]] bool intersect(const ray& r, interval ray_t) const;
 
-    static const bounds3d empty, universe;
+    static const bounds3 empty, universe;
 
 private:
     void padToMinimums();
 };
 
-bounds3d operator+(const bounds3d& bbox, const vec3d& offset);
-bounds3d operator+(const vec3d& offset, const bounds3d& bbox);
+bounds3 operator+(const bounds3& bbox, const vec3& offset);
+bounds3 operator+(const vec3& offset, const bounds3& bbox);
 
 /* ---------------- ONB ---------------- */
 
 class orthonormal_base {
 public:
-    explicit orthonormal_base(const vec3d& n);
+    explicit orthonormal_base(const vec3& n);
 
-    [[nodiscard]] const vec3d& u() const { return axis[0]; }
-    [[nodiscard]] const vec3d& v() const { return axis[1]; }
-    [[nodiscard]] const vec3d& w() const { return axis[2]; }
+    [[nodiscard]] const vec3& u() const { return axis[0]; }
+    [[nodiscard]] const vec3& v() const { return axis[1]; }
+    [[nodiscard]] const vec3& w() const { return axis[2]; }
 
-    [[nodiscard]] vec3d transform(const vec3d& v) const;
+    [[nodiscard]] vec3 transform(const vec3& v) const;
 
 private:
-    vec3d axis[3];
+    vec3 axis[3];
 };
 
 #endif

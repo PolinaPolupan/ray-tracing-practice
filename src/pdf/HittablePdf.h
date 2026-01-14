@@ -13,11 +13,11 @@ public:
       : objects(objects), origin(origin)
     {}
 
-    [[nodiscard]] double value(const vec3d& direction) const override {
+    [[nodiscard]] double value(const vec3& direction) const override {
         return objects.pdf(origin, direction);
     }
 
-    [[nodiscard]] vec3d generate() const override {
+    [[nodiscard]] vec3 generate() const override {
         return objects.random(origin);
     }
 

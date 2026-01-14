@@ -17,12 +17,12 @@ public:
         sRec.skipPdf = true;
         const double ri = rec.front_face ? (1.0/refraction_index) : refraction_index;
 
-        const vec3d unit_direction = unit_vector(rIn.d());
+        const vec3 unit_direction = unit_vector(rIn.d());
         const double cos_theta = std::fmin(dot(-unit_direction, rec.normal), 1.0);
         const double sin_theta = std::sqrt(1.0 - cos_theta*cos_theta);
 
         const bool cannot_refract = ri * sin_theta > 1.0;
-        vec3d direction;
+        vec3 direction;
 
         if (cannot_refract || reflectance(cos_theta, ri) > random_double())
             direction = reflect(unit_direction, rec.normal);

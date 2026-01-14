@@ -10,8 +10,8 @@ class PDF {
 public:
     virtual ~PDF() = default;
 
-    [[nodiscard]] virtual double value(const vec3d& direction) const = 0;
-    [[nodiscard]] virtual vec3d generate() const = 0;
+    [[nodiscard]] virtual double value(const vec3& direction) const = 0;
+    [[nodiscard]] virtual vec3 generate() const = 0;
 };
 
 #endif //PDF_H

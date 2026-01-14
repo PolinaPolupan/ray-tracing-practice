@@ -9,7 +9,7 @@
 
 class Translate final : public shape {
 public:
-    Translate(const shared_ptr<shape>& object, const vec3d& offset)
+    Translate(const shared_ptr<shape>& object, const vec3& offset)
      : object(object), offset(offset)
     {
         bbox = object->bounds() + offset;
@@ -29,12 +29,12 @@ public:
         return true;
     }
 
-    [[nodiscard]] bounds3d bounds() const override { return bbox; }
+    [[nodiscard]] bounds3 bounds() const override { return bbox; }
 
 private:
     shared_ptr<shape> object;
-    vec3d offset;
-    bounds3d bbox;
+    vec3 offset;
+    bounds3 bbox;
 };
 
 #endif //TRANSLATE_H

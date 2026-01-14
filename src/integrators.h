@@ -18,7 +18,7 @@ public:
     void render(const HittableList& world, const HittableList& lights);
 
 private:
-    [[nodiscard]] vec3d li(const ray& r, int depth, const HittableList& world, const HittableList& lights) const;
+    [[nodiscard]] vec3 li(const ray& r, int depth, const HittableList& world, const HittableList& lights) const;
 
 public:
     camera cam;
@@ -27,7 +27,7 @@ public:
 
     int    samples_per_pixel = 10;   // Count of random samples for each pixel
     int    max_depth         = 10;   // Maximum number of ray bounces into scene
-    vec3d  background{};               // Scene background color
+    vec3  background{};               // Scene background color
 };
 
 
