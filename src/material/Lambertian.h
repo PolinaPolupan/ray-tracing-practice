@@ -13,7 +13,7 @@ public:
     explicit Lambertian(const color& albedo) : tex(make_shared<SolidColor>(albedo)) {}
     explicit Lambertian(const shared_ptr<Texture> &tex) : tex(tex) {}
 
-    [[nodiscard]] bool scatter(const ray& rIn, const HitRecord& rec, const ScatterRecord& sRec) const override {
+    [[nodiscard]] bool scatter(const ray& rIn, const HitRecord& rec, const ScatterRecord& sRec, const std::shared_ptr<sampler>& sampler) const override {
         sRec.attenuation = tex->value(rec.u, rec.v, rec.p);
         sRec.pdfPtr = make_shared<CosinePdf>(rec.normal);
         sRec.skipPdf = false;

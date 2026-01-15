@@ -24,37 +24,17 @@ public:
         return distribution(generator);
     }
 
+    point2 gen_2d() override {
+        return point2(gen_1d(), gen_1d());
+    }
+
 private:
     std::mt19937 generator;
 };
 
-inline double random_double() {
-    static std::uniform_real_distribution<double> distribution(0.0, 1.0);
-    static std::mt19937 generator;
-    return distribution(generator);
-}
-
-inline double random_double(const double min, const double max) {
-    // Returns a random real in [min,max).
-    return min + (max-min)*random_double();
-}
-
-inline int random_int(const int min, const int max) {
-    // Returns a random integer in [min,max].
-    return static_cast<int>(random_double(min, max + 1));
-}
-
-inline vec3 random_in_unit_disk() {
-    while (true) {
-        auto p = vec3(random_double(-1,1), random_double(-1,1), 0);
-        if (p.length_squared() < 1)
-            return p;
-    }
-}
-
-inline vec3 sample_uniform_hemisphere() {
-    const auto r1 = random_double();
-    const auto r2 = random_double();
+inline vec3 sample_uniform_hemisphere(const point2 u) {
+    const auto r1 = u.x;
+    const auto r2 = u.y;
 
     const auto phi = 2*pi*r1;
     auto x = std::cos(phi) * std::sqrt(r2);
@@ -64,21 +44,36 @@ inline vec3 sample_uniform_hemisphere() {
     return {x, y, z};
 }
 
-inline vec3 random(const double min, const double max) {
-    return {random_double(min,max), random_double(min,max), random_double(min,max)};
+[[nodiscard]] vec3 sample_square_stratified(point2 u, int s_i, int s_j, double recip_sqrt_spp);
+
+inline point3 defocus_disk_sample(
+    const std::shared_ptr<sampler>& samp,
+    const point3& center,
+    const vec3& du,
+    const vec3& dv
+) {
+    vec3 p;
+    do {
+        p = vec3(
+            samp->gen_1d() * 2 - 1,
+            samp->gen_1d() * 2 - 1,
+            0
+        );
+    } while (p.length_squared() >= 1);
+
+    return center + p.x() * du + p.y() * dv;
 }
 
-[[nodiscard]] vec3 sample_square_stratified(int s_i, int s_j, double recip_sqrt_spp);
+inline vec3 random_to_sphere(const point2 u, const double radius, const double distance_squared) {
+    const auto r1 = u.x;
+    const auto r2 = u.y;
+    auto z = 1 + r2*(std::sqrt(1-radius*radius/distance_squared) - 1);
 
-[[nodiscard]] inline vec3 sample_square() {
-    // Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
-    return {random_double() - 0.5, random_double() - 0.5, 0};
-}
+    const auto phi = 2*pi*r1;
+    auto x = std::cos(phi) * std::sqrt(1-z*z);
+    auto y = std::sin(phi) * std::sqrt(1-z*z);
 
-[[nodiscard]] inline point3 defocus_disk_sample(const point3 &center, const vec3 &defocus_disk_u, const vec3 &defocus_disk_v) {
-    // Returns a random point in the camera defocus disk.
-    auto p = random_in_unit_disk();
-    return center + (p[0] * defocus_disk_u) + (p[1] * defocus_disk_v);
+    return {x, y, z};
 }
 
 #endif //SAMPLING_H

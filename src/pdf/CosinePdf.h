@@ -7,7 +7,6 @@
 #include <cmath>
 
 
-
 class CosinePdf final : public PDF {
 public:
     explicit CosinePdf(const vec3& w) : uvw(w) {}
@@ -17,8 +16,8 @@ public:
         return std::fmax(0, cosine_theta/pi);
     }
 
-    [[nodiscard]] vec3 generate() const override {
-        return uvw.transform(sample_uniform_hemisphere());
+    [[nodiscard]] vec3 generate(const std::shared_ptr<sampler>& sampler) const override {
+        return uvw.transform(sample_uniform_hemisphere(sampler->gen_2d()));
     }
 
 private:

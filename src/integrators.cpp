@@ -11,7 +11,7 @@
 
 
 void integrator::init() {
-    cam.init();
+    camera_->init();
 
     sqrt_spp = static_cast<int>(std::sqrt(samples_per_pixel));
     pixel_samples_scale = 1.0 / (sqrt_spp * sqrt_spp);
@@ -21,19 +21,20 @@ void integrator::render(const HittableList& world, const HittableList& lights) {
     init();
 
     // Render
-    std::cout << "P3\n" << cam.image_width << " " << cam.image_height << "\n255\n";
+    std::cout << "P3\n" << camera_->image_width << " " << camera_->image_height << "\n255\n";
 
-    for (int j = 0; j < cam.image_height; j++) {
-        std::clog << "\rScanlines remaining: " << (cam.image_height - j) << ' ' << std::flush;
-        for (int i = 0; i < cam.image_width; i++) {
+    for (int j = 0; j < camera_->image_height; j++) {
+        std::clog << "\rScanlines remaining: " << (camera_->image_height - j) << ' ' << std::flush;
+        for (int i = 0; i < camera_->image_width; i++) {
             color pixel_color(0,0,0);
             for (int s_j = 0; s_j < sqrt_spp; s_j++) {
                 for (int s_i = 0; s_i < sqrt_spp; s_i++) {
-                    ray r = cam.gen_ray(i, j, s_i, s_j);
+                    const point2 u = sampler_->gen_2d();
+                    ray r = camera_->gen_ray(sampler_, u, i, j, s_i, s_j);
                     pixel_color += li(r, max_depth, world, lights);
                 }
             }
-            cam.write_color(std::cout, pixel_samples_scale * pixel_color);
+            camera_->write_color(std::cout, pixel_samples_scale * pixel_color);
         }
     }
 
@@ -54,7 +55,7 @@ color integrator::li(const ray &r, int depth, const HittableList &world, const H
     ScatterRecord sRec;
     const color color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
 
-    if (!rec.mat->scatter(r, rec, sRec))
+    if (!rec.mat->scatter(r, rec, sRec, sampler_))
         return color_from_emission;
 
     if (sRec.skipPdf) {
@@ -64,7 +65,7 @@ color integrator::li(const ray &r, int depth, const HittableList &world, const H
     const auto light_ptr = make_shared<HittablePdf>(lights, rec.p);
     const MixturePdf p(light_ptr, sRec.pdfPtr);
 
-    const auto scattered = ray(rec.p, p.generate(), r.time());
+    const auto scattered = ray(rec.p, p.generate(sampler_), r.time());
     auto pdf_value = p.value(scattered.d());
 
     const double scattering_pdf = rec.mat->scatteringPdf(r, rec, scattered);

@@ -3,6 +3,7 @@
 
 #include "film.h"
 #include "math.h"
+#include "sampling.h"
 
 class ray;
 
@@ -36,7 +37,7 @@ public:
 
     void init();
 
-    [[nodiscard]] ray gen_ray(int i, int j, int s_i, int s_j) const;
+    [[nodiscard]] ray gen_ray(const std::shared_ptr<sampler>& sampler, point2 u, int i, int j, int s_i, int s_j) const;
 
     void write_color(std::ostream& out, const color& pixel_color) const;
 

@@ -17,8 +17,8 @@ public:
         return objects.pdf(origin, direction);
     }
 
-    [[nodiscard]] vec3 generate() const override {
-        return objects.random(origin);
+    [[nodiscard]] vec3 generate(const std::shared_ptr<sampler>& sampler) const override {
+        return objects.random(origin, sampler);
     }
 
 private:

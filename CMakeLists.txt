@@ -36,7 +36,6 @@ add_executable (inOneWeekend
         src/hittable/Translate.h
         src/hittable/RotateY.h
         src/material/Isotropic.h
-        src/hittable/ConstantMedium.h
         src/pdf/PDF.h
         src/pdf/SpherePdf.h
         src/pdf/CosinePdf.h

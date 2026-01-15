@@ -7,13 +7,14 @@
 
 #include "cameras.h"
 #include "math.h"
+#include "sampling.h"
 
 class ray;
 class HittableList;
 
 class integrator {
 public:
-    explicit integrator(const camera &camera): cam(camera) {}
+    explicit integrator(const std::shared_ptr<camera>&camera, const std::shared_ptr<sampler>& sampler): camera_(camera), sampler_(sampler) {}
     void init();
     void render(const HittableList& world, const HittableList& lights);
 
@@ -21,7 +22,8 @@ private:
     [[nodiscard]] vec3 li(const ray& r, int depth, const HittableList& world, const HittableList& lights) const;
 
 public:
-    camera cam;
+    std::shared_ptr<camera> camera_;
+    std::shared_ptr<sampler> sampler_;
     double pixel_samples_scale = 0;  // Color scale factor for a sum of pixel samples
     int    sqrt_spp = 0;             // Square root of number of samples per pixel
 

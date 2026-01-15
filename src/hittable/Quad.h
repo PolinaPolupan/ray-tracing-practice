@@ -87,8 +87,8 @@ public:
         return distance_squared / (cosine * area);
     }
 
-    [[nodiscard]] vec3 random(const point3& origin) const override {
-        const auto p = Q + (random_double() * u) + (random_double() * v);
+    [[nodiscard]] vec3 random(const point3& origin, const std::shared_ptr<sampler>& sampler) const override {
+        const auto p = Q + (sampler->gen_1d() * u) + (sampler->gen_1d() * v);
         return p - origin;
     }
 

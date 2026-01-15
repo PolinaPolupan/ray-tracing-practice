@@ -1,6 +1,7 @@
 #ifndef HITTABLE_H
 #define HITTABLE_H
 #include "HitRecord.h"
+#include "sampling.h"
 
 
 class shape {
@@ -15,7 +16,7 @@ public:
         return 0.0;
     }
 
-    [[nodiscard]] virtual vec3 random(const point3& origin) const {
+    [[nodiscard]] virtual vec3 random(const point3& origin, const std::shared_ptr<sampler>& sampler) const {
         return {1,0,0};
     }
 };

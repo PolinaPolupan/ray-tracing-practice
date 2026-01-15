@@ -5,6 +5,8 @@
 #ifndef SPHEREPDF_H
 #define SPHEREPDF_H
 
+#include "PDF.h"
+
 
 class SpherePdf final : public PDF {
 public:
@@ -14,7 +16,7 @@ public:
         return 1/(4 * pi);
     }
 
-    [[nodiscard]] vec3 generate() const override {
+    [[nodiscard]] vec3 generate(const std::shared_ptr<sampler>& sampler) const override {
         return random_unit_vector();
     }
 };

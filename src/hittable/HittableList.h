@@ -51,9 +51,11 @@ public:
         return sum;
     }
 
-    [[nodiscard]] vec3 random(const point3& origin) const override {
-        const auto int_size = static_cast<int>(objects.size());
-        return objects[random_int(0, int_size-1)]->random(origin);
+    [[nodiscard]] vec3 random(const point3& origin, const std::shared_ptr<sampler>& sampler) const override {
+        int idx = static_cast<int>(sampler->gen_1d() * objects.size());
+        idx = std::min(idx, static_cast<int>(objects.size()) - 1);
+
+        return objects[idx]->random(origin, sampler);
     }
 
 private:

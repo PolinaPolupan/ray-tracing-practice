@@ -47,16 +47,16 @@ void camera::init() {
     defocus_disk_v = v * defocus_radius;
 }
 
-ray camera::gen_ray(const int i, const int j, const int s_i, const int s_j) const {
+ray camera::gen_ray(const std::shared_ptr<sampler>& sampler, point2 u, const int i, const int j, const int s_i, const int s_j) const {
     // Construct a camera ray originating from the defocus disk and directed at a randomly
     // sampled point around the pixel location i, j for stratified sample square s_i, s_j.
 
-    const auto offset = sample_square_stratified(s_i, s_j, recip_sqrt_spp);
+    const auto offset = sample_square_stratified(u, s_i, s_j, recip_sqrt_spp);
     const auto pixel_sample = pixel00_loc
                       + ((i + offset.x()) * pixel_delta_u)
                       + ((j + offset.y()) * pixel_delta_v);
 
-    auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample(center, defocus_disk_u, defocus_disk_v);
+    auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample(sampler, center, defocus_disk_u, defocus_disk_v);
     const auto ray_direction = pixel_sample - ray_origin;
 
     return {ray_origin, ray_direction};

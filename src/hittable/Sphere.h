@@ -1,5 +1,6 @@
 #ifndef SPHERE_H
 #define SPHERE_H
+#include "sampling.h"
 
 
 class Sphere final : public shape {
@@ -66,11 +67,11 @@ public:
         return  1 / solid_angle;
     }
 
-    [[nodiscard]] vec3 random(const point3& origin) const override {
+    [[nodiscard]] vec3 random(const point3& origin, const std::shared_ptr<sampler>& sampler) const override {
         const vec3 direction = center.at(0) - origin;
         auto distance_squared = direction.length_squared();
         const orthonormal_base uvw(direction);
-        return uvw.transform(random_to_sphere(radius, distance_squared));
+        return uvw.transform(random_to_sphere(sampler->gen_2d(), radius, distance_squared));
     }
 
 private:
@@ -93,18 +94,6 @@ private:
 
         u = phi / (2*pi);
         v = theta / pi;
-    }
-
-    static vec3 random_to_sphere(const double radius, const double distance_squared) {
-        const auto r1 = random_double();
-        const auto r2 = random_double();
-        auto z = 1 + r2*(std::sqrt(1-radius*radius/distance_squared) - 1);
-
-        const auto phi = 2*pi*r1;
-        auto x = std::cos(phi) * std::sqrt(1-z*z);
-        auto y = std::sin(phi) * std::sqrt(1-z*z);
-
-        return {x, y, z};
     }
 };
 

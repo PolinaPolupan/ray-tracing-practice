@@ -14,7 +14,7 @@ public:
         return 0;
     }
 
-    [[nodiscard]] virtual bool scatter(const ray& rIn, const HitRecord& rec, const ScatterRecord& sRec) const {
+    [[nodiscard]] virtual bool scatter(const ray& rIn, const HitRecord& rec, const ScatterRecord& sRec, const std::shared_ptr<sampler>& sampler) const {
         return false;
     }
 
