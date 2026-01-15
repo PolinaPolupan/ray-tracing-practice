@@ -13,14 +13,14 @@ public:
         p[1] = p1;
     }
 
-    [[nodiscard]] double value(const Vec3& direction) const override {
+    [[nodiscard]] double value(const vec3& direction) const override {
         return 0.5 * p[0]->value(direction) + 0.5 * p[1]->value(direction);
     }
 
-    [[nodiscard]] Vec3 generate() const override {
-        if (random_double() < 0.5)
-            return p[0]->generate();
-        return p[1]->generate();
+    [[nodiscard]] vec3 generate(const std::shared_ptr<sampler>& sampler) const override {
+        if (sampler->gen_1d() < 0.5)
+            return p[0]->generate(sampler);
+        return p[1]->generate(sampler);
     }
 
 private:

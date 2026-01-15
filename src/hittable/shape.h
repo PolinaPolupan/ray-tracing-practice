@@ -1,9 +1,7 @@
 #ifndef HITTABLE_H
 #define HITTABLE_H
-#include "bounds3d.h"
 #include "HitRecord.h"
-#include "interval.h"
-#include "ray.h"
+#include "sampling.h"
 
 
 class shape {
@@ -12,13 +10,13 @@ public:
 
     virtual bool intersect(const ray& r, interval ray_t, HitRecord& rec) const = 0;
 
-    [[nodiscard]] virtual bounds3d bounds() const = 0;
+    [[nodiscard]] virtual bounds3 bounds() const = 0;
 
-    [[nodiscard]] virtual double pdf(const Point3& origin, const Vec3& direction) const {
+    [[nodiscard]] virtual double pdf(const point3& origin, const vec3& direction) const {
         return 0.0;
     }
 
-    [[nodiscard]] virtual Vec3 random(const Point3& origin) const {
+    [[nodiscard]] virtual vec3 random(const point3& origin, const std::shared_ptr<sampler>& sampler) const {
         return {1,0,0};
     }
 };

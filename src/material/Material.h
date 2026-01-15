@@ -14,11 +14,11 @@ public:
         return 0;
     }
 
-    [[nodiscard]] virtual bool scatter(const ray& rIn, const HitRecord& rec, const ScatterRecord& sRec) const {
+    [[nodiscard]] virtual bool scatter(const ray& rIn, const HitRecord& rec, const ScatterRecord& sRec, const std::shared_ptr<sampler>& sampler) const {
         return false;
     }
 
-    [[nodiscard]] virtual Color emitted(const ray& r_in, const HitRecord& rec, double u, double v, const Point3& p) const {
+    [[nodiscard]] virtual color emitted(const ray& r_in, const HitRecord& rec, double u, double v, const point3& p) const {
         return {0,0,0};
     }
 };

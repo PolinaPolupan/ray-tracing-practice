@@ -4,7 +4,6 @@
 
 #include "film.h"
 
-#include "interval.h"
 
 double film::linear_to_gamma(const double linear_component) {
     if (linear_component > 0)
@@ -13,7 +12,7 @@ double film::linear_to_gamma(const double linear_component) {
     return 0;
 }
 
-void film::write_color(std::ostream &out, const Color &pixel_color) {
+void film::write_color(std::ostream &out, const color &pixel_color) {
     auto r = pixel_color.x();
     auto g = pixel_color.y();
     auto b = pixel_color.z();

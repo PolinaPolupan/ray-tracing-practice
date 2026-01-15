@@ -5,6 +5,7 @@
 #ifndef HITTABLELIST_H
 #define HITTABLELIST_H
 
+#include "sampling.h"
 #include "shape.h"
 
 
@@ -19,7 +20,7 @@ public:
 
     void add(const shared_ptr<shape>& object) {
         objects.push_back(object);
-        bbox = bounds3d(bbox, object->bounds());
+        bbox = bounds3(bbox, object->bounds());
     }
 
     bool intersect(const ray& r, const interval ray_t, HitRecord& rec) const override {
@@ -38,9 +39,9 @@ public:
         return hit_anything;
     }
 
-    [[nodiscard]] bounds3d bounds() const override { return bbox; }
+    [[nodiscard]] bounds3 bounds() const override { return bbox; }
 
-    [[nodiscard]] double pdf(const Point3& origin, const Vec3& direction) const override {
+    [[nodiscard]] double pdf(const point3& origin, const vec3& direction) const override {
         const auto weight = 1.0 / objects.size();
         auto sum = 0.0;
 
@@ -50,13 +51,15 @@ public:
         return sum;
     }
 
-    [[nodiscard]] Vec3 random(const Point3& origin) const override {
-        const auto int_size = static_cast<int>(objects.size());
-        return objects[random_int(0, int_size-1)]->random(origin);
+    [[nodiscard]] vec3 random(const point3& origin, const std::shared_ptr<sampler>& sampler) const override {
+        int idx = static_cast<int>(sampler->gen_1d() * objects.size());
+        idx = std::min(idx, static_cast<int>(objects.size()) - 1);
+
+        return objects[idx]->random(origin, sampler);
     }
 
 private:
-    bounds3d bbox;
+    bounds3 bbox;
 };
 
 

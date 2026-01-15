@@ -10,7 +10,7 @@
 
 class ScatterRecord {
 public:
-    mutable Color attenuation;
+    mutable color attenuation;
     mutable std::shared_ptr<PDF> pdfPtr;
     mutable bool skipPdf;
     mutable ray skipPdfRay;

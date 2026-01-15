@@ -5,16 +5,18 @@
 #ifndef SPHEREPDF_H
 #define SPHEREPDF_H
 
+#include "PDF.h"
+
 
 class SpherePdf final : public PDF {
 public:
     SpherePdf() = default;
 
-    [[nodiscard]] double value(const Vec3& direction) const override {
+    [[nodiscard]] double value(const vec3& direction) const override {
         return 1/(4 * pi);
     }
 
-    [[nodiscard]] Vec3 generate() const override {
+    [[nodiscard]] vec3 generate(const std::shared_ptr<sampler>& sampler) const override {
         return random_unit_vector();
     }
 };

@@ -5,15 +5,16 @@
 #ifndef METAL_H
 #define METAL_H
 #include "Material.h"
+#include "sampling.h"
 #include "hittable/HitRecord.h"
 
 
 class Metal final : public Material {
 public:
-    explicit Metal(const Color& albedo, const double fuzz) : albedo(albedo), fuzz(fuzz < 1 ? fuzz : 1)  {}
+    explicit Metal(const color& albedo, const double fuzz) : albedo(albedo), fuzz(fuzz < 1 ? fuzz : 1)  {}
 
-    [[nodiscard]] bool scatter(const ray& rIn, const HitRecord& rec, const ScatterRecord& sRec) const override {
-        Vec3 reflected = reflect(rIn.direction(), rec.normal);
+    [[nodiscard]] bool scatter(const ray& rIn, const HitRecord& rec, const ScatterRecord& sRec, const std::shared_ptr<sampler>& sampler) const override {
+        vec3 reflected = reflect(rIn.d(), rec.normal);
         reflected = unit_vector(reflected) + (fuzz * random_unit_vector());
 
         sRec.attenuation = albedo;
@@ -25,7 +26,7 @@ public:
     }
 
 private:
-    Color albedo;
+    color albedo;
     double fuzz;
 };
 

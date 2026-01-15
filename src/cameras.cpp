@@ -5,6 +5,7 @@
 #include "cameras.h"
 
 #include "ray.h"
+#include "sampling.h"
 
 
 void camera::init() {
@@ -29,8 +30,8 @@ void camera::init() {
     v = cross(w, u);
 
     // Calculate the vectors across the horizontal and down the vertical viewport edges.
-    const Vec3 viewport_u = viewport_width * u;    // Vector across viewport horizontal edge
-    const Vec3 viewport_v = viewport_height * -v;  // Vector down viewport vertical edge
+    const vec3 viewport_u = viewport_width * u;    // Vector across viewport horizontal edge
+    const vec3 viewport_v = viewport_height * -v;  // Vector down viewport vertical edge
 
     // Calculate the horizontal and vertical delta vectors from pixel to pixel.
     pixel_delta_u = viewport_u / image_width;
@@ -46,32 +47,23 @@ void camera::init() {
     defocus_disk_v = v * defocus_radius;
 }
 
-ray camera::gen_ray(const int i, const int j, const int s_i, const int s_j) const {
+ray camera::gen_ray(const std::shared_ptr<sampler>& sampler, point2 u, const int i, const int j, const int s_i, const int s_j) const {
     // Construct a camera ray originating from the defocus disk and directed at a randomly
     // sampled point around the pixel location i, j for stratified sample square s_i, s_j.
 
-    const auto offset = sample_square_stratified(s_i, s_j);
+    const auto offset = sample_square_stratified(u, s_i, s_j, recip_sqrt_spp);
     const auto pixel_sample = pixel00_loc
                       + ((i + offset.x()) * pixel_delta_u)
                       + ((j + offset.y()) * pixel_delta_v);
 
-    auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample();
+    auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample(sampler, center, defocus_disk_u, defocus_disk_v);
     const auto ray_direction = pixel_sample - ray_origin;
-    auto ray_time = random_double();
 
-    return {ray_origin, ray_direction, ray_time};
+    return {ray_origin, ray_direction};
 }
 
-void camera::write_color(std::ostream &out, const Color &pixel_color) const {
+void camera::write_color(std::ostream &out, const color &pixel_color) const {
     film_->write_color(out, pixel_color);
 }
 
-Vec3 camera::sample_square_stratified(const int s_i, const int s_j) const {
-    // Returns the vector to a random point in the square sub-pixel specified by grid
-    // indices s_i and s_j, for an idealized unit square pixel [-.5,-.5] to [+.5,+.5].
 
-    auto px = ((s_i + random_double()) * recip_sqrt_spp) - 0.5;
-    auto py = ((s_j + random_double()) * recip_sqrt_spp) - 0.5;
-
-    return {px, py, 0};
-}
