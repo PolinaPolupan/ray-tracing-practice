@@ -4,12 +4,42 @@
 
 #include "sampling.h"
 
-vec3 sample_square_stratified(const point2 u, const int s_i, const int s_j, const double recip_sqrt_spp) {
-    // Returns the vector to a random point in the square sub-pixel specified by grid
-    // indices s_i and s_j, for an idealized unit square pixel [-.5,-.5] to [+.5,+.5].
+vec3 sample_uniform_hemisphere(const point2 u)
+{
+    const auto r1 = u.x;
+    const auto r2 = u.y;
 
-    auto px = ((s_i + u.x) * recip_sqrt_spp) - 0.5;
-    auto py = ((s_j + u.y) * recip_sqrt_spp) - 0.5;
+    const auto phi = 2*pi*r1;
+    auto x = std::cos(phi) * std::sqrt(r2);
+    auto y = std::sin(phi) * std::sqrt(r2);
+    auto z = std::sqrt(1-r2);
 
-    return {px, py, 0};
+    return {x, y, z};
+}
+
+point3 defocus_disk_sample(const std::shared_ptr<sampler>& samp, const point3& center, const vec3& du, const vec3& dv)
+{
+    vec3 p;
+    do {
+        p = vec3(
+            samp->gen_1d() * 2 - 1,
+            samp->gen_1d() * 2 - 1,
+            0
+        );
+    } while (p.length_squared() >= 1);
+
+    return center + p.x() * du + p.y() * dv;
+}
+
+vec3 random_to_sphere(const point2 u, const double radius, const double distance_squared)
+{
+    const auto r1 = u.x;
+    const auto r2 = u.y;
+    auto z = 1 + r2*(std::sqrt(1-radius*radius/distance_squared) - 1);
+
+    const auto phi = 2*pi*r1;
+    auto x = std::cos(phi) * std::sqrt(1-z*z);
+    auto y = std::sin(phi) * std::sqrt(1-z*z);
+
+    return {x, y, z};
 }

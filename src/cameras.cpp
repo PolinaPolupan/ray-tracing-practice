@@ -12,9 +12,6 @@ void camera::init() {
     image_height = static_cast<int>(image_width / aspect_ratio);
     image_height = (image_height < 1) ? 1 : image_height;
 
-    sqrt_spp = static_cast<int>(std::sqrt(samples_per_pixel));
-    recip_sqrt_spp = 1.0 / sqrt_spp;
-
     center = lookfrom;
 
     // Determine viewport dimensions.
@@ -47,19 +44,17 @@ void camera::init() {
     defocus_disk_v = v * defocus_radius;
 }
 
-ray camera::gen_ray(const std::shared_ptr<sampler>& sampler, point2 u, const int i, const int j, const int s_i, const int s_j) const {
-    // Construct a camera ray originating from the defocus disk and directed at a randomly
-    // sampled point around the pixel location i, j for stratified sample square s_i, s_j.
+ray camera::gen_ray(const std::shared_ptr<sampler>& sampler, const int i, const int j) const {
+    const point2 u = sampler->gen_2d();
 
-    const auto offset = sample_square_stratified(u, s_i, s_j, recip_sqrt_spp);
-    const auto pixel_sample = pixel00_loc
-                      + ((i + offset.x()) * pixel_delta_u)
-                      + ((j + offset.y()) * pixel_delta_v);
+    const auto pixel_sample = pixel00_loc + (i + u.x) * pixel_delta_u + (j + u.y) * pixel_delta_v;
 
-    auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample(sampler, center, defocus_disk_u, defocus_disk_v);
-    const auto ray_direction = pixel_sample - ray_origin;
+    point3 ray_origin =
+        (defocus_angle <= 0)
+            ? center
+            : defocus_disk_sample(sampler, center, defocus_disk_u, defocus_disk_v);
 
-    return {ray_origin, ray_direction};
+    return { ray_origin, pixel_sample - ray_origin };
 }
 
 void camera::write_color(std::ostream &out, const color &pixel_color) const {

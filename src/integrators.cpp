@@ -10,14 +10,13 @@
 #include "pdf/MixturePdf.h"
 
 
-void integrator::init() {
+void integrator::init() const
+{
     camera_->init();
-
-    sqrt_spp = static_cast<int>(std::sqrt(samples_per_pixel));
-    pixel_samples_scale = 1.0 / (sqrt_spp * sqrt_spp);
 }
 
-void integrator::render(const HittableList& world, const HittableList& lights) {
+void integrator::render(const HittableList& world, const HittableList& lights) const
+{
     init();
 
     // Render
@@ -27,14 +26,15 @@ void integrator::render(const HittableList& world, const HittableList& lights) {
         std::clog << "\rScanlines remaining: " << (camera_->image_height - j) << ' ' << std::flush;
         for (int i = 0; i < camera_->image_width; i++) {
             color pixel_color(0,0,0);
-            for (int s_j = 0; s_j < sqrt_spp; s_j++) {
-                for (int s_i = 0; s_i < sqrt_spp; s_i++) {
-                    const point2 u = sampler_->gen_2d();
-                    ray r = camera_->gen_ray(sampler_, u, i, j, s_i, s_j);
-                    pixel_color += li(r, max_depth, world, lights);
-                }
+
+            sampler_->start_pixel(i, j);
+
+            while (sampler_->start_next_sample()) {
+                ray r = camera_->gen_ray(sampler_, i, j);
+                pixel_color += li(r, max_depth, world, lights);
             }
-            camera_->write_color(std::cout, pixel_samples_scale * pixel_color);
+
+            camera_->write_color(std::cout, pixel_color / sampler_->get_spp());
         }
     }
 

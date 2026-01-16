@@ -48,11 +48,10 @@ void cornell_box() {
 
     film film;
     const auto cam = std::make_shared<camera>(&film);
-    const auto samp = std::make_shared<independent_sampler>();
+    const auto samp = std::make_shared<independent_sampler>(16);
 
     cam->aspect_ratio      = 1.0;
     cam->image_width       = 600;
-    cam->samples_per_pixel = 10;
 
     cam->vfov     = 40;
     cam->lookfrom = point3(278, 278, -800);
@@ -61,9 +60,7 @@ void cornell_box() {
 
     cam->defocus_angle = 0;
 
-    integrator integrator(cam, samp);
-
-    integrator.samples_per_pixel = 10;
+    const integrator integrator(cam, samp);
 
     integrator.render(world, lights);
 }

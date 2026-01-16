@@ -11,7 +11,6 @@ class camera {
 public:
     double aspect_ratio = 1.0;  // Ratio of image width over height
     int    image_width  = 100;  // Rendered image width in pixel count
-    int    samples_per_pixel = 10;   // Count of random samples for each pixel
 
     double vfov = 90;  // Vertical view angle (field of view)
     point3 lookfrom = point3(0,0,0);   // Point camera is looking from
@@ -29,15 +28,13 @@ public:
     vec3   u, v, w;              // Camera frame basis vectors
     vec3   defocus_disk_u;       // Defocus disk horizontal radius
     vec3   defocus_disk_v;       // Defocus disk vertical radius
-    int    sqrt_spp = 0;             // Square root of number of samples per pixel
-    double recip_sqrt_spp = 0;       // 1 / sqrt_spp
 
 public:
     explicit camera(film* film): film_(film) {}
 
     void init();
 
-    [[nodiscard]] ray gen_ray(const std::shared_ptr<sampler>& sampler, point2 u, int i, int j, int s_i, int s_j) const;
+    [[nodiscard]] ray gen_ray(const std::shared_ptr<sampler>& sampler, int i, int j) const;
 
     void write_color(std::ostream& out, const color& pixel_color) const;
 

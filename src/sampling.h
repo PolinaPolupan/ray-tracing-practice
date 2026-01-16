@@ -11,14 +11,32 @@
 
 class sampler {
 public:
+    explicit sampler(const int spp) : spp_(spp) {}
     virtual ~sampler() = default;
 
+    virtual void start_pixel(int x, int y) = 0;
+    virtual bool start_next_sample() = 0;
     virtual double gen_1d() = 0;
     virtual point2 gen_2d() = 0;
+
+    int get_spp() const { return spp_; }
+
+protected:
+    int spp_;
 };
 
 class independent_sampler: public sampler {
 public:
+    explicit independent_sampler(const int spp) : sampler(spp) {}
+
+    void start_pixel(int x, int y) override {
+        sample_index = 0;
+    }
+
+    bool start_next_sample() override {
+        return sample_index++ < spp_;
+    }
+
     double gen_1d() override {
         std::uniform_real_distribution<double> distribution(0.0, 1.0);
         return distribution(generator);
@@ -29,51 +47,51 @@ public:
     }
 
 private:
+    int sample_index = 0;
     std::mt19937 generator;
 };
 
-inline vec3 sample_uniform_hemisphere(const point2 u) {
-    const auto r1 = u.x;
-    const auto r2 = u.y;
+class stratified_sampler final : public sampler {
+public:
+    explicit stratified_sampler(const int spp): sampler(spp), sqrt_spp(static_cast<int>(std::sqrt(spp))) {}
 
-    const auto phi = 2*pi*r1;
-    auto x = std::cos(phi) * std::sqrt(r2);
-    auto y = std::sin(phi) * std::sqrt(r2);
-    auto z = std::sqrt(1-r2);
+    void start_pixel(int x, int y) override {
+        sample_index = 0;
+    }
 
-    return {x, y, z};
-}
+    bool start_next_sample() override {
+        return sample_index++ < spp_;
+    }
 
-[[nodiscard]] vec3 sample_square_stratified(point2 u, int s_i, int s_j, double recip_sqrt_spp);
+    double gen_1d() override {
+        return rng01();
+    }
 
-inline point3 defocus_disk_sample(
-    const std::shared_ptr<sampler>& samp,
-    const point3& center,
-    const vec3& du,
-    const vec3& dv
-) {
-    vec3 p;
-    do {
-        p = vec3(
-            samp->gen_1d() * 2 - 1,
-            samp->gen_1d() * 2 - 1,
-            0
-        );
-    } while (p.length_squared() >= 1);
+    point2 gen_2d() override {
+        const int stratum = sample_index - 1;
+        const int x = stratum % sqrt_spp;
+        const int y = stratum / sqrt_spp;
 
-    return center + p.x() * du + p.y() * dv;
-}
+        return {
+            (x + rng01()) / sqrt_spp,
+            (y + rng01()) / sqrt_spp
+        };
+    }
 
-inline vec3 random_to_sphere(const point2 u, const double radius, const double distance_squared) {
-    const auto r1 = u.x;
-    const auto r2 = u.y;
-    auto z = 1 + r2*(std::sqrt(1-radius*radius/distance_squared) - 1);
+private:
+    double rng01() {
+        return std::uniform_real_distribution<double>(0, 1)(rng);
+    }
 
-    const auto phi = 2*pi*r1;
-    auto x = std::cos(phi) * std::sqrt(1-z*z);
-    auto y = std::sin(phi) * std::sqrt(1-z*z);
+    int sqrt_spp;
+    int sample_index = 0;
+    std::mt19937 rng;
+};
 
-    return {x, y, z};
-}
+vec3 sample_uniform_hemisphere(point2 u);
+
+point3 defocus_disk_sample(const std::shared_ptr<sampler>& samp, const point3& center, const vec3& du, const vec3& dv);
+
+vec3 random_to_sphere(point2 u, double radius, double distance_squared);
 
 #endif //SAMPLING_H
