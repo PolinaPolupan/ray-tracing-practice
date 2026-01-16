@@ -44,7 +44,7 @@ color integrator::li(const ray &r, int depth, const HittableList &world, const H
 
     // If the ray hits nothing, return the background color.
     if (!world.intersect(r, interval(0.001, infinity), rec))
-        return background;
+        return {0,0,0};
 
     ScatterRecord sRec;
     const color color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);

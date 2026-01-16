@@ -25,7 +25,6 @@ public:
     std::shared_ptr<sampler> sampler_;
 
     int    max_depth         = 10;   // Maximum number of ray bounces into scene
-    vec3  background{};               // Scene background color
 };
 
 
