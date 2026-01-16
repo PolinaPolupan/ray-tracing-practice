@@ -56,9 +56,3 @@ ray camera::gen_ray(const std::shared_ptr<sampler>& sampler, const int i, const 
 
     return { ray_origin, pixel_sample - ray_origin };
 }
-
-void camera::write_color(std::ostream &out, const color &pixel_color) const {
-    film_->write_color(out, pixel_color);
-}
-
-

@@ -36,7 +36,7 @@ public:
 
     [[nodiscard]] ray gen_ray(const std::shared_ptr<sampler>& sampler, int i, int j) const;
 
-    void write_color(std::ostream& out, const color& pixel_color) const;
+    film* get_film() const { return film_; }
 
 private:
     film* film_;

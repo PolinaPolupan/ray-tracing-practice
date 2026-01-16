@@ -9,15 +9,9 @@
 #include "pdf/HittablePdf.h"
 #include "pdf/MixturePdf.h"
 
-
-void integrator::init() const
-{
-    camera_->init();
-}
-
 void integrator::render(const HittableList& world, const HittableList& lights) const
 {
-    init();
+    camera_->init();
 
     // Render
     std::cout << "P3\n" << camera_->image_width << " " << camera_->image_height << "\n255\n";
@@ -34,7 +28,7 @@ void integrator::render(const HittableList& world, const HittableList& lights) c
                 pixel_color += li(r, max_depth, world, lights);
             }
 
-            camera_->write_color(std::cout, pixel_color / sampler_->get_spp());
+            camera_->get_film()->write_color(std::cout, pixel_color / sampler_->get_spp());
         }
     }
 

@@ -15,7 +15,6 @@ class HittableList;
 class integrator {
 public:
     explicit integrator(const std::shared_ptr<camera>&camera, const std::shared_ptr<sampler>& sampler): camera_(camera), sampler_(sampler) {}
-    void init() const;
     void render(const HittableList& world, const HittableList& lights) const;
 
 private:

@@ -48,7 +48,7 @@ void cornell_box() {
 
     film film;
     const auto cam = std::make_shared<camera>(&film);
-    const auto samp = std::make_shared<independent_sampler>(16);
+    const auto samp = std::make_shared<stratified_sampler>(36);
 
     cam->aspect_ratio      = 1.0;
     cam->image_width       = 600;
