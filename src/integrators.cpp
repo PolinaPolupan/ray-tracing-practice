@@ -21,7 +21,7 @@ void integrator::render(const HittableList& world, const HittableList& lights) c
         for (int i = 0; i < camera_->image_width; i++) {
             color pixel_color(0,0,0);
 
-            sampler_->start_pixel(i, j);
+            sampler_->start_pixel();
 
             while (sampler_->start_next_sample()) {
                 ray r = camera_->gen_ray(sampler_, i, j);

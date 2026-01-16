@@ -14,7 +14,7 @@ public:
     explicit sampler(const int spp) : spp_(spp) {}
     virtual ~sampler() = default;
 
-    virtual void start_pixel(int x, int y) = 0;
+    virtual void start_pixel() = 0;
     virtual bool start_next_sample() = 0;
     virtual double gen_1d() = 0;
     virtual point2 gen_2d() = 0;
@@ -29,7 +29,7 @@ class independent_sampler: public sampler {
 public:
     explicit independent_sampler(const int spp) : sampler(spp) {}
 
-    void start_pixel(int x, int y) override {
+    void start_pixel() override {
         sample_index = 0;
     }
 
@@ -55,7 +55,7 @@ class stratified_sampler final : public sampler {
 public:
     explicit stratified_sampler(const int spp): sampler(spp), sqrt_spp(static_cast<int>(std::sqrt(spp))) {}
 
-    void start_pixel(int x, int y) override {
+    void start_pixel() override {
         sample_index = 0;
     }
 
