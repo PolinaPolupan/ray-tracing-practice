@@ -40,7 +40,7 @@ public:
         bbox = bounds3(min, max);
     }
 
-    bool intersect(const ray& r, const interval ray_t, shape_intersection& rec) const override {
+    std::optional<shape_intersection> intersect(const ray& r, const interval ray_t, shape_intersection& rec) const override {
 
         // Transform the ray from world space to object space.
 
@@ -61,7 +61,7 @@ public:
         // Determine whether an intersection exists in object space (and if so, where).
 
         if (!object->intersect(rotated_r, ray_t, rec))
-            return false;
+            return {};
 
         // Transform the intersection from object space back to world space.
 
@@ -77,7 +77,7 @@ public:
             (-sin_theta * rec.normal.x()) + (cos_theta * rec.normal.z())
         );
 
-        return true;
+        return {rec};
     }
 
     [[nodiscard]] bounds3 bounds() const override { return bbox; }

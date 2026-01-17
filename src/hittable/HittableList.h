@@ -25,7 +25,7 @@ public:
         bbox = bounds3(bbox, object->bounds());
     }
 
-    bool intersect(const ray& r, const interval ray_t, shape_intersection& rec) const override {
+    std::optional<shape_intersection> intersect(const ray& r, const interval ray_t, shape_intersection& rec) const override {
         shape_intersection temp_rec;
         bool hit_anything = false;
         auto closest_so_far = ray_t.max;
@@ -38,7 +38,11 @@ public:
             }
         }
 
-        return hit_anything;
+        if (hit_anything)
+        {
+            return {rec};
+        }
+        return {};
     }
 
     [[nodiscard]] bounds3 bounds() const override { return bbox; }

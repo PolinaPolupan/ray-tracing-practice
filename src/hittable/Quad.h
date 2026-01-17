@@ -33,17 +33,17 @@ public:
 
     [[nodiscard]] bounds3 bounds() const override { return bbox; }
 
-    bool intersect(const ray& r, const interval ray_t, shape_intersection& rec) const override {
+    std::optional<shape_intersection> intersect(const ray& r, const interval ray_t, shape_intersection& rec) const override {
         const auto denom = dot(normal, r.d());
 
         // No hit if the ray is parallel to the plane.
         if (std::fabs(denom) < 1e-8)
-            return false;
+            return {};
 
         // Return false if the hit point parameter t is outside the ray interval.
         const auto t = (D - dot(normal, r.o())) / denom;
         if (!ray_t.contains(t))
-            return false;
+            return {};
 
         const auto intersection = r.at(t);
         const vec3 planar_hitpt_vector = intersection - Q;
@@ -51,7 +51,7 @@ public:
         const auto beta = dot(w, cross(u, planar_hitpt_vector));
 
         if (!isInterior(alpha, beta, rec))
-            return false;
+            return {};
 
         // Ray hits the 2D shape; set the rest of the hit record and return true.
 
@@ -60,7 +60,7 @@ public:
         rec.mat = mat;
         rec.set_face_normal(r, normal);
 
-        return true;
+        return {rec};
     }
 
     static bool isInterior(const double a, const double b, shape_intersection& rec) {

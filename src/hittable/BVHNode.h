@@ -47,14 +47,15 @@ public:
         }
     }
 
-    bool intersect(const ray& r, const interval ray_t, shape_intersection& rec) const override {
+    std::optional<shape_intersection> intersect(const ray& r, const interval ray_t, shape_intersection& rec) const override {
         if (!bbox.intersect(r, ray_t))
-            return false;
+            return {};
 
-        const bool hit_left = left->intersect(r, ray_t, rec);
-        const bool hit_right = right->intersect(r, interval(ray_t.min, hit_left ? rec.t : ray_t.max), rec);
+        const auto hit_left = left->intersect(r, ray_t, rec);
+        const auto hit_right = right->intersect(r, interval(ray_t.min, hit_left ? rec.t : ray_t.max), rec);
 
-        return hit_left || hit_right;
+        if (hit_left) return {hit_left};
+        return {hit_right};
     }
 
     [[nodiscard]] bounds3 bounds() const override { return bbox; }

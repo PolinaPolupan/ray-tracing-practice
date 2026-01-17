@@ -23,7 +23,7 @@ public:
 
     [[nodiscard]] bounds3 bounds() const override { return bbox; }
 
-    bool intersect(const ray& r, const interval ray_t, shape_intersection& rec) const override {
+    std::optional<shape_intersection> intersect(const ray& r, const interval ray_t, shape_intersection& rec) const override {
         point3 current_center = center.at(r.time());
         vec3 oc = current_center - r.o();
         const auto a = r.d().length_squared();
@@ -32,7 +32,7 @@ public:
 
         const auto discriminant = h*h - a*c;
         if (discriminant < 0)
-            return false;
+            return {};
 
         const auto sqrtd = std::sqrt(discriminant);
 
@@ -41,7 +41,7 @@ public:
         if (!ray_t.surrounds(root)) {
             root = (h + sqrtd) / a;
             if (!ray_t.surrounds(root))
-                return false;
+                return {};
         }
 
         rec.t = root;
@@ -51,7 +51,7 @@ public:
         get_sphere_uv(outward_normal, rec.u, rec.v);
         rec.mat = mat;
 
-        return true;
+        return {rec};
     }
 
     [[nodiscard]] double pdf(const point3& origin, const vec3& direction) const override {

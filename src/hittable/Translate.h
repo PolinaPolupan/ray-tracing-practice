@@ -15,18 +15,18 @@ public:
         bbox = object->bounds() + offset;
     }
 
-    bool intersect(const ray& r, const interval ray_t, shape_intersection& rec) const override {
+    std::optional<shape_intersection> intersect(const ray& r, const interval ray_t, shape_intersection& rec) const override {
         // Move the ray backwards by the offset
         ray offset_r(r.o() - offset, r.d(), r.time());
 
         // Determine whether an intersection exists along the offset ray (and if so, where)
         if (!object->intersect(offset_r, ray_t, rec))
-            return false;
+            return {};
 
         // Move the intersection point forwards by the offset
         rec.p += offset;
 
-        return true;
+        return {rec};
     }
 
     [[nodiscard]] bounds3 bounds() const override { return bbox; }

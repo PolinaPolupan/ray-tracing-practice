@@ -8,7 +8,7 @@ class shape {
 public:
     virtual ~shape() = default;
 
-    virtual bool intersect(const ray& r, interval ray_t, shape_intersection& rec) const = 0;
+    virtual std::optional<shape_intersection> intersect(const ray& r, interval ray_t, shape_intersection& rec) const = 0;
 
     [[nodiscard]] virtual bounds3 bounds() const = 0;
 
