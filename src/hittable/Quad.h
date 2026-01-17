@@ -33,14 +33,12 @@ public:
 
     [[nodiscard]] bounds3 bounds() const override { return bbox; }
 
-    std::optional<shape_intersection> intersect(const ray& r, const interval ray_t, shape_intersection& rec) const override {
+    [[nodiscard]] std::optional<shape_intersection> intersect(const ray& r, const interval ray_t) const override {
         const auto denom = dot(normal, r.d());
 
-        // No hit if the ray is parallel to the plane.
         if (std::fabs(denom) < 1e-8)
             return {};
 
-        // Return false if the hit point parameter t is outside the ray interval.
         const auto t = (D - dot(normal, r.o())) / denom;
         if (!ray_t.contains(t))
             return {};
@@ -50,17 +48,16 @@ public:
         const auto alpha = dot(w, cross(planar_hitpt_vector, v));
         const auto beta = dot(w, cross(u, planar_hitpt_vector));
 
+        shape_intersection rec;
         if (!isInterior(alpha, beta, rec))
             return {};
-
-        // Ray hits the 2D shape; set the rest of the hit record and return true.
 
         rec.t = t;
         rec.p = intersection;
         rec.mat = mat;
         rec.set_face_normal(r, normal);
 
-        return {rec};
+        return rec;
     }
 
     static bool isInterior(const double a, const double b, shape_intersection& rec) {
@@ -77,12 +74,14 @@ public:
     }
 
     [[nodiscard]] double pdf(const point3& origin, const vec3& direction) const override {
-        shape_intersection rec;
-        if (!this->intersect(ray(origin, direction), interval(0.001, infinity), rec))
-            return 0;
+        // Use a temporary intersection just to get t and normal for PDF calc if needed,
+        // but since we just returned from intersect check, we need the data.
+        // We have to call intersect again to get the data in this design.
+        const auto rec = this->intersect(ray(origin, direction), interval(0.001, infinity));
+        if (!rec) return 0;
 
-        const auto distance_squared = rec.t * rec.t * direction.length_squared();
-        const auto cosine = std::fabs(dot(direction, rec.normal) / direction.length());
+        const auto distance_squared = rec->t * rec->t * direction.length_squared();
+        const auto cosine = std::fabs(dot(direction, rec->normal) / direction.length());
 
         return distance_squared / (cosine * area);
     }

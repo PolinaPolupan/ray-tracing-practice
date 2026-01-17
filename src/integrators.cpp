@@ -40,10 +40,11 @@ color integrator::li(const ray &r, int depth, const HittableList &world, const H
     if (depth <= 0)
         return {0,0,0};
 
-    // If the ray hits nothing, return the background color.
-    shape_intersection rec;
-    if (!world.intersect(r, interval(0.001, infinity), rec).has_value())
-        return {0,0,0};
+    const auto rec_opt = world.intersect(r, interval(0.001, infinity));
+    if (!rec_opt)
+        return {0, 0, 0};
+
+    const shape_intersection& rec = *rec_opt;
 
     ScatterRecord sRec;
     const color color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
