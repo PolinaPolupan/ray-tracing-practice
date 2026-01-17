@@ -47,7 +47,7 @@ public:
         }
     }
 
-    bool intersect(const ray& r, const interval ray_t, HitRecord& rec) const override {
+    bool intersect(const ray& r, const interval ray_t, shape_intersection& rec) const override {
         if (!bbox.intersect(r, ray_t))
             return false;
 

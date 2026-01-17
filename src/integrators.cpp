@@ -3,7 +3,7 @@
 //
 
 #include "integrators.h"
-#include "hittable/HitRecord.h"
+#include "hittable/shape_intersection.h"
 #include "material/Material.h"
 #include "material/ScatterRecord.h"
 #include "pdf/HittablePdf.h"
@@ -40,9 +40,8 @@ color integrator::li(const ray &r, int depth, const HittableList &world, const H
     if (depth <= 0)
         return {0,0,0};
 
-    HitRecord rec;
-
     // If the ray hits nothing, return the background color.
+    shape_intersection rec;
     if (!world.intersect(r, interval(0.001, infinity), rec))
         return {0,0,0};
 

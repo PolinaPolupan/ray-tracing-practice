@@ -9,7 +9,7 @@
 
 class Material;
 
-class HitRecord {
+class shape_intersection {
 public:
     point3 p;
     vec3 normal;

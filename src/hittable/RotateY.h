@@ -40,7 +40,7 @@ public:
         bbox = bounds3(min, max);
     }
 
-    bool intersect(const ray& r, const interval ray_t, HitRecord& rec) const override {
+    bool intersect(const ray& r, const interval ray_t, shape_intersection& rec) const override {
 
         // Transform the ray from world space to object space.
 

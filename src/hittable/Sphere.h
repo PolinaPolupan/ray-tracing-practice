@@ -23,7 +23,7 @@ public:
 
     [[nodiscard]] bounds3 bounds() const override { return bbox; }
 
-    bool intersect(const ray& r, const interval ray_t, HitRecord& rec) const override {
+    bool intersect(const ray& r, const interval ray_t, shape_intersection& rec) const override {
         point3 current_center = center.at(r.time());
         vec3 oc = current_center - r.o();
         const auto a = r.d().length_squared();
@@ -56,7 +56,7 @@ public:
 
     [[nodiscard]] double pdf(const point3& origin, const vec3& direction) const override {
         // This method only works for stationary spheres.
-        HitRecord rec;
+        shape_intersection rec;
         if (!this->intersect(ray(origin, direction), interval(0.001, infinity), rec))
             return 0;
 

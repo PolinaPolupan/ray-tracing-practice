@@ -5,6 +5,8 @@
 #ifndef HITTABLELIST_H
 #define HITTABLELIST_H
 
+#include <optional>
+
 #include "sampling.h"
 #include "shape.h"
 
@@ -23,8 +25,8 @@ public:
         bbox = bounds3(bbox, object->bounds());
     }
 
-    bool intersect(const ray& r, const interval ray_t, HitRecord& rec) const override {
-        HitRecord temp_rec;
+    bool intersect(const ray& r, const interval ray_t, shape_intersection& rec) const override {
+        shape_intersection temp_rec;
         bool hit_anything = false;
         auto closest_so_far = ray_t.max;
 

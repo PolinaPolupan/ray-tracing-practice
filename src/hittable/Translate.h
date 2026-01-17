@@ -15,7 +15,7 @@ public:
         bbox = object->bounds() + offset;
     }
 
-    bool intersect(const ray& r, const interval ray_t, HitRecord& rec) const override {
+    bool intersect(const ray& r, const interval ray_t, shape_intersection& rec) const override {
         // Move the ray backwards by the offset
         ray offset_r(r.o() - offset, r.d(), r.time());
 

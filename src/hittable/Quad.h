@@ -33,7 +33,7 @@ public:
 
     [[nodiscard]] bounds3 bounds() const override { return bbox; }
 
-    bool intersect(const ray& r, const interval ray_t, HitRecord& rec) const override {
+    bool intersect(const ray& r, const interval ray_t, shape_intersection& rec) const override {
         const auto denom = dot(normal, r.d());
 
         // No hit if the ray is parallel to the plane.
@@ -63,7 +63,7 @@ public:
         return true;
     }
 
-    static bool isInterior(const double a, const double b, HitRecord& rec) {
+    static bool isInterior(const double a, const double b, shape_intersection& rec) {
         const auto unit_interval = interval(0, 1);
         // Given the hit point in plane coordinates, return false if it is outside the
         // primitive, otherwise set the hit record UV coordinates and return true.
@@ -77,7 +77,7 @@ public:
     }
 
     [[nodiscard]] double pdf(const point3& origin, const vec3& direction) const override {
-        HitRecord rec;
+        shape_intersection rec;
         if (!this->intersect(ray(origin, direction), interval(0.001, infinity), rec))
             return 0;
 

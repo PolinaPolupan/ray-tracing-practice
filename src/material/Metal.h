@@ -6,14 +6,14 @@
 #define METAL_H
 #include "Material.h"
 #include "sampling.h"
-#include "hittable/HitRecord.h"
+#include "hittable/shape_intersection.h"
 
 
 class Metal final : public Material {
 public:
     explicit Metal(const color& albedo, const double fuzz) : albedo(albedo), fuzz(fuzz < 1 ? fuzz : 1)  {}
 
-    [[nodiscard]] bool scatter(const ray& rIn, const HitRecord& rec, const ScatterRecord& sRec, const std::shared_ptr<sampler>& sampler) const override {
+    [[nodiscard]] bool scatter(const ray& rIn, const shape_intersection& rec, const ScatterRecord& sRec, const std::shared_ptr<sampler>& sampler) const override {
         vec3 reflected = reflect(rIn.d(), rec.normal);
         reflected = unit_vector(reflected) + (fuzz * random_unit_vector());
 
