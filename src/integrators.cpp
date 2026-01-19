@@ -9,7 +9,7 @@
 #include "pdf/HittablePdf.h"
 #include "pdf/MixturePdf.h"
 
-void integrator::render(const HittableList& world, const HittableList& lights) const
+void integrator::render() const
 {
     camera_->init();
 
@@ -25,7 +25,7 @@ void integrator::render(const HittableList& world, const HittableList& lights) c
 
             while (sampler_->start_next_sample()) {
                 ray r = camera_->gen_ray(sampler_, i, j);
-                pixel_color += li(r, max_depth, world, lights);
+                pixel_color += li(r, max_depth);
             }
 
             camera_->get_film()->write_color(std::cout, pixel_color / sampler_->get_spp());
@@ -35,12 +35,12 @@ void integrator::render(const HittableList& world, const HittableList& lights) c
     std::clog << "\rDone.                 \n";
 }
 
-color integrator::li(const ray &r, int depth, const HittableList &world, const HittableList &lights) const {
+color integrator::li(const ray &r, const int depth) const {
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0)
         return {0,0,0};
 
-    const auto rec_opt = world.intersect(r, interval(0.001, infinity));
+    const auto rec_opt = world_->intersect(r, interval(0.001, infinity));
     if (!rec_opt)
         return {0, 0, 0};
 
@@ -53,10 +53,10 @@ color integrator::li(const ray &r, int depth, const HittableList &world, const H
         return color_from_emission;
 
     if (sRec.skipPdf) {
-        return sRec.attenuation * li(sRec.skipPdfRay, depth-1, world, lights);
+        return sRec.attenuation * li(sRec.skipPdfRay, depth-1);
     }
 
-    const auto light_ptr = make_shared<HittablePdf>(lights, rec.p);
+    const auto light_ptr = make_shared<HittablePdf>(*lights_, rec.p);
     const MixturePdf p(light_ptr, sRec.pdfPtr);
 
     const auto scattered = ray(rec.p, p.generate(sampler_), r.time());
@@ -64,9 +64,10 @@ color integrator::li(const ray &r, int depth, const HittableList &world, const H
 
     const double scattering_pdf = rec.mat->scatteringPdf(r, rec, scattered);
 
-    const color sample_color = li(scattered, depth-1, world, lights);
+    const color sample_color = li(scattered, depth-1);
     const color color_from_scatter =
         (sRec.attenuation * scattering_pdf * sample_color) / pdf_value;
 
     return color_from_emission + color_from_scatter;
 }
+

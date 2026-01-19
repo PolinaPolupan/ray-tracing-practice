@@ -60,9 +60,9 @@ void cornell_box() {
 
     cam->defocus_angle = 0;
 
-    const integrator integrator(cam, samp);
+    const integrator integrator(cam, samp, std::make_shared<HittableList>(world), std::make_shared<HittableList>(lights));
 
-    integrator.render(world, lights);
+    integrator.render();
 }
 
 int main() {

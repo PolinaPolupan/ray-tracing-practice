@@ -26,6 +26,7 @@ public:
 
     vec3& operator+=(const vec3& v);
     vec3& operator*=(double t);
+    vec3& operator*=(const vec3& v);
     vec3& operator/=(double t);
 
     [[nodiscard]] double length() const;
