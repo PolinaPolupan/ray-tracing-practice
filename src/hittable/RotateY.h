@@ -40,10 +40,7 @@ public:
         bbox = bounds3(min, max);
     }
 
-    bool intersect(const ray& r, const interval ray_t, HitRecord& rec) const override {
-
-        // Transform the ray from world space to object space.
-
+    [[nodiscard]] std::optional<shape_intersection> intersect(const ray& r, const interval ray_t) const override {
         const auto origin = point3(
             (cos_theta * r.o().x()) - (sin_theta * r.o().z()),
             r.o().y(),
@@ -58,26 +55,22 @@ public:
 
         ray rotated_r(origin, direction, r.time());
 
-        // Determine whether an intersection exists in object space (and if so, where).
+        auto result = object->intersect(rotated_r, ray_t);
+        if (!result) return {};
 
-        if (!object->intersect(rotated_r, ray_t, rec))
-            return false;
-
-        // Transform the intersection from object space back to world space.
-
-        rec.p = point3(
-            (cos_theta * rec.p.x()) + (sin_theta * rec.p.z()),
-            rec.p.y(),
-            (-sin_theta * rec.p.x()) + (cos_theta * rec.p.z())
+        result->p = point3(
+            (cos_theta * result->p.x()) + (sin_theta * result->p.z()),
+            result->p.y(),
+            (-sin_theta * result->p.x()) + (cos_theta * result->p.z())
         );
 
-        rec.normal = vec3(
-            (cos_theta * rec.normal.x()) + (sin_theta * rec.normal.z()),
-            rec.normal.y(),
-            (-sin_theta * rec.normal.x()) + (cos_theta * rec.normal.z())
+        result->normal = vec3(
+            (cos_theta * result->normal.x()) + (sin_theta * result->normal.z()),
+            result->normal.y(),
+            (-sin_theta * result->normal.x()) + (cos_theta * result->normal.z())
         );
 
-        return true;
+        return result;
     }
 
     [[nodiscard]] bounds3 bounds() const override { return bbox; }

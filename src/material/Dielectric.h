@@ -11,7 +11,7 @@ class Dielectric final : public Material {
 public:
     explicit Dielectric(const double refraction_index) : refraction_index(refraction_index) {}
 
-    [[nodiscard]] bool scatter(const ray& rIn, const HitRecord& rec, const ScatterRecord& sRec, const std::shared_ptr<sampler>& sampler) const override {
+    [[nodiscard]] bool scatter(const ray& rIn, const shape_intersection& rec, const ScatterRecord& sRec, const std::shared_ptr<sampler>& sampler) const override {
         sRec.attenuation = color(1.0, 1.0, 1.0);
         sRec.pdfPtr = nullptr;
         sRec.skipPdf = true;

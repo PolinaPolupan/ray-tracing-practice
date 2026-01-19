@@ -48,7 +48,7 @@ void cornell_box() {
 
     film film;
     const auto cam = std::make_shared<camera>(&film);
-    const auto samp = std::make_shared<stratified_sampler>(100);
+    const auto samp = std::make_shared<stratified_sampler>(16);
 
     cam->aspect_ratio      = 1.0;
     cam->image_width       = 600;
@@ -60,9 +60,9 @@ void cornell_box() {
 
     cam->defocus_angle = 0;
 
-    const integrator integrator(cam, samp);
+    const integrator integrator(cam, samp, std::make_shared<HittableList>(world), std::make_shared<HittableList>(lights));
 
-    integrator.render(world, lights);
+    integrator.render();
 }
 
 int main() {

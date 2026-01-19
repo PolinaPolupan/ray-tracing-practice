@@ -31,7 +31,7 @@ add_executable (inOneWeekend
         src/texture/NoiseTexture.h
         src/hittable/Quad.h
         src/material/DiffuseLight.h
-        src/hittable/HitRecord.h
+        src/hittable/shape_intersection.h
         src/hittable/HittableList.h
         src/hittable/Translate.h
         src/hittable/RotateY.h

@@ -14,15 +14,24 @@ class HittableList;
 
 class integrator {
 public:
-    explicit integrator(const std::shared_ptr<camera>&camera, const std::shared_ptr<sampler>& sampler): camera_(camera), sampler_(sampler) {}
-    void render(const HittableList& world, const HittableList& lights) const;
+    explicit integrator(
+        const std::shared_ptr<camera>&camera,
+        const std::shared_ptr<sampler>& sampler,
+        const std::shared_ptr<HittableList>& world,
+        const std::shared_ptr<HittableList>& lights
+        ): camera_(camera), sampler_(sampler), world_(world), lights_(lights) {}
+
+    void render() const;
 
 private:
-    [[nodiscard]] vec3 li(const ray& r, int depth, const HittableList& world, const HittableList& lights) const;
+    [[nodiscard]] vec3 li(const ray& r, int depth) const;
 
 public:
     std::shared_ptr<camera> camera_;
     std::shared_ptr<sampler> sampler_;
+
+    std::shared_ptr<HittableList> world_;
+    std::shared_ptr<HittableList> lights_;
 
     int    max_depth         = 10;   // Maximum number of ray bounces into scene
 };

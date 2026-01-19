@@ -1,6 +1,6 @@
 #ifndef HITTABLE_H
 #define HITTABLE_H
-#include "HitRecord.h"
+#include "shape_intersection.h"
 #include "sampling.h"
 
 
@@ -8,7 +8,7 @@ class shape {
 public:
     virtual ~shape() = default;
 
-    virtual bool intersect(const ray& r, interval ray_t, HitRecord& rec) const = 0;
+    [[nodiscard]] virtual std::optional<shape_intersection> intersect(const ray& r, interval ray_t) const = 0;
 
     [[nodiscard]] virtual bounds3 bounds() const = 0;
 

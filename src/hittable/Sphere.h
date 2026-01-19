@@ -23,27 +23,27 @@ public:
 
     [[nodiscard]] bounds3 bounds() const override { return bbox; }
 
-    bool intersect(const ray& r, const interval ray_t, HitRecord& rec) const override {
-        point3 current_center = center.at(r.time());
-        vec3 oc = current_center - r.o();
+    [[nodiscard]] std::optional<shape_intersection> intersect(const ray& r, const interval ray_t) const override {
+        const point3 current_center = center.at(r.time());
+        const vec3 oc = current_center - r.o();
         const auto a = r.d().length_squared();
         const auto h = dot(r.d(), oc);
         const auto c = oc.length_squared() - radius*radius;
 
         const auto discriminant = h*h - a*c;
         if (discriminant < 0)
-            return false;
+            return {};
 
         const auto sqrtd = std::sqrt(discriminant);
 
-        // Find the nearest root that lies in the acceptable range.
         auto root = (h - sqrtd) / a;
         if (!ray_t.surrounds(root)) {
             root = (h + sqrtd) / a;
             if (!ray_t.surrounds(root))
-                return false;
+                return {};
         }
 
+        shape_intersection rec;
         rec.t = root;
         rec.p = r.at(rec.t);
         const vec3 outward_normal = (rec.p - current_center) / radius;
@@ -51,13 +51,12 @@ public:
         get_sphere_uv(outward_normal, rec.u, rec.v);
         rec.mat = mat;
 
-        return true;
+        return rec;
     }
 
     [[nodiscard]] double pdf(const point3& origin, const vec3& direction) const override {
         // This method only works for stationary spheres.
-        HitRecord rec;
-        if (!this->intersect(ray(origin, direction), interval(0.001, infinity), rec))
+        if (!this->intersect(ray(origin, direction), interval(0.001, infinity)))
             return 0;
 
         const auto dist_squared = (center.at(0) - origin).length_squared();
