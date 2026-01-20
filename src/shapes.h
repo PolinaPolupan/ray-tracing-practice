@@ -49,9 +49,9 @@ public:
     }
 };
 
-class Quad final : public shape {
+class quad final : public shape {
 public:
-    Quad(const point3& Q, const vec3& u, const vec3& v, const std::shared_ptr<material> &mat);
+    quad(const point3& Q, const vec3& u, const vec3& v, const std::shared_ptr<material> &mat);
 
     void bounding_box();
 
@@ -59,7 +59,7 @@ public:
 
     [[nodiscard]] std::optional<shape_intersection> intersect(const ray& r, interval ray_t) const override;
 
-    static bool isInterior(double a, double b, shape_intersection& rec);
+    static bool is_interior(double a, double b, shape_intersection& rec);
 
     [[nodiscard]] double pdf(const point3& origin, const vec3& direction) const override;
 
@@ -79,12 +79,12 @@ private:
     double area;
 };
 
-class HittableList final : public shape {
+class hittable_list final : public shape {
 public:
     std::vector<shared_ptr<shape>> objects;
 
-    HittableList() = default;
-    explicit HittableList(const shared_ptr<shape>& object) { add(object); }
+    hittable_list() = default;
+    explicit hittable_list(const shared_ptr<shape>& object) { add(object); }
 
     auto begin() { return objects.begin(); }
     auto end() { return objects.end(); }
@@ -111,7 +111,7 @@ private:
     bounds3 bbox;
 };
 
-shared_ptr<HittableList> box(const point3& a, const point3& b, const shared_ptr<material>& mat);
+shared_ptr<hittable_list> box(const point3& a, const point3& b, const shared_ptr<material>& mat);
 
 class RotateY final : public shape {
 public:
@@ -128,17 +128,17 @@ private:
     bounds3 bbox;
 };
 
-class Sphere final : public shape {
+class sphere final : public shape {
 public:
     // Stationary Sphere
-    Sphere(const point3& static_center, double radius, const shared_ptr<material> &mat)
+    sphere(const point3& static_center, double radius, const shared_ptr<material> &mat)
       : center(static_center, vec3(0,0,0)), radius(std::fmax(0,radius)), mat(mat) {
         const auto rvec = vec3(radius, radius, radius);
         bbox = bounds3(static_center - rvec, static_center + rvec);
     }
 
     // Moving Sphere
-    Sphere(const point3& center1, const point3& center2, const double radius, const shared_ptr<material> &mat)
+    sphere(const point3& center1, const point3& center2, const double radius, const shared_ptr<material> &mat)
       : center(center1, center2 - center1), radius(std::fmax(0,radius)), mat(mat) {
         const auto rvec = vec3(radius, radius, radius);
         const bounds3 box1(center.at(0) - rvec, center.at(0) + rvec);
@@ -163,9 +163,9 @@ private:
     static void get_sphere_uv(const point3& p, double& u, double& v);
 };
 
-class Translate final : public shape {
+class translate final : public shape {
 public:
-    Translate(const shared_ptr<shape>& object, const vec3& offset): object(object), offset(offset) {
+    translate(const shared_ptr<shape>& object, const vec3& offset): object(object), offset(offset) {
         bbox = object->bounds() + offset;
     }
 
@@ -179,16 +179,16 @@ private:
     bounds3 bbox;
 };
 
-class BVHNode final : public shape {
+class bvh_node final : public shape {
 public:
-    explicit BVHNode(HittableList list) : BVHNode(list.objects, 0, list.objects.size()) {
+    explicit bvh_node(hittable_list list) : bvh_node(list.objects, 0, list.objects.size()) {
         // There's a C++ subtlety here. This constructor (without span indices) creates an
         // implicit copy of the hittable list, which we will modify. The lifetime of the copied
         // list only extends until this constructor exits. That's OK, because we only need to
         // persist the resulting bounding volume hierarchy.
     }
 
-    BVHNode(std::vector<shared_ptr<shape>>& objects, size_t start, size_t end);
+    bvh_node(std::vector<shared_ptr<shape>>& objects, size_t start, size_t end);
 
     [[nodiscard]] std::optional<shape_intersection> intersect(const ray& r, interval ray_t) const override;
 

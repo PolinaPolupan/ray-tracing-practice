@@ -10,15 +10,15 @@
 #include "sampling.h"
 
 class ray;
-class HittableList;
+class hittable_list;
 
 class integrator {
 public:
     explicit integrator(
         const std::shared_ptr<camera>&camera,
         const std::shared_ptr<sampler>& sampler,
-        const std::shared_ptr<HittableList>& world,
-        const std::shared_ptr<HittableList>& lights
+        const std::shared_ptr<hittable_list>& world,
+        const std::shared_ptr<hittable_list>& lights
         ): camera_(camera), sampler_(sampler), world_(world), lights_(lights) {}
 
     void render() const;
@@ -30,8 +30,8 @@ public:
     std::shared_ptr<camera> camera_;
     std::shared_ptr<sampler> sampler_;
 
-    std::shared_ptr<HittableList> world_;
-    std::shared_ptr<HittableList> lights_;
+    std::shared_ptr<hittable_list> world_;
+    std::shared_ptr<hittable_list> lights_;
 
     int max_depth = 10;   // Maximum number of ray bounces into scene
 };

@@ -9,35 +9,35 @@
 
 
 void cornell_box() {
-    HittableList world;
+    hittable_list world;
 
     auto red   = make_shared<lambertian>(color(.65, .05, .05));
     auto white = make_shared<lambertian>(color(.73, .73, .73));
     auto green = make_shared<lambertian>(color(.12, .45, .15));
     auto light = make_shared<diffuse_light>(color(15, 15, 15));
 
-    world.add(make_shared<Quad>(point3(555,0,0), vec3(0,555,0), vec3(0,0,555), green));
-    world.add(make_shared<Quad>(point3(0,0,0), vec3(0,555,0), vec3(0,0,555), red));
-    world.add(make_shared<Quad>(point3(343, 554, 332), vec3(-130,0,0), vec3(0,0,-105), light));
-    world.add(make_shared<Quad>(point3(0,0,0), vec3(555,0,0), vec3(0,0,555), white));
-    world.add(make_shared<Quad>(point3(555,555,555), vec3(-555,0,0), vec3(0,0,-555), white));
-    world.add(make_shared<Quad>(point3(0,0,555), vec3(555,0,0), vec3(0,555,0), white));
+    world.add(make_shared<quad>(point3(555,0,0), vec3(0,555,0), vec3(0,0,555), green));
+    world.add(make_shared<quad>(point3(0,0,0), vec3(0,555,0), vec3(0,0,555), red));
+    world.add(make_shared<quad>(point3(343, 554, 332), vec3(-130,0,0), vec3(0,0,-105), light));
+    world.add(make_shared<quad>(point3(0,0,0), vec3(555,0,0), vec3(0,0,555), white));
+    world.add(make_shared<quad>(point3(555,555,555), vec3(-555,0,0), vec3(0,0,-555), white));
+    world.add(make_shared<quad>(point3(0,0,555), vec3(555,0,0), vec3(0,555,0), white));
 
     // Box
     shared_ptr<shape> box1 = box(point3(0,0,0), point3(165,330,165), white);
     box1 = make_shared<RotateY>(box1, 15);
-    box1 = make_shared<Translate>(box1, vec3(265,0,295));
+    box1 = make_shared<translate>(box1, vec3(265,0,295));
     world.add(box1);
 
     // Glass Sphere
     auto glass = make_shared<metal>(color(1, 1, 1), 0.0);
-    world.add(make_shared<Sphere>(point3(190,90,190), 90, glass));
+    world.add(make_shared<sphere>(point3(190,90,190), 90, glass));
 
     // Light Sources
-    HittableList lights;
+    hittable_list lights;
     auto empty_material = shared_ptr<material>();
-    lights.add(make_shared<Quad>(point3(343,554,332), vec3(-130,0,0), vec3(0,0,-105), empty_material));
-    lights.add(make_shared<Sphere>(point3(190, 90, 190), 90, empty_material));
+    lights.add(make_shared<quad>(point3(343,554,332), vec3(-130,0,0), vec3(0,0,-105), empty_material));
+    lights.add(make_shared<sphere>(point3(190, 90, 190), 90, empty_material));
 
     film film;
     const auto cam = std::make_shared<camera>(&film);
@@ -53,7 +53,7 @@ void cornell_box() {
 
     cam->defocus_angle = 0;
 
-    const integrator integrator(cam, samp, std::make_shared<HittableList>(world), std::make_shared<HittableList>(lights));
+    const integrator integrator(cam, samp, std::make_shared<hittable_list>(world), std::make_shared<hittable_list>(lights));
 
     integrator.render();
 }

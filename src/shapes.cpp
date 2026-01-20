@@ -4,7 +4,7 @@
 
 #include "shapes.h"
 
-Quad::Quad(const point3& Q, const vec3& u, const vec3& v, const std::shared_ptr<material>& mat): Q(Q), u(u), v(v), mat(mat)
+quad::quad(const point3& Q, const vec3& u, const vec3& v, const std::shared_ptr<material>& mat): Q(Q), u(u), v(v), mat(mat)
 {
     const auto n = cross(u, v);
     normal = unit_vector(n);
@@ -16,7 +16,7 @@ Quad::Quad(const point3& Q, const vec3& u, const vec3& v, const std::shared_ptr<
     bounding_box();
 }
 
-void Quad::bounding_box()
+void quad::bounding_box()
 {
     // Compute the bounding box of all four vertices.
     const auto bbox_diagonal1 = bounds3(Q, Q + u + v);
@@ -24,7 +24,7 @@ void Quad::bounding_box()
     bbox = bounds3(bbox_diagonal1, bbox_diagonal2);
 }
 
-std::optional<shape_intersection> Quad::intersect(const ray& r, const interval ray_t) const
+std::optional<shape_intersection> quad::intersect(const ray& r, const interval ray_t) const
 {
     const auto denom = dot(normal, r.d());
 
@@ -41,7 +41,7 @@ std::optional<shape_intersection> Quad::intersect(const ray& r, const interval r
     const auto beta = dot(w, cross(u, planar_hitpt_vector));
 
     shape_intersection rec;
-    if (!isInterior(alpha, beta, rec))
+    if (!is_interior(alpha, beta, rec))
         return {};
 
     rec.t = t;
@@ -52,7 +52,7 @@ std::optional<shape_intersection> Quad::intersect(const ray& r, const interval r
     return rec;
 }
 
-bool Quad::isInterior(const double a, const double b, shape_intersection& rec)
+bool quad::is_interior(const double a, const double b, shape_intersection& rec)
 {
     const auto unit_interval = interval(0, 1);
     // Given the hit point in plane coordinates, return false if it is outside the
@@ -66,7 +66,7 @@ bool Quad::isInterior(const double a, const double b, shape_intersection& rec)
     return true;
 }
 
-double Quad::pdf(const point3& origin, const vec3& direction) const
+double quad::pdf(const point3& origin, const vec3& direction) const
 {
     // Use a temporary intersection just to get t and normal for PDF calc if needed,
     // but since we just returned from intersect check, we need the data.
@@ -80,7 +80,7 @@ double Quad::pdf(const point3& origin, const vec3& direction) const
     return distance_squared / (cosine * area);
 }
 
-std::optional<shape_intersection> HittableList::intersect(const ray& r, const interval ray_t) const
+std::optional<shape_intersection> hittable_list::intersect(const ray& r, const interval ray_t) const
 {
     std::optional<shape_intersection> closest_hit;
     auto closest_so_far = ray_t.max;
@@ -95,7 +95,7 @@ std::optional<shape_intersection> HittableList::intersect(const ray& r, const in
     return closest_hit;
 }
 
-double HittableList::pdf(const point3& origin, const vec3& direction) const
+double hittable_list::pdf(const point3& origin, const vec3& direction) const
 {
     const auto weight = 1.0 / objects.size();
     auto sum = 0.0;
@@ -106,7 +106,7 @@ double HittableList::pdf(const point3& origin, const vec3& direction) const
     return sum;
 }
 
-vec3 HittableList::random(const point3& origin, const std::shared_ptr<sampler>& sampler) const
+vec3 hittable_list::random(const point3& origin, const std::shared_ptr<sampler>& sampler) const
 {
     int idx = static_cast<int>(sampler->gen_1d() * objects.size());
     idx = std::min(idx, static_cast<int>(objects.size()) - 1);
@@ -114,11 +114,11 @@ vec3 HittableList::random(const point3& origin, const std::shared_ptr<sampler>& 
     return objects[idx]->random(origin, sampler);
 }
 
-shared_ptr<HittableList> box(const point3& a, const point3& b, const shared_ptr<material>& mat)
+shared_ptr<hittable_list> box(const point3& a, const point3& b, const shared_ptr<material>& mat)
 {
     // Returns the 3D box (six sides) that contains the two opposite vertices a & b.
 
-    auto sides = make_shared<HittableList>();
+    auto sides = make_shared<hittable_list>();
 
     // Construct the two opposite vertices with the minimum and maximum coordinates.
     const auto min = point3(std::fmin(a.x(),b.x()), std::fmin(a.y(),b.y()), std::fmin(a.z(),b.z()));
@@ -128,12 +128,12 @@ shared_ptr<HittableList> box(const point3& a, const point3& b, const shared_ptr<
     auto dy = vec3(0, max.y() - min.y(), 0);
     auto dz = vec3(0, 0, max.z() - min.z());
 
-    sides->add(make_shared<Quad>(point3(min.x(), min.y(), max.z()),  dx,  dy, mat)); // front
-    sides->add(make_shared<Quad>(point3(max.x(), min.y(), max.z()), -dz,  dy, mat)); // right
-    sides->add(make_shared<Quad>(point3(max.x(), min.y(), min.z()), -dx,  dy, mat)); // back
-    sides->add(make_shared<Quad>(point3(min.x(), min.y(), min.z()),  dz,  dy, mat)); // left
-    sides->add(make_shared<Quad>(point3(min.x(), max.y(), max.z()),  dx, -dz, mat)); // top
-    sides->add(make_shared<Quad>(point3(min.x(), min.y(), min.z()),  dx,  dz, mat)); // bottom
+    sides->add(make_shared<quad>(point3(min.x(), min.y(), max.z()),  dx,  dy, mat)); // front
+    sides->add(make_shared<quad>(point3(max.x(), min.y(), max.z()), -dz,  dy, mat)); // right
+    sides->add(make_shared<quad>(point3(max.x(), min.y(), min.z()), -dx,  dy, mat)); // back
+    sides->add(make_shared<quad>(point3(min.x(), min.y(), min.z()),  dz,  dy, mat)); // left
+    sides->add(make_shared<quad>(point3(min.x(), max.y(), max.z()),  dx, -dz, mat)); // top
+    sides->add(make_shared<quad>(point3(min.x(), min.y(), min.z()),  dx,  dz, mat)); // bottom
 
     return sides;
 }
@@ -205,7 +205,7 @@ std::optional<shape_intersection> RotateY::intersect(const ray& r, const interva
     return result;
 }
 
-std::optional<shape_intersection> Sphere::intersect(const ray& r, interval ray_t) const
+std::optional<shape_intersection> sphere::intersect(const ray& r, interval ray_t) const
 {
     const point3 current_center = center.at(r.time());
     const vec3 oc = current_center - r.o();
@@ -237,7 +237,7 @@ std::optional<shape_intersection> Sphere::intersect(const ray& r, interval ray_t
     return rec;
 }
 
-double Sphere::pdf(const point3& origin, const vec3& direction) const
+double sphere::pdf(const point3& origin, const vec3& direction) const
 {
     // This method only works for stationary spheres.
     if (!this->intersect(ray(origin, direction), interval(0.001, infinity)))
@@ -250,7 +250,7 @@ double Sphere::pdf(const point3& origin, const vec3& direction) const
     return  1 / solid_angle;
 }
 
-vec3 Sphere::random(const point3& origin, const std::shared_ptr<sampler>& sampler) const
+vec3 sphere::random(const point3& origin, const std::shared_ptr<sampler>& sampler) const
 {
     const vec3 direction = center.at(0) - origin;
     const auto distance_squared = direction.length_squared();
@@ -258,7 +258,7 @@ vec3 Sphere::random(const point3& origin, const std::shared_ptr<sampler>& sample
     return uvw.transform(random_to_sphere(sampler->gen_2d(), radius, distance_squared));
 }
 
-void Sphere::get_sphere_uv(const point3& p, double& u, double& v)
+void sphere::get_sphere_uv(const point3& p, double& u, double& v)
 {
     // p: a given point on the sphere of radius one, centered at the origin.
     // u: returned value [0,1] of angle around the Y axis from X=-1.
@@ -274,7 +274,7 @@ void Sphere::get_sphere_uv(const point3& p, double& u, double& v)
     v = theta / pi;
 }
 
-std::optional<shape_intersection> Translate::intersect(const ray& r, const interval ray_t) const
+std::optional<shape_intersection> translate::intersect(const ray& r, const interval ray_t) const
 {
     const ray offset_r(r.o() - offset, r.d(), r.time());
 
@@ -285,7 +285,7 @@ std::optional<shape_intersection> Translate::intersect(const ray& r, const inter
     return result;
 }
 
-BVHNode::BVHNode(std::vector<shared_ptr<shape>>& objects, size_t start, size_t end)
+bvh_node::bvh_node(std::vector<shared_ptr<shape>>& objects, size_t start, size_t end)
 {
     // Build the bounding box of the span of source objects.
     bbox = bounds3::empty;
@@ -309,12 +309,12 @@ BVHNode::BVHNode(std::vector<shared_ptr<shape>>& objects, size_t start, size_t e
         std::sort(std::begin(objects) + start, std::begin(objects) + end, comparator);
 
         auto mid = start + object_span/2;
-        left = make_shared<BVHNode>(objects, start, mid);
-        right = make_shared<BVHNode>(objects, mid, end);
+        left = make_shared<bvh_node>(objects, start, mid);
+        right = make_shared<bvh_node>(objects, mid, end);
     }
 }
 
-std::optional<shape_intersection> BVHNode::intersect(const ray& r, const interval ray_t) const
+std::optional<shape_intersection> bvh_node::intersect(const ray& r, const interval ray_t) const
 {
     if (!bbox.intersect(r, ray_t))
         return {};
