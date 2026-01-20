@@ -19,12 +19,7 @@ add_executable (inOneWeekend
         src/hittable/Sphere.h
         src/rtweekend.h
         src/hittable/BVHNode.h
-        src/texture/Texture.h
-        src/texture/SolidColor.h
-        src/texture/CheckerTexture.h
         src/RtwImage.h
-        src/texture/ImageTexture.h
-        src/texture/NoiseTexture.h
         src/hittable/Quad.h
         src/hittable/shape_intersection.h
         src/hittable/HittableList.h
@@ -44,7 +39,9 @@ add_executable (inOneWeekend
         src/math.h
         src/bsdf.cpp
         src/bsdf.h
-        src/materials.h)
+        src/materials.h
+        src/textures.cpp
+        src/textures.h)
 
 target_include_directories(inOneWeekend PRIVATE
         ${CMAKE_SOURCE_DIR}/src
