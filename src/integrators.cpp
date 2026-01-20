@@ -56,18 +56,15 @@ color integrator::li(const ray &r, const int depth) const {
         return L + s.f * li(ray(rec.p, s.wi, r.time()), depth - 1);
     }
 
-    // Create Light PDF
-    const HittablePdf light_pdf(*lights_, rec.p);
-
     if (sampler_->gen_1d() < 0.5) {
         // Strategy A: Sample Light
-        wi = light_pdf.generate(sampler_);
+        wi = lights_->random(rec.p, sampler_);
     } else {
         // Strategy B: Sample BSDF
         wi = bsdf->sample_f(wo, sampler_->gen_2d()).wi;
     }
 
-    const double p_light = light_pdf.value(wi);
+    const double p_light = lights_->pdf(rec.p, wi);
     const double p_bsdf = bsdf->pdf(wo, wi);
     const double pdf_val = 0.5 * p_light + 0.5 * p_bsdf;
 

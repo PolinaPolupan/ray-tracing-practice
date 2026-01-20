@@ -25,8 +25,6 @@ add_executable (inOneWeekend
         src/hittable/HittableList.h
         src/hittable/Translate.h
         src/hittable/RotateY.h
-        src/pdf/PDF.h
-        src/pdf/HittablePdf.h
         src/integrators.cpp
         src/integrators.h
         src/film.cpp
