@@ -10,7 +10,6 @@
 #include "hittable/RotateY.h"
 #include "hittable/Sphere.h"
 #include "hittable/Translate.h"
-#include "texture/ImageTexture.h"
 
 
 void cornell_box() {

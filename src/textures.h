@@ -1,7 +1,7 @@
 #ifndef RAY_TRACING_IN_ONE_WEEK_TEXTURES_H
 #define RAY_TRACING_IN_ONE_WEEK_TEXTURES_H
 #include "math.h"
-#include "RtwImage.h"
+#include "rtw_image.h"
 
 class perlin {
 public:
@@ -98,7 +98,7 @@ public:
     [[nodiscard]] color value(double u, double v, const point3& p) const override;
 
 private:
-    RtwImage image_;
+    rtw_image image_;
 };
 
 class checker final : public texture {
