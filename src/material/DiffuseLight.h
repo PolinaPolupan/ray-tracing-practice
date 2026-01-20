@@ -12,17 +12,23 @@ class Texture;
 
 class DiffuseLight final : public Material {
 public:
-    explicit DiffuseLight(const std::shared_ptr<Texture> &tex) : tex(tex) {}
-    explicit DiffuseLight(const color& emit) : tex(make_shared<SolidColor>(emit)) {}
+    explicit DiffuseLight(const std::shared_ptr<Texture>& tex) : tex(tex) {}
+    explicit DiffuseLight(const color& emit)
+        : tex(make_shared<SolidColor>(emit)) {}
 
-    [[nodiscard]] color emitted(const ray& r_in, const shape_intersection& rec, const double u, const double v, const point3& p) const override {
+    std::unique_ptr<bsdf> get_bsdf(const shape_intersection&) const override {
+        return nullptr;
+    }
+
+    color Le(const ray&, const shape_intersection& rec, double u, double v, const point3& p) const override {
         if (!rec.front_face)
-            return {0,0,0};
+            return color(0,0,0);
         return tex->value(u, v, p);
     }
 
 private:
     shared_ptr<Texture> tex;
 };
+
 
 #endif //DIFFUSELIGHT_H

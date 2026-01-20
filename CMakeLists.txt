@@ -35,12 +35,8 @@ add_executable (inOneWeekend
         src/hittable/HittableList.h
         src/hittable/Translate.h
         src/hittable/RotateY.h
-        src/material/Isotropic.h
         src/pdf/PDF.h
-        src/pdf/SpherePdf.h
-        src/pdf/CosinePdf.h
         src/pdf/HittablePdf.h
-        src/pdf/MixturePdf.h
         src/material/ScatterRecord.h
         src/integrators.cpp
         src/integrators.h
@@ -51,7 +47,9 @@ add_executable (inOneWeekend
         src/sampling.cpp
         src/sampling.h
         src/math.cpp
-        src/math.h)
+        src/math.h
+        src/bsdf.cpp
+        src/bsdf.h)
 
 target_include_directories(inOneWeekend PRIVATE
         ${CMAKE_SOURCE_DIR}/src

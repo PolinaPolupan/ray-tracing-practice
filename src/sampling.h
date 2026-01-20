@@ -94,4 +94,7 @@ point3 defocus_disk_sample(const std::shared_ptr<sampler>& samp, const point3& c
 
 vec3 random_to_sphere(point2 u, double radius, double distance_squared);
 
+vec3 cosine_sample_hemisphere(const point2& u);
+
+
 #endif //SAMPLING_H

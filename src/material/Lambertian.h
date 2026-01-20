@@ -4,7 +4,7 @@
 
 #ifndef LAMBERTIAN_H
 #define LAMBERTIAN_H
-#include "pdf/CosinePdf.h"
+#include "Material.h"
 
 class Texture;
 
@@ -13,16 +13,9 @@ public:
     explicit Lambertian(const color& albedo) : tex(make_shared<SolidColor>(albedo)) {}
     explicit Lambertian(const shared_ptr<Texture> &tex) : tex(tex) {}
 
-    [[nodiscard]] bool scatter(const ray& rIn, const shape_intersection& rec, const ScatterRecord& sRec, const std::shared_ptr<sampler>& sampler) const override {
-        sRec.attenuation = tex->value(rec.u, rec.v, rec.p);
-        sRec.pdfPtr = make_shared<CosinePdf>(rec.normal);
-        sRec.skipPdf = false;
-        return true;
-    }
-
-    [[nodiscard]] double scatteringPdf(const ray& r_in, const shape_intersection& rec, const ray& scattered) const override {
-        const auto cos_theta = dot(rec.normal, unit_vector(scattered.d()));
-        return cos_theta < 0 ? 0 : cos_theta/pi;
+    std::unique_ptr<bsdf> get_bsdf(const shape_intersection& rec) const override {
+        color albedo = tex->value(rec.u, rec.v, rec.p);
+        return std::make_unique<lambertian_bsdf>(albedo, rec.normal);
     }
 
 private:

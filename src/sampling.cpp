@@ -43,3 +43,15 @@ vec3 random_to_sphere(const point2 u, const double radius, const double distance
 
     return {x, y, z};
 }
+
+vec3 cosine_sample_hemisphere(const point2& u)
+{
+    const double r = std::sqrt(u.x);
+    const double phi = 2 * pi * u.y;
+
+    double x = r * std::cos(phi);
+    double y = r * std::sin(phi);
+    double z = std::sqrt(1 - u.x);
+
+    return { x, y, z };
+}

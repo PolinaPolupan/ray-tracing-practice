@@ -7,7 +7,25 @@
 #include "material/Material.h"
 #include "material/ScatterRecord.h"
 #include "pdf/HittablePdf.h"
-#include "pdf/MixturePdf.h"
+
+class BsdfPdf final : public PDF {
+public:
+    BsdfPdf(const bsdf& bsdf, const vec3& wo)
+        : bsdf_(bsdf), wo_(wo) {}
+
+    [[nodiscard]] double value(const vec3& direction) const override {
+        return bsdf_.pdf(wo_, direction);
+    }
+
+    [[nodiscard]] vec3 generate(const std::shared_ptr<sampler>& sampler) const override {
+        return bsdf_.sample_f(wo_, sampler->gen_2d()).wi;
+    }
+
+private:
+    const bsdf& bsdf_;
+    vec3 wo_;
+};
+
 
 void integrator::render() const
 {
@@ -46,28 +64,38 @@ color integrator::li(const ray &r, const int depth) const {
 
     const shape_intersection& rec = *rec_opt;
 
-    ScatterRecord sRec;
-    const color color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
+    const color L = rec.mat->Le(r, rec, rec.u, rec.v, rec.p);
 
-    if (!rec.mat->scatter(r, rec, sRec, sampler_))
-        return color_from_emission;
+    auto bsdf = rec.mat->get_bsdf(rec);
+    if (!bsdf)
+        return L; // Material is purely emissive or absorbs everything (like a light source)
 
-    if (sRec.skipPdf) {
-        return sRec.attenuation * li(sRec.skipPdfRay, depth-1);
+    vec3 wi;
+    double pdf_val;
+    vec3 wo = -unit_vector(r.d()); // Direction towards camera
+
+    // Create Light PDF
+    HittablePdf light_pdf(*lights_, rec.p);
+
+    if (sampler_->gen_1d() < 0.5) {
+        // Strategy A: Sample Light
+        wi = light_pdf.generate(sampler_);
+    } else {
+        // Strategy B: Sample BSDF
+        wi = bsdf->sample_f(wo, sampler_->gen_2d()).wi;
     }
 
-    const auto light_ptr = make_shared<HittablePdf>(*lights_, rec.p);
-    const MixturePdf p(light_ptr, sRec.pdfPtr);
+    double p_light = light_pdf.value(wi);
+    double p_bsdf = bsdf->pdf(wo, wi);
+    pdf_val = 0.5 * p_light + 0.5 * p_bsdf;
 
-    const auto scattered = ray(rec.p, p.generate(sampler_), r.time());
-    auto pdf_value = p.value(scattered.d());
+    if (pdf_val <= 0)
+        return L;
 
-    const double scattering_pdf = rec.mat->scatteringPdf(r, rec, scattered);
+    color f_val = bsdf->f(wo, wi);
+    double cos_theta = std::max(0.0, dot(rec.normal, unit_vector(wi)));
 
-    const color sample_color = li(scattered, depth-1);
-    const color color_from_scatter =
-        (sRec.attenuation * scattering_pdf * sample_color) / pdf_value;
-
-    return color_from_emission + color_from_scatter;
+    // 8. Render Equation: L = Le + (f * Li * cos) / pdf
+    return L + (f_val * li(ray(rec.p, wi, r.time()), depth - 1) * cos_theta) / pdf_val;
 }
 
