@@ -3,9 +3,8 @@
 #include <memory>
 
 #include "bsdf.h"
+#include "textures.h"
 #include "hittable/shape_intersection.h"
-#include "texture/SolidColor.h"
-#include "texture/Texture.h"
 
 
 class material {
@@ -21,8 +20,8 @@ public:
 
 class lambertian final : public material {
 public:
-    explicit lambertian(const color& albedo) : tex_(make_shared<SolidColor>(albedo)) {}
-    explicit lambertian(const shared_ptr<Texture> &tex) : tex_(tex) {}
+    explicit lambertian(const color& albedo) : tex_(make_shared<solid_color>(albedo)) {}
+    explicit lambertian(const shared_ptr<texture> &tex) : tex_(tex) {}
 
     [[nodiscard]] std::unique_ptr<bsdf> get_bsdf(const shape_intersection& rec) const override {
         color albedo = tex_->value(rec.u, rec.v, rec.p);
@@ -30,7 +29,7 @@ public:
     }
 
 private:
-    shared_ptr<Texture> tex_;
+    shared_ptr<texture> tex_;
 };
 
 class dielectric final : public material {
@@ -61,8 +60,8 @@ private:
 
 class diffuse_light final : public material {
 public:
-    explicit diffuse_light(const std::shared_ptr<Texture>& tex) : tex_(tex) {}
-    explicit diffuse_light(const color& emit): tex_(make_shared<SolidColor>(emit)) {}
+    explicit diffuse_light(const std::shared_ptr<texture>& tex) : tex_(tex) {}
+    explicit diffuse_light(const color& emit): tex_(make_shared<solid_color>(emit)) {}
 
     [[nodiscard]] std::unique_ptr<bsdf> get_bsdf(const shape_intersection&) const override {
         return nullptr;
@@ -75,7 +74,7 @@ public:
     }
 
 private:
-    shared_ptr<Texture> tex_;
+    shared_ptr<texture> tex_;
 };
 
 #endif //RAY_TRACING_IN_ONE_WEEK_MATERIALS_H
