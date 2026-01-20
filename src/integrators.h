@@ -33,7 +33,7 @@ public:
     std::shared_ptr<HittableList> world_;
     std::shared_ptr<HittableList> lights_;
 
-    int    max_depth         = 10;   // Maximum number of ray bounces into scene
+    int max_depth = 10;   // Maximum number of ray bounces into scene
 };
 
 

@@ -3,8 +3,8 @@
 #include <memory>
 
 #include "bsdf.h"
+#include "shapes.h"
 #include "textures.h"
-#include "hittable/shape_intersection.h"
 
 
 class material {

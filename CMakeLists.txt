@@ -15,16 +15,8 @@ project ("Ray Tracing In One Week")
 add_executable (inOneWeekend
         src/rtweekend.cpp
         src/ray.h
-        src/hittable/shape.h
-        src/hittable/Sphere.h
         src/rtweekend.h
-        src/hittable/BVHNode.h
         src/rtw_image.h
-        src/hittable/Quad.h
-        src/hittable/shape_intersection.h
-        src/hittable/HittableList.h
-        src/hittable/Translate.h
-        src/hittable/RotateY.h
         src/integrators.cpp
         src/integrators.h
         src/film.cpp
@@ -40,7 +32,9 @@ add_executable (inOneWeekend
         src/materials.h
         src/textures.cpp
         src/textures.h
-        src/rtw_image.cpp)
+        src/rtw_image.cpp
+        src/shapes.cpp
+        src/shapes.h)
 
 target_include_directories(inOneWeekend PRIVATE
         ${CMAKE_SOURCE_DIR}/src

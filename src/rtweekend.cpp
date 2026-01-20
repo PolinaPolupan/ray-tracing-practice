@@ -2,14 +2,10 @@
 
 #include "rtweekend.h"
 
-#include "hittable/shape.h"
 #include "cameras.h"
 #include "integrators.h"
 #include "materials.h"
-#include "hittable/Quad.h"
-#include "hittable/RotateY.h"
-#include "hittable/Sphere.h"
-#include "hittable/Translate.h"
+#include "shapes.h"
 
 
 void cornell_box() {

@@ -1,8 +1,7 @@
 #include "integrators.h"
 
 #include "materials.h"
-#include "hittable/HittableList.h"
-#include "hittable/shape_intersection.h"
+#include "shapes.h"
 
 
 void integrator::render() const
