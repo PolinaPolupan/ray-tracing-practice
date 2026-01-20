@@ -7,6 +7,14 @@ class ray;
 
 struct point2 {
     double x, y;
+
+    double operator[](const int i) const {
+        return (i == 0) ? x : y;
+    }
+
+    double& operator[](const int i) {
+        return (i == 0) ? x : y;
+    }
 };
 
 class vec3 {

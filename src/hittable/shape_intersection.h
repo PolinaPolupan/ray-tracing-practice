@@ -7,13 +7,13 @@
 #include "ray.h"
 
 
-class Material;
+class material;
 
 class shape_intersection {
 public:
     point3 p;
     vec3 normal;
-    shared_ptr<Material> mat;
+    shared_ptr<material> mat;
     double t{};
     double u;
     double v;

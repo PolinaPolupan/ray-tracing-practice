@@ -5,23 +5,21 @@
 #include "hittable/shape.h"
 #include "cameras.h"
 #include "integrators.h"
+#include "materials.h"
 #include "hittable/Quad.h"
 #include "hittable/RotateY.h"
 #include "hittable/Sphere.h"
 #include "hittable/Translate.h"
-#include "material/Dielectric.h"
-#include "material/DiffuseLight.h"
-#include "material/Lambertian.h"
 #include "texture/ImageTexture.h"
 
 
 void cornell_box() {
     HittableList world;
 
-    auto red   = make_shared<Lambertian>(color(.65, .05, .05));
-    auto white = make_shared<Lambertian>(color(.73, .73, .73));
-    auto green = make_shared<Lambertian>(color(.12, .45, .15));
-    auto light = make_shared<DiffuseLight>(color(15, 15, 15));
+    auto red   = make_shared<lambertian>(color(.65, .05, .05));
+    auto white = make_shared<lambertian>(color(.73, .73, .73));
+    auto green = make_shared<lambertian>(color(.12, .45, .15));
+    auto light = make_shared<diffuse_light>(color(15, 15, 15));
 
     world.add(make_shared<Quad>(point3(555,0,0), vec3(0,555,0), vec3(0,0,555), green));
     world.add(make_shared<Quad>(point3(0,0,0), vec3(0,555,0), vec3(0,0,555), red));
@@ -37,18 +35,18 @@ void cornell_box() {
     world.add(box1);
 
     // Glass Sphere
-    auto glass = make_shared<Dielectric>(1.5);
+    auto glass = make_shared<metal>(color(1, 1, 1), 0.0);
     world.add(make_shared<Sphere>(point3(190,90,190), 90, glass));
 
     // Light Sources
     HittableList lights;
-    auto empty_material = shared_ptr<Material>();
+    auto empty_material = shared_ptr<material>();
     lights.add(make_shared<Quad>(point3(343,554,332), vec3(-130,0,0), vec3(0,0,-105), empty_material));
     lights.add(make_shared<Sphere>(point3(190, 90, 190), 90, empty_material));
 
     film film;
     const auto cam = std::make_shared<camera>(&film);
-    const auto samp = std::make_shared<stratified_sampler>(16);
+    const auto samp = std::make_shared<stratified_sampler>(36);
 
     cam->aspect_ratio      = 1.0;
     cam->image_width       = 600;

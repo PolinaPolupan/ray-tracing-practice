@@ -6,14 +6,14 @@
 class Sphere final : public shape {
 public:
     // Stationary Sphere
-    Sphere(const point3& static_center, double radius, const shared_ptr<Material> &mat)
+    Sphere(const point3& static_center, double radius, const shared_ptr<material> &mat)
       : center(static_center, vec3(0,0,0)), radius(std::fmax(0,radius)), mat(mat) {
         const auto rvec = vec3(radius, radius, radius);
         bbox = bounds3(static_center - rvec, static_center + rvec);
     }
 
     // Moving Sphere
-    Sphere(const point3& center1, const point3& center2, const double radius, const shared_ptr<Material> &mat)
+    Sphere(const point3& center1, const point3& center2, const double radius, const shared_ptr<material> &mat)
       : center(center1, center2 - center1), radius(std::fmax(0,radius)), mat(mat) {
         const auto rvec = vec3(radius, radius, radius);
         const bounds3 box1(center.at(0) - rvec, center.at(0) + rvec);
@@ -76,7 +76,7 @@ public:
 private:
     ray center;
     double radius;
-    shared_ptr<Material> mat;
+    shared_ptr<material> mat;
     bounds3 bbox;
 
 private:
