@@ -11,7 +11,7 @@
 
 class Quad final : public shape {
 public:
-    Quad(const point3& Q, const vec3& u, const vec3& v, const std::shared_ptr<Material> &mat)
+    Quad(const point3& Q, const vec3& u, const vec3& v, const std::shared_ptr<material> &mat)
       : Q(Q), u(u), v(v), mat(mat)
     {
         const auto n = cross(u, v);
@@ -95,14 +95,14 @@ private:
     point3 Q;
     vec3 u, v;
     vec3 w;
-    shared_ptr<Material> mat;
+    shared_ptr<material> mat;
     bounds3 bbox;
     vec3 normal;
     double D;
     double area;
 };
 
-inline shared_ptr<HittableList> box(const point3& a, const point3& b, const shared_ptr<Material>& mat)
+inline shared_ptr<HittableList> box(const point3& a, const point3& b, const shared_ptr<material>& mat)
 {
     // Returns the 3D box (six sides) that contains the two opposite vertices a & b.
 

@@ -4,6 +4,7 @@
 
 #ifndef HITTABLEPDF_H
 #define HITTABLEPDF_H
+#include "PDF.h"
 #include "hittable/HittableList.h"
 
 

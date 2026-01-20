@@ -17,6 +17,17 @@ vec3 sample_uniform_hemisphere(const point2 u)
     return {x, y, z};
 }
 
+vec3 sample_uniform_sphere(const point2& u)
+{
+    const double z = 1.0 - 2.0 * u.x;
+    const double r = std::sqrt(std::max(0.0, 1.0 - z * z));
+    const double phi = 2.0 * pi * u.y;
+    auto x = r * std::cos(phi);
+    auto y = r * std::sin(phi);
+
+    return { x, y, z };
+}
+
 point3 defocus_disk_sample(const std::shared_ptr<sampler>& samp, const point3& center, const vec3& du, const vec3& dv)
 {
     vec3 p;
@@ -42,4 +53,16 @@ vec3 random_to_sphere(const point2 u, const double radius, const double distance
     auto y = std::sin(phi) * std::sqrt(1-z*z);
 
     return {x, y, z};
+}
+
+vec3 cosine_sample_hemisphere(const point2& u)
+{
+    const double r = std::sqrt(u.x);
+    const double phi = 2 * pi * u.y;
+
+    double x = r * std::cos(phi);
+    double y = r * std::sin(phi);
+    double z = std::sqrt(1 - u.x);
+
+    return { x, y, z };
 }

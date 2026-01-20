@@ -90,8 +90,13 @@ private:
 
 vec3 sample_uniform_hemisphere(point2 u);
 
+vec3 sample_uniform_sphere(const point2& u);
+
 point3 defocus_disk_sample(const std::shared_ptr<sampler>& samp, const point3& center, const vec3& du, const vec3& dv);
 
 vec3 random_to_sphere(point2 u, double radius, double distance_squared);
+
+vec3 cosine_sample_hemisphere(const point2& u);
+
 
 #endif //SAMPLING_H

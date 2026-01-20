@@ -18,30 +18,15 @@ add_executable (inOneWeekend
         src/hittable/shape.h
         src/hittable/Sphere.h
         src/rtweekend.h
-        src/material/Material.h
-        src/material/Lambertian.h
-        src/material/Metal.h
-        src/material/Dielectric.h
         src/hittable/BVHNode.h
-        src/texture/Texture.h
-        src/texture/SolidColor.h
-        src/texture/CheckerTexture.h
-        src/RtwImage.h
-        src/texture/ImageTexture.h
-        src/texture/NoiseTexture.h
+        src/rtw_image.h
         src/hittable/Quad.h
-        src/material/DiffuseLight.h
         src/hittable/shape_intersection.h
         src/hittable/HittableList.h
         src/hittable/Translate.h
         src/hittable/RotateY.h
-        src/material/Isotropic.h
         src/pdf/PDF.h
-        src/pdf/SpherePdf.h
-        src/pdf/CosinePdf.h
         src/pdf/HittablePdf.h
-        src/pdf/MixturePdf.h
-        src/material/ScatterRecord.h
         src/integrators.cpp
         src/integrators.h
         src/film.cpp
@@ -51,7 +36,13 @@ add_executable (inOneWeekend
         src/sampling.cpp
         src/sampling.h
         src/math.cpp
-        src/math.h)
+        src/math.h
+        src/bsdf.cpp
+        src/bsdf.h
+        src/materials.h
+        src/textures.cpp
+        src/textures.h
+        src/rtw_image.cpp)
 
 target_include_directories(inOneWeekend PRIVATE
         ${CMAKE_SOURCE_DIR}/src

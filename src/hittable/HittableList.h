@@ -18,6 +18,12 @@ public:
     HittableList() = default;
     explicit HittableList(const shared_ptr<shape>& object) { add(object); }
 
+    auto begin() { return objects.begin(); }
+    auto end() { return objects.end(); }
+
+    auto begin() const { return objects.begin(); }
+    auto end() const { return objects.end(); }
+
     void clear() { objects.clear(); }
 
     void add(const shared_ptr<shape>& object) {
