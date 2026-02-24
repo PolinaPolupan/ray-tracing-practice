@@ -12,47 +12,57 @@ struct bsdf_sample {
 class bsdf
 {
 public:
+    explicit bsdf(const vec3& n): onb_(n), n_(n) {}
+
     virtual ~bsdf() = default;
 
-    [[nodiscard]] virtual bsdf_sample sample_f(const vec3& wo, const point2& u) const = 0;
+    [[nodiscard]] virtual bsdf_sample sample_f(const vec3& wo, const vec3& wi) const = 0;
 
     [[nodiscard]] virtual color f(const vec3& wo, const vec3& wi) const = 0;
 
     [[nodiscard]] virtual double pdf(const vec3& wo, const vec3& wi) const = 0;
 
     [[nodiscard]] virtual bool is_specular() const { return false; }
+
+protected:
+    [[nodiscard]] vec3 to_local(const vec3& v) const
+    {
+        return onb_.transform(v);
+    }
+
+    orthonormal_base onb_;
+    vec3 n_;
 };
 
 class lambertian_bsdf final: public bsdf {
 public:
-    lambertian_bsdf(const color& albedo, const vec3& normal)
-      : albedo(albedo), n(normal) {}
+    lambertian_bsdf(const color& albedo, const vec3& normal): bsdf(normal), albedo_(albedo) {}
 
-    [[nodiscard]] bsdf_sample sample_f(const vec3& wo, const point2& u) const override;
+    [[nodiscard]] bsdf_sample sample_f(const vec3& wo, const vec3& wi) const override;
 
     [[nodiscard]] color f(const vec3&, const vec3& wi) const override {
-        double cos = dot(n, unit_vector(wi));
+        double cos = dot(n_, unit_vector(wi));
         if (cos <= 0) return {0,0,0};
-        return albedo / pi;
+        return albedo_ / pi;
     }
 
     [[nodiscard]] double pdf(const vec3&, const vec3& wi) const override {
-        const double cos = dot(n, unit_vector(wi));
+        double cos = dot(n_, unit_vector(wi));
         return cos > 0 ? cos / pi : 0;
     }
 
 private:
-    color albedo;
-    vec3 n;
+    color albedo_;
 };
 
 class dielectric_bsdf final : public bsdf {
 public:
-    dielectric_bsdf(const double ior, const vec3& normal, const bool front_face): ior_(ior), n_(normal), front_face_(front_face) {}
+    dielectric_bsdf(const double ior, const vec3& normal, const bool front_face):
+    bsdf(normal), ior_(ior), front_face_(front_face) {}
 
     [[nodiscard]] bool is_specular() const override { return true; }
 
-    [[nodiscard]] bsdf_sample sample_f(const vec3& wo, const point2& u) const override;
+    [[nodiscard]] bsdf_sample sample_f(const vec3& wo, const vec3& wi) const override;
 
     [[nodiscard]] double pdf(const vec3& wo, const vec3& wi) const override {
         return 0;
@@ -64,7 +74,6 @@ public:
 
 private:
     double ior_;
-    vec3 n_;
     bool front_face_;
 
     static double reflectance(const double cosine, const double refraction_index) {
@@ -78,19 +87,18 @@ private:
 class metal_bsdf final : public bsdf {
 public:
     metal_bsdf(const color& albedo, const double fuzz, const vec3& normal)
-        : albedo(albedo), fuzz(fuzz), n(normal) {}
+        : bsdf(normal), albedo_(albedo), fuzz_(fuzz) {}
 
     [[nodiscard]] bool is_specular() const override { return true; }
 
-    [[nodiscard]] bsdf_sample sample_f(const vec3& wo, const point2& u) const override;
+    [[nodiscard]] bsdf_sample sample_f(const vec3& wo, const vec3& wi) const override;
 
     [[nodiscard]] color f(const vec3& wo, const vec3& wi) const override { return {0,0,0}; }
     [[nodiscard]] double pdf(const vec3& wo, const vec3& wi) const override { return 0.0; }
 
 private:
-    color albedo;
-    double fuzz;
-    vec3 n;
+    color albedo_;
+    double fuzz_;
 };
 
 #endif //RAY_TRACING_IN_ONE_WEEK_BSDF_H

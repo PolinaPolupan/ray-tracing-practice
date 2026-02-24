@@ -53,7 +53,7 @@ void cornell_box() {
 
     cam->defocus_angle = 0;
 
-    const integrator integrator(cam, samp, std::make_shared<hittable_list>(world), std::make_shared<hittable_list>(lights));
+    const random_walk_integrator integrator(cam, samp, std::make_shared<hittable_list>(world), std::make_shared<hittable_list>(lights));
 
     integrator.render();
 }
