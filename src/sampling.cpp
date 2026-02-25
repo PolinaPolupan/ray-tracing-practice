@@ -6,15 +6,11 @@
 
 vec3 sample_uniform_hemisphere(const point2 u)
 {
-    const auto r1 = u.x;
-    const auto r2 = u.y;
+    const double z = u.x;
+    const double r = std::sqrt(std::max(0.0, 1.0 - z * z));
+    const double phi = 2.0 * pi * u.y;
 
-    const auto phi = 2*pi*r1;
-    auto x = std::cos(phi) * std::sqrt(r2);
-    auto y = std::sin(phi) * std::sqrt(r2);
-    auto z = std::sqrt(1-r2);
-
-    return {x, y, z};
+    return { r * std::cos(phi), r * std::sin(phi), z };
 }
 
 vec3 sample_uniform_sphere(const point2& u)

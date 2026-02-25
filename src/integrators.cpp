@@ -43,20 +43,19 @@ color random_walk_integrator::li(const ray &r, const int depth) const {
     const color L = rec.mat->Le(r, rec, rec.u, rec.v, rec.p);
 
     const auto bsdf = rec.mat->get_bsdf(rec);
-    if (!bsdf)
-        return L;
+    if (!bsdf) return L;
 
     const vec3 wo = -unit_vector(r.d());
+
     const orthonormal_base onb(rec.normal);
     const vec3 wi_local = sample_uniform_hemisphere(sampler_->gen_2d());
     const vec3 wi = onb.transform(wi_local);
 
     const color f = bsdf->f(wo, wi);
-    const double pdf = bsdf->pdf(wo, wi);
 
     const double cos_theta = std::max(0.0, dot(rec.normal, unit_vector(wi)));
 
-    return L + f * li(ray(rec.p, wi, r.time()), depth-1) * cos_theta / pdf;
+    return L + f * li(ray(rec.p, wi, r.time()), depth-1) * cos_theta / (1.0 / (2.0 * pi));
 }
 
 color path_integrator::li(const ray &r, const int depth) const {
