@@ -12,43 +12,44 @@ struct bsdf_sample {
 class bsdf
 {
 public:
-    explicit bsdf(const vec3& n): onb_(n), n_(n) {}
+    explicit bsdf(const vec3& n): frame_(n) {}
 
     virtual ~bsdf() = default;
 
-    [[nodiscard]] virtual bsdf_sample sample_f(const vec3& wo, const vec3& wi) const = 0;
+    [[nodiscard]] virtual bsdf_sample sample_f(const vec3& wo_world, const point2& u) const = 0;
 
-    [[nodiscard]] virtual color f(const vec3& wo, const vec3& wi) const = 0;
+    [[nodiscard]] virtual color f(const vec3& wo_world, const vec3& wi_world) const = 0;
 
-    [[nodiscard]] virtual double pdf(const vec3& wo, const vec3& wi) const = 0;
+    [[nodiscard]] virtual double pdf(const vec3& wo_world, const vec3& wi_world) const = 0;
 
     [[nodiscard]] virtual bool is_specular() const { return false; }
 
 protected:
-    [[nodiscard]] vec3 to_local(const vec3& v) const
-    {
-        return onb_.transform(v);
-    }
-
-    orthonormal_base onb_;
-    vec3 n_;
+    frame frame_;
 };
 
 class lambertian_bsdf final: public bsdf {
 public:
     lambertian_bsdf(const color& albedo, const vec3& normal): bsdf(normal), albedo_(albedo) {}
 
-    [[nodiscard]] bsdf_sample sample_f(const vec3& wo, const vec3& wi) const override;
+    [[nodiscard]] bsdf_sample sample_f(const vec3& wo_world, const point2& u) const override;
 
-    [[nodiscard]] color f(const vec3&, const vec3& wi) const override {
-        double cos = dot(n_, unit_vector(wi));
-        if (cos <= 0) return {0,0,0};
+    [[nodiscard]] color f(const vec3& wo_world, const vec3& wi_world) const override
+    {
+        const vec3 wi = frame_.to_local(wi_world);
+
+        if (wi.z() <= 0) return {0,0,0};
+
         return albedo_ / pi;
     }
 
-    [[nodiscard]] double pdf(const vec3&, const vec3& wi) const override {
-        double cos = dot(n_, unit_vector(wi));
-        return cos > 0 ? cos / pi : 0;
+    [[nodiscard]] double pdf(const vec3& wo_world, const vec3& wi_world) const override
+    {
+        const vec3 wi = frame_.to_local(wi_world);
+
+        if (wi.z() <= 0) return 0;
+
+        return wi.z() / pi;
     }
 
 private:
@@ -62,7 +63,7 @@ public:
 
     [[nodiscard]] bool is_specular() const override { return true; }
 
-    [[nodiscard]] bsdf_sample sample_f(const vec3& wo, const vec3& wi) const override;
+    [[nodiscard]] bsdf_sample sample_f(const vec3& wo_world, const point2& u) const override;
 
     [[nodiscard]] double pdf(const vec3& wo, const vec3& wi) const override {
         return 0;
@@ -91,7 +92,7 @@ public:
 
     [[nodiscard]] bool is_specular() const override { return true; }
 
-    [[nodiscard]] bsdf_sample sample_f(const vec3& wo, const vec3& wi) const override;
+    [[nodiscard]] bsdf_sample sample_f(const vec3& wo_world, const point2& u) const override;
 
     [[nodiscard]] color f(const vec3& wo, const vec3& wi) const override { return {0,0,0}; }
     [[nodiscard]] double pdf(const vec3& wo, const vec3& wi) const override { return 0.0; }

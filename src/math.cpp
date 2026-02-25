@@ -4,9 +4,6 @@
 
 /* ---------------- vec3d ---------------- */
 
-vec3::vec3() : e{0,0,0} {}
-vec3::vec3(const double e0, const double e1, const double e2) : e{e0,e1,e2} {}
-
 vec3 vec3::operator-() const {
     return {-e[0], -e[1], -e[2]};
 }
@@ -209,13 +206,13 @@ void bounds3::padToMinimums() {
 
 /* ---------------- ONB ---------------- */
 
-orthonormal_base::orthonormal_base(const vec3& n) {
+frame::frame(const vec3& n) {
     axis[2] = unit_vector(n);
     vec3 a = (std::fabs(axis[2].x()) > 0.9) ? vec3(0,1,0) : vec3(1,0,0);
     axis[1] = unit_vector(cross(axis[2], a));
     axis[0] = cross(axis[2], axis[1]);
 }
 
-vec3 orthonormal_base::transform(const vec3& v) const {
+vec3 frame::transform(const vec3& v) const {
     return v[0]*axis[0] + v[1]*axis[1] + v[2]*axis[2];
 }

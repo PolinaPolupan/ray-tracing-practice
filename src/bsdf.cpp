@@ -1,58 +1,62 @@
 #include "bsdf.h"
 
-bsdf_sample lambertian_bsdf::sample_f(const vec3& wo, const vec3& wi) const
+bsdf_sample lambertian_bsdf::sample_f(const vec3& wo_world, const point2& u) const
 {
-    const double pdf_val = pdf(wo, wi);
-    const color f_val = f(wo, wi);
+    const vec3 wi_local = cosine_sample_hemisphere(u);
 
-    return { wi, f_val, pdf_val };
+    const double pdf = wi_local.z() / pi;
+    const color f = albedo_ / pi;
+
+    return { frame_.from_local(wi_local), f, pdf };
 }
 
-bsdf_sample dielectric_bsdf::sample_f(const vec3& wo, const vec3& wi) const
+bsdf_sample dielectric_bsdf::sample_f(const vec3& wo_world, const point2& u) const
 {
-    // NOTE: 'wo' is the vector pointing OUT from the surface towards the camera.
-    // The original logic used 'unit_direction' (incident ray), which is -wo.
+    const vec3 wo = frame_.to_local(wo_world);
+    const vec3 n(0,0,1);
 
-    const double ri = front_face_ ? (1.0 / ior_) : ior_;
+    double eta_i = 1.0;
+    double eta_t = ior_;
 
-    // Incident vector (pointing INTO the surface)
+    const bool entering = wo.z() > 0;
+
+    if (!entering)
+        std::swap(eta_i, eta_t);
+
+    const double eta = eta_i / eta_t;
+
     const vec3 wi_in = -wo;
 
-    const double cos_theta = std::fmin(dot(wo, n_), 1.0);
-    const double sin_theta = std::sqrt(1.0 - cos_theta * cos_theta);
+    const double cos_theta = std::abs(wo.z());
+    const double sin_theta = std::sqrt(std::max(0.0, 1 - cos_theta*cos_theta));
 
-    const bool cannot_refract = ri * sin_theta > 1.0;
-    vec3 direction;
+    const bool cannot_refract = eta * sin_theta > 1.0;
 
-    if (cannot_refract || reflectance(cos_theta, ri) > 0.5) {
-        direction = reflect(wi_in, n_);
+    const double Fr = reflectance(cos_theta, eta);
+
+    vec3 wi_local;
+
+    if (cannot_refract || u.x < Fr) {
+        // reflect
+        wi_local = reflect(wi_in, n);
     } else {
-        direction = refract(wi_in, n_, ri);
+        // refract
+        wi_local = refract(wi_in, n, eta);
     }
 
-    // For perfect specular, the "f" value is effectively 1.0 (white)
-    // because the PDF is a delta function. The integrator handles the recursion.
-    return { direction, color(1.0, 1.0, 1.0), 1.0 };
+    return {frame_.from_local(wi_local), color(1.0),1.0 };
 }
 
-bsdf_sample metal_bsdf::sample_f(const vec3& wo, const vec3& wi) const
+bsdf_sample metal_bsdf::sample_f(const vec3& wo_world, const point2& u) const
 {
-    // 1. Calculate perfect reflection
-    // wo points OUT, so -wo points IN
-    const vec3 reflected = reflect(-wo, n_);
+    const vec3 wo = frame_.to_local(wo_world);
 
-    // 2. Add fuzz
-    // We need to map the 2D sample 'u' to a random point on a unit sphere.
-    // (If fuzz is 0, this part is skipped effectively)
-    const vec3 wi_fuzz = unit_vector(reflected + fuzz_ * wi);
+    const vec3 n(0,0,1);
 
-    // 3. Check if the fuzzed ray scattered below the surface
-    if (dot(wi_fuzz, n_) <= 0) {
-        // Absorbed
-        return { vec3(0,0,0), color(0,0,0), 0.0 };
-    }
+    const vec3 wi_local = reflect(-wo, n);
 
-    // For specular/delta interactions, we return the albedo as the throughput 'f'
-    // and PDF 1.0 (placeholder).
-    return { wi_fuzz, albedo_, 1.0 };
+    if (wi_local.z() <= 0)
+        return { vec3(0), color(0), 0 };
+
+    return {frame_.from_local(wi_local), albedo_, 1.0};
 }

@@ -21,8 +21,9 @@ class vec3 {
 public:
     double e[3];
 
-    vec3();
-    vec3(double e0, double e1, double e2);
+    vec3() : e{0,0,0} {}
+    vec3(const double e0) : e{e0,e0,e0} {}
+    vec3(const double e0, const double e1, const double e2) : e{e0,e1,e2} {}
 
     [[nodiscard]] double x() const { return e[0]; }
     [[nodiscard]] double y() const { return e[1]; }
@@ -107,17 +108,25 @@ private:
 bounds3 operator+(const bounds3& bbox, const vec3& offset);
 bounds3 operator+(const vec3& offset, const bounds3& bbox);
 
-/* ---------------- ONB ---------------- */
-
-class orthonormal_base {
+class frame {
 public:
-    explicit orthonormal_base(const vec3& n);
+    explicit frame(const vec3& n);
 
     [[nodiscard]] const vec3& u() const { return axis[0]; }
     [[nodiscard]] const vec3& v() const { return axis[1]; }
     [[nodiscard]] const vec3& w() const { return axis[2]; }
 
     [[nodiscard]] vec3 transform(const vec3& v) const;
+
+    [[nodiscard]] vec3 to_local(const vec3& v) const
+    {
+        return {dot(v, axis[0]), dot(v, axis[1]), dot(v, axis[2])};
+    }
+
+    [[nodiscard]] vec3 from_local(const vec3& v) const
+    {
+        return {v.x() * axis[0] + v.y() * axis[1] + v.z() * axis[2]};
+    }
 
 private:
     vec3 axis[3];

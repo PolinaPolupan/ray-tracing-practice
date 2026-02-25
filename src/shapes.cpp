@@ -254,7 +254,7 @@ vec3 sphere::random(const point3& origin, const std::shared_ptr<sampler>& sample
 {
     const vec3 direction = center.at(0) - origin;
     const auto distance_squared = direction.length_squared();
-    const orthonormal_base uvw(direction);
+    const frame uvw(direction);
     return uvw.transform(random_to_sphere(sampler->gen_2d(), radius, distance_squared));
 }
 
