@@ -32,6 +32,7 @@ public:
     vec3 operator-() const;
     double operator[](const int i) const { return e[i]; }
     double& operator[](const int i) { return e[i]; }
+    explicit operator bool() const { return e[0] || e[1] || e[2]; }
 
     vec3& operator+=(const vec3& v);
     vec3& operator*=(double t);

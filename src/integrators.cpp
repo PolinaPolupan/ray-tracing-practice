@@ -30,7 +30,7 @@ void integrator::render() const
     std::clog << "\rDone.                 \n";
 }
 
-color random_walk_integrator::li(const ray &r, const int depth) const {
+color random_walk_integrator::li(ray &r, const int depth) const {
     if (depth <= 0)
         return {0,0,0};
 
@@ -49,7 +49,8 @@ color random_walk_integrator::li(const ray &r, const int depth) const {
 
     if (bsdf->is_specular()) {
         const auto s = bsdf->sample_f(wo, sampler_->gen_2d());
-        return L + s.f * li(ray(rec.p, s.wi, r.time()), depth - 1);
+        r = ray(rec.p, s.wi, r.time());
+        return L + s.f * li(r, depth - 1);
     }
 
     const frame fr(rec.normal);
@@ -60,46 +61,66 @@ color random_walk_integrator::li(const ray &r, const int depth) const {
 
     const double cos_theta = std::max(0.0, dot(rec.normal, unit_vector(wi)));
 
-    return L + f * li(ray(rec.p, wi, r.time()), depth-1) * cos_theta / (1.0 / (2.0 * pi));
+    r = ray(rec.p, wi, r.time());
+    return L + f * li(r, depth-1) * cos_theta / (1.0 / (2.0 * pi));
 }
 
-color path_integrator::li(const ray &r, const int depth) const {
-    if (depth <= 0) return {0,0,0};
+inline double power_heuristic(double pdf_f, double pdf_g) {
+    double f2 = pdf_f * pdf_f;
+    double g2 = pdf_g * pdf_g;
+    return f2 / (f2 + g2);
+}
 
-    const auto rec_opt = world_->intersect(r, interval(0.001, infinity));
-    if (!rec_opt) return {0, 0, 0};
+color path_integrator::li(ray &r, const int d) const {
+    color L = 0.0f, beta = 1.0f;
+    int depth = 0;
 
-    const shape_intersection& rec = *rec_opt;
-    const color L = rec.mat->Le(r, rec, rec.u, rec.v, rec.p);
+    while (beta)
+    {
+        const auto rec_opt = world_->intersect(r, interval(0.001, infinity));
+        if (!rec_opt) return {0, 0, 0};
 
-    const auto bsdf = rec.mat->get_bsdf(rec);
-    if (!bsdf) return L;
+        // Emissive surfaces
+        const shape_intersection& rec = *rec_opt;
+        L += beta * rec.mat->Le(r, rec, rec.u, rec.v, rec.p);
 
-    const vec3 wo = -unit_vector(r.d());
-    vec3 wi;
+        // End path if maximum depth reached
+        if (depth++ == max_depth)
+            break;
 
-    if (bsdf->is_specular()) {
-        const auto s = bsdf->sample_f(wo, sampler_->gen_2d());
-        return L + s.f * li(ray(rec.p, s.wi, r.time()), depth - 1);
+        const auto bsdf = rec.mat->get_bsdf(rec);
+        if (!bsdf) return L;
+
+        const vec3 wo = -unit_vector(r.d());
+        vec3 wi;
+
+        if (bsdf->is_specular()) {
+            const auto s = bsdf->sample_f(wo, sampler_->gen_2d());
+            beta *= s.f;
+            r = ray(rec.p, s.wi, r.time());
+            continue;
+        }
+
+        if (sampler_->gen_1d() < 0.5) {
+            const vec3 light_vec = lights_->random(rec.p, sampler_);
+            wi = unit_vector(light_vec);
+        } else {
+            wi = bsdf->sample_f(wo, sampler_->gen_2d()).wi;
+            wi = unit_vector(wi);
+        }
+
+        const double p_light = lights_->pdf(rec.p, wi);
+        const double p_bsdf = bsdf->pdf(wo, wi);
+        const double pdf_val = 0.5 * p_light + 0.5 * p_bsdf;
+
+        if (pdf_val <= 1e-8) break;
+
+        const color f_val = bsdf->f(wo, wi);
+        const double cos_theta = std::max(0.0, dot(rec.normal, unit_vector(wi)));
+        beta *= f_val * cos_theta / pdf_val;
+
+        r = ray(rec.p, wi, r.time());
     }
 
-    if (sampler_->gen_1d() < 0.5) {
-        const vec3 light_vec = lights_->random(rec.p, sampler_);
-        wi = unit_vector(light_vec);
-    } else {
-        wi = bsdf->sample_f(wo, sampler_->gen_2d()).wi;
-        wi = unit_vector(wi);
-    }
-
-    const double p_light = lights_->pdf(rec.p, wi);
-    const double p_bsdf = bsdf->pdf(wo, wi);
-    const double pdf_val = 0.5 * p_light + 0.5 * p_bsdf;
-
-    if (pdf_val <= 1e-8) return L;
-
-    const color f_val = bsdf->f(wo, wi);
-
-    const double cos_theta = std::max(0.0, dot(rec.normal, unit_vector(wi)));
-
-    return L + (f_val * li(ray(rec.p, wi, r.time()), depth - 1) * cos_theta) / pdf_val;
+    return L;
 }

@@ -25,7 +25,7 @@ public:
 
     void render() const;
 
-    virtual vec3 li(const ray& r, int depth) const = 0;
+    virtual vec3 li(ray& r, int depth) const = 0;
 
 protected:
     std::shared_ptr<camera> camera_;
@@ -47,7 +47,7 @@ public:
         const std::shared_ptr<hittable_list>& lights
         ) : integrator(camera, sampler, world, lights) {}
 
-    [[nodiscard]] vec3 li(const ray& r, int depth) const override;
+    [[nodiscard]] vec3 li(ray& r, int depth) const override;
 };
 
 class path_integrator: public integrator
@@ -60,7 +60,7 @@ public:
         const std::shared_ptr<hittable_list>& lights
         ) : integrator(camera, sampler, world, lights) {}
 
-    [[nodiscard]] vec3 li(const ray& r, int depth) const override;
+    [[nodiscard]] vec3 li(ray& r, int depth) const override;
 };
 
 #endif //INTEGRATORS_H
