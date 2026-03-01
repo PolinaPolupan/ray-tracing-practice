@@ -65,12 +65,6 @@ color random_walk_integrator::li(ray &r, const int depth) const {
     return L + f * li(r, depth-1) * cos_theta / (1.0 / (2.0 * pi));
 }
 
-inline double power_heuristic(double pdf_f, double pdf_g) {
-    double f2 = pdf_f * pdf_f;
-    double g2 = pdf_g * pdf_g;
-    return f2 / (f2 + g2);
-}
-
 color path_integrator::li(ray &r, const int d) const {
     color L = 0.0f, beta = 1.0f;
     int depth = 0;
@@ -92,7 +86,6 @@ color path_integrator::li(ray &r, const int d) const {
         if (!bsdf) return L;
 
         const vec3 wo = -unit_vector(r.d());
-        vec3 wi;
 
         if (bsdf->is_specular()) {
             const auto s = bsdf->sample_f(wo, sampler_->gen_2d());
@@ -101,17 +94,14 @@ color path_integrator::li(ray &r, const int d) const {
             continue;
         }
 
-        if (sampler_->gen_1d() < 0.5) {
-            const vec3 light_vec = lights_->random(rec.p, sampler_);
-            wi = unit_vector(light_vec);
-        } else {
-            wi = bsdf->sample_f(wo, sampler_->gen_2d()).wi;
-            wi = unit_vector(wi);
+        const auto [light, p] = light_sampler_.sample(sampler_->gen_1d());
+        const light_li_sample ls = light->sample_li(rec.p);
+        if (unoccluded(rec.p, ls.p_light, rec.t)) {
+            L += beta * bsdf->f(wo, ls.wi) * std::max(0.0, dot(rec.normal, ls.wi)) * ls.li / (ls.pdf * p);
         }
 
-        const double p_light = lights_->pdf(rec.p, wi);
-        const double p_bsdf = bsdf->pdf(wo, wi);
-        const double pdf_val = 0.5 * p_light + 0.5 * p_bsdf;
+        vec3 wi = bsdf->sample_f(wo, sampler_->gen_2d()).wi;
+        const double pdf_val = bsdf->pdf(wo, wi);
 
         if (pdf_val <= 1e-8) break;
 

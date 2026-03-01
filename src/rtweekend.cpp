@@ -6,6 +6,7 @@
 #include "integrators.h"
 #include "materials.h"
 #include "shapes.h"
+#include "lights.h"
 
 
 void cornell_box() {
@@ -14,11 +15,9 @@ void cornell_box() {
     auto red   = make_shared<lambertian>(color(.65, .05, .05));
     auto white = make_shared<lambertian>(color(.73, .73, .73));
     auto green = make_shared<lambertian>(color(.12, .45, .15));
-    auto light = make_shared<diffuse_light>(color(15, 15, 15));
 
     world.add(make_shared<quad>(point3(555,0,0), vec3(0,555,0), vec3(0,0,555), green));
     world.add(make_shared<quad>(point3(0,0,0), vec3(0,555,0), vec3(0,0,555), red));
-    world.add(make_shared<quad>(point3(343, 554, 332), vec3(-130,0,0), vec3(0,0,-105), light));
     world.add(make_shared<quad>(point3(0,0,0), vec3(555,0,0), vec3(0,0,555), white));
     world.add(make_shared<quad>(point3(555,555,555), vec3(-555,0,0), vec3(0,0,-555), white));
     world.add(make_shared<quad>(point3(0,0,555), vec3(555,0,0), vec3(0,555,0), white));
@@ -31,13 +30,10 @@ void cornell_box() {
 
     // Glass Sphere
     auto glass = make_shared<metal>(color(1, 1, 1), 0.0);
-    world.add(make_shared<sphere>(point3(190,90,190), 90, glass));
+     world.add(make_shared<sphere>(point3(190,90,190), 90, glass));
 
-    // Light Sources
-    hittable_list lights;
     auto empty_material = shared_ptr<material>();
-    lights.add(make_shared<quad>(point3(343,554,332), vec3(-130,0,0), vec3(0,0,-105), empty_material));
-    lights.add(make_shared<sphere>(point3(190, 90, 190), 90, empty_material));
+
 
     film film;
     const auto cam = std::make_shared<camera>(&film);
@@ -53,9 +49,12 @@ void cornell_box() {
 
     cam->defocus_angle = 0;
 
-    const path_integrator integrator(cam, samp, std::make_shared<hittable_list>(world), std::make_shared<hittable_list>(lights));
+    std::vector<std::shared_ptr<light>> lights;
+    lights.push_back(std::make_shared<point_light>(vec3(278, 500, 278), 200000.0));
 
-    integrator.render();
+    auto integrator_ptr = std::make_shared<path_integrator>(cam, samp,std::make_shared<hittable_list>(world), lights);
+
+    integrator_ptr->render();
 }
 
 int main() {

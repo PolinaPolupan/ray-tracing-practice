@@ -7,7 +7,7 @@ bsdf_sample lambertian_bsdf::sample_f(const vec3& wo_world, const point2& u) con
     const double pdf = wi_local.z() / pi;
     const color f = albedo_ / pi;
 
-    return { frame_.from_local(wi_local), f, pdf };
+    return { unit_vector(frame_.from_local(wi_local)), f, pdf };
 }
 
 bsdf_sample dielectric_bsdf::sample_f(const vec3& wo_world, const point2& u) const
@@ -44,7 +44,7 @@ bsdf_sample dielectric_bsdf::sample_f(const vec3& wo_world, const point2& u) con
         wi_local = refract(wi_in, n, eta);
     }
 
-    return {frame_.from_local(wi_local), color(1.0),1.0 };
+    return {unit_vector(frame_.from_local(wi_local)), color(1.0),1.0 };
 }
 
 bsdf_sample metal_bsdf::sample_f(const vec3& wo_world, const point2& u) const
@@ -58,5 +58,5 @@ bsdf_sample metal_bsdf::sample_f(const vec3& wo_world, const point2& u) const
     if (wi_local.z() <= 0)
         return { vec3(0), color(0), 0 };
 
-    return {frame_.from_local(wi_local), albedo_, 1.0};
+    return {unit_vector(frame_.from_local(wi_local)), albedo_, 1.0};
 }

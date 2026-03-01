@@ -34,7 +34,9 @@ add_executable (inOneWeekend
         src/textures.h
         src/rtw_image.cpp
         src/shapes.cpp
-        src/shapes.h)
+        src/shapes.h
+        src/lights.h
+        src/lights.h)
 
 target_include_directories(inOneWeekend PRIVATE
         ${CMAKE_SOURCE_DIR}/src
