@@ -110,6 +110,15 @@ color path_integrator::li(ray &r, const int d) const {
         beta *= f_val * cos_theta / pdf_val;
 
         r = ray(rec.p, wi, r.time());
+
+        if (depth > 1) {
+            double max_component = std::max({beta.x(), beta.y(), beta.z()});
+            const double p_continue = std::max(0.05, max_component);
+            if (sampler_->gen_1d() > p_continue) {
+                break;
+            }
+            beta /= p_continue;
+        }
     }
 
     return L;
