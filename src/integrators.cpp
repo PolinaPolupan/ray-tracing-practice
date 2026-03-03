@@ -10,23 +10,20 @@ void integrator::render() const
 
     std::vector<color> image_buffer(camera_->image_width * camera_->image_height);
 
-    // Render
-    std::cout << "P3\n" << camera_->image_width << " " << camera_->image_height << "\n255\n";
+    for (int wave = 0; wave < sampler_->get_spp(); wave++)
+    {
+        sampler_->start_next_sample();
+        std::clog << "\rSample: " << wave << ' ' << std::flush;
+        for (int j = 0; j < camera_->image_height; j++) {
+            for (int i = 0; i < camera_->image_width; i++) {
+                color pixel_color(0,0,0);
 
-    for (int j = 0; j < camera_->image_height; j++) {
-        std::clog << "\rScanlines remaining: " << (camera_->image_height - j) << ' ' << std::flush;
-        for (int i = 0; i < camera_->image_width; i++) {
-            color pixel_color(0,0,0);
-
-            sampler_->start_pixel();
-
-            while (sampler_->start_next_sample()) {
                 ray r = camera_->gen_ray(sampler_, i, j);
                 pixel_color += li(r, max_depth);
-            }
 
-            const int index = j * camera_->image_width + i;
-            image_buffer[index] = pixel_color / sampler_->get_spp();
+                const int index = j * camera_->image_width + i;
+                image_buffer[index] += pixel_color / sampler_->get_spp();
+            }
         }
     }
 

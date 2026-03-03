@@ -68,7 +68,7 @@ public:
     }
 
     point2 gen_2d() override {
-        const int stratum = sample_index - 1;
+        const int stratum = sample_index;
         const int x = stratum % sqrt_spp;
         const int y = stratum / sqrt_spp;
 
