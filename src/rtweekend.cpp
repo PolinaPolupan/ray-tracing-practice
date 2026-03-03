@@ -34,10 +34,9 @@ void cornell_box() {
 
     auto empty_material = shared_ptr<material>();
 
-
     film film;
     const auto cam = std::make_shared<camera>(&film);
-    const auto samp = std::make_shared<stratified_sampler>(36);
+    const auto samp = std::make_shared<stratified_sampler>(100);
 
     cam->aspect_ratio      = 1.0;
     cam->image_width       = 600;
@@ -52,7 +51,10 @@ void cornell_box() {
     std::vector<std::shared_ptr<light>> lights;
     lights.push_back(std::make_shared<point_light>(vec3(278, 500, 278), 100000.0));
 
-    auto integrator_ptr = std::make_shared<path_integrator>(cam, samp,std::make_shared<hittable_list>(world), lights);
+    auto bvh_root = std::make_shared<hittable_list>();
+    bvh_root->add(std::make_shared<bvh_node>(world));
+
+    const auto integrator_ptr = std::make_shared<path_integrator>(cam, samp, bvh_root, lights);
 
     integrator_ptr->render();
 }

@@ -8,6 +8,8 @@ void integrator::render() const
 {
     camera_->init();
 
+    std::vector<color> image_buffer(camera_->image_width * camera_->image_height);
+
     // Render
     std::cout << "P3\n" << camera_->image_width << " " << camera_->image_height << "\n255\n";
 
@@ -23,8 +25,13 @@ void integrator::render() const
                 pixel_color += li(r, max_depth);
             }
 
-            camera_->get_film()->write_color(std::cout, pixel_color / sampler_->get_spp());
+            const int index = j * camera_->image_width + i;
+            image_buffer[index] = pixel_color / sampler_->get_spp();
         }
+    }
+
+    for (const auto& pixel : image_buffer) {
+        camera_->get_film()->write_color(std::cout, pixel);
     }
 
     std::clog << "\rDone.                 \n";
