@@ -1,7 +1,7 @@
 #ifndef RAY_TRACING_IN_ONE_WEEK_MATH_H
 #define RAY_TRACING_IN_ONE_WEEK_MATH_H
 
-#include "rtweekend.h"
+#include "constants.h"
 
 class ray;
 

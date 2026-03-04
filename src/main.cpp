@@ -1,13 +1,40 @@
 ﻿#include <chrono>
 
-#include "rtweekend.h"
+#include "constants.h"
 
 #include "cameras.h"
 #include "integrators.h"
 #include "materials.h"
 #include "shapes.h"
 #include "lights.h"
+#include <SDL3/SDL.h>
 
+SDL_Renderer* g_renderer = nullptr;
+SDL_Texture* g_texture = nullptr;
+int g_width = 600;
+int g_height = 600;
+
+void update_display(const std::vector<pixel>& buffer) {
+    std::vector<uint32_t> pixels(g_width * g_height);
+
+    for (int i = 0; i < g_width * g_height; i++) {
+        pixel c = buffer[i];
+        pixels[i] = (255 << 24) | (c.b << 16) | (c.g << 8) | c.r;
+    }
+
+    SDL_UpdateTexture(g_texture, nullptr, pixels.data(), g_width * sizeof(uint32_t));
+    SDL_RenderClear(g_renderer);
+    SDL_RenderTexture(g_renderer, g_texture, nullptr, nullptr);
+    SDL_RenderPresent(g_renderer);
+
+    // Handle events to keep window responsive
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        if (event.type == SDL_EVENT_QUIT) {
+            exit(0);  // Or set a flag to stop rendering
+        }
+    }
+}
 
 void cornell_box() {
     hittable_list world;
@@ -34,12 +61,12 @@ void cornell_box() {
 
     auto empty_material = shared_ptr<material>();
 
-    film film;
+    film film(g_width, g_height);
     const auto cam = std::make_shared<camera>(&film);
     const auto samp = std::make_shared<stratified_sampler>(16);
 
     cam->aspect_ratio      = 1.0;
-    cam->image_width       = 600;
+    cam->image_width       = g_width;
 
     cam->vfov     = 40;
     cam->lookfrom = point3(278, 278, -800);
@@ -56,10 +83,24 @@ void cornell_box() {
 
     const auto integrator_ptr = std::make_shared<path_integrator>(cam, samp, bvh_root, lights);
 
-    integrator_ptr->render();
+    integrator_ptr->render(update_display);
 }
 
 int main() {
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
+        SDL_Log("SDL_Init failed: %s", SDL_GetError());
+        return 1;
+    }
+
+    SDL_Window* window = SDL_CreateWindow("Ray Tracer", g_width, g_height, 0);
+    if (!window) return 1;
+
+    g_renderer = SDL_CreateRenderer(window, "software");
+    if (!g_renderer) return 1;
+
+    g_texture = SDL_CreateTexture(g_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, g_width, g_height);
+    if (!g_texture) return 1;
+
     using clock = std::chrono::high_resolution_clock;
 
     const auto start = clock::now();
@@ -70,4 +111,9 @@ int main() {
 
     const std::chrono::duration<double> elapsed = end - start;
     std::cerr << "Render time: " << elapsed.count() << " seconds\n";
+
+    SDL_DestroyTexture(g_texture);
+    SDL_DestroyRenderer(g_renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
 }

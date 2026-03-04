@@ -11,15 +11,22 @@ endif()
 
 project ("Ray Tracing In One Week")
 
+# set the output directory for built objects.
+# This makes sure that the dynamic library goes into the build directory automatically.
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
+
+# This assumes the SDL source is available in vendored/SDL
+add_subdirectory(external/SDL EXCLUDE_FROM_ALL)
+
 # Add source to this project's executable.
 add_executable (inOneWeekend
-        src/rtweekend.cpp
+        src/main.cpp
         src/ray.h
-        src/rtweekend.h
+        src/constants.h
         src/rtw_image.h
         src/integrators.cpp
         src/integrators.h
-        src/film.cpp
         src/film.h
         src/cameras.cpp
         src/cameras.h
@@ -36,7 +43,9 @@ add_executable (inOneWeekend
         src/shapes.cpp
         src/shapes.h
         src/lights.h
-        src/lights.h)
+        src/lights.h
+        src/constants.h
+        src/constants.h)
 
 target_include_directories(inOneWeekend PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -48,3 +57,6 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
 endif()
 
 # TODO: Add tests and install targets if needed.
+
+# Link to the actual SDL3 library.
+target_link_libraries(inOneWeekend PRIVATE SDL3::SDL3)

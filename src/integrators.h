@@ -5,6 +5,8 @@
 #ifndef INTEGRATORS_H
 #define INTEGRATORS_H
 
+#include <functional>
+
 #include "cameras.h"
 #include "lights.h"
 #include "math.h"
@@ -26,7 +28,9 @@ public:
         const std::vector<std::shared_ptr<light>>& lights
         ): camera_(camera), sampler_(sampler), world_(world), lights_(lights), light_sampler_(lights) {}
 
-    void render() const;
+    using RenderCallback = std::function<void(const std::vector<pixel>&)>;
+
+    void render(RenderCallback on_sample_complete = nullptr) const;
 
     virtual vec3 li(ray& r, int depth) const = 0;
 

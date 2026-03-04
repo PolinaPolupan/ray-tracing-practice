@@ -4,32 +4,34 @@
 #include "shapes.h"
 
 
-void integrator::render() const
+void integrator::render(RenderCallback on_sample_complete) const
 {
     camera_->init();
 
-    std::vector<color> image_buffer(camera_->image_width * camera_->image_height);
+    // Render
+    std::cout << "P3\n" << camera_->image_width << " " << camera_->image_height << "\n255\n";
 
-    for (int wave = 0; wave < sampler_->get_spp(); wave++)
+    while (sampler_->start_next_sample())
     {
-        sampler_->start_next_sample();
-        std::clog << "\rSample: " << wave << ' ' << std::flush;
-        for (int j = 0; j < camera_->image_height; j++) {
-            for (int i = 0; i < camera_->image_width; i++) {
-                color pixel_color(0,0,0);
-
+        for (int j = 0; j < camera_->image_height; j++)
+        {
+            for (int i = 0; i < camera_->image_width; i++)
+            {
                 ray r = camera_->gen_ray(sampler_, i, j);
-                pixel_color += li(r, max_depth);
-
+                color pixel_color = li(r, max_depth);
                 const int index = j * camera_->image_width + i;
-                image_buffer[index] += pixel_color / sampler_->get_spp();
+                camera_->get_film()->add_sample(index, pixel_color);
             }
+        }
+
+        camera_->get_film()->increment_sample_count();
+
+        if (on_sample_complete) {
+            on_sample_complete(camera_->get_film()->get_display_buffer());
         }
     }
 
-    for (const auto& pixel : image_buffer) {
-        camera_->get_film()->write_color(std::cout, pixel);
-    }
+    camera_->get_film()->write_color(std::cout);
 
     std::clog << "\rDone.                 \n";
 }
