@@ -17,7 +17,7 @@ public:
     virtual void start_pixel() = 0;
     virtual bool start_next_sample() = 0;
     virtual double gen_1d() = 0;
-    virtual point2 gen_2d() = 0;
+    virtual point2d gen_2d() = 0;
 
     int get_spp() const { return spp_; }
 
@@ -42,7 +42,7 @@ public:
         return distribution(generator);
     }
 
-    point2 gen_2d() override {
+    point2d gen_2d() override {
         return point2(gen_1d(), gen_1d());
     }
 
@@ -67,7 +67,7 @@ public:
         return rng01();
     }
 
-    point2 gen_2d() override {
+    point2d gen_2d() override {
         const int stratum = sample_index;
         const int x = stratum % sqrt_spp;
         const int y = stratum / sqrt_spp;
@@ -88,15 +88,15 @@ private:
     std::mt19937 rng;
 };
 
-vec3 sample_uniform_hemisphere(point2 u);
+vec3 sample_uniform_hemisphere(point2d u);
 
-vec3 sample_uniform_sphere(const point2& u);
+vec3 sample_uniform_sphere(const point2d& u);
 
 point3 defocus_disk_sample(const std::shared_ptr<sampler>& samp, const point3& center, const vec3& du, const vec3& dv);
 
-vec3 random_to_sphere(point2 u, double radius, double distance_squared);
+vec3 random_to_sphere(point2d u, double radius, double distance_squared);
 
-vec3 cosine_sample_hemisphere(const point2& u);
+vec3 cosine_sample_hemisphere(const point2d& u);
 
 
 #endif //SAMPLING_H

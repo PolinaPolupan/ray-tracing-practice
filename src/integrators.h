@@ -34,7 +34,7 @@ public:
 
     virtual vec3 li(ray& r, int depth) const = 0;
 
-    bool unoccluded(const vec3& p0, const vec3& p1, const double time) const {
+    [[nodiscard]] bool unoccluded(const vec3& p0, const vec3& p1, const double time) const {
         const vec3 dir = p1 - p0;
         const double dist = dir.length();
         const vec3 dir_norm = dir / dist;
@@ -42,6 +42,29 @@ public:
 
         const auto hit = world_->intersect(shadow_ray, interval(0.001, dist - 0.001));
         return !hit.has_value();
+    }
+
+    [[nodiscard]] std::vector<bounds2i> get_tiles() const
+    {
+        std::vector<bounds2i> tiles;
+        const bounds2i extent({0, 0}, {camera_->image_width, camera_->image_height});
+
+        for (int y = 0; y < camera_->image_height; y += tile_size_)
+        {
+            for (int x = 0; x < camera_->image_width; x += tile_size_)
+            {
+                bounds2i tile_bounds({x, y},
+                    {std::min(x + tile_size_, camera_->image_width), std::min(y + tile_size_, camera_->image_height)});
+
+                tile_bounds = intersect(tile_bounds, extent);
+
+                if (!tile_bounds.is_empty()) {
+                    tiles.push_back(tile_bounds);
+                }
+            }
+        }
+
+        return tiles;
     }
 
 protected:
@@ -53,6 +76,7 @@ protected:
     light_sampler light_sampler_;
 
     int max_depth = 10;   // Maximum number of ray bounces into scene
+    int tile_size_ = 32;
 };
 
 class random_walk_integrator : public integrator

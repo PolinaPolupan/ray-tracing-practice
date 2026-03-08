@@ -4,7 +4,7 @@
 
 #include "sampling.h"
 
-vec3 sample_uniform_hemisphere(const point2 u)
+vec3 sample_uniform_hemisphere(const point2d u)
 {
     const double z = u.x;
     const double r = std::sqrt(std::max(0.0, 1.0 - z * z));
@@ -13,7 +13,7 @@ vec3 sample_uniform_hemisphere(const point2 u)
     return { r * std::cos(phi), r * std::sin(phi), z };
 }
 
-vec3 sample_uniform_sphere(const point2& u)
+vec3 sample_uniform_sphere(const point2d& u)
 {
     const double z = 1.0 - 2.0 * u.x;
     const double r = std::sqrt(std::max(0.0, 1.0 - z * z));
@@ -38,7 +38,7 @@ point3 defocus_disk_sample(const std::shared_ptr<sampler>& samp, const point3& c
     return center + p.x() * du + p.y() * dv;
 }
 
-vec3 random_to_sphere(const point2 u, const double radius, const double distance_squared)
+vec3 random_to_sphere(const point2d u, const double radius, const double distance_squared)
 {
     const auto r1 = u.x;
     const auto r2 = u.y;
@@ -51,7 +51,7 @@ vec3 random_to_sphere(const point2 u, const double radius, const double distance
     return {x, y, z};
 }
 
-vec3 cosine_sample_hemisphere(const point2& u)
+vec3 cosine_sample_hemisphere(const point2d& u)
 {
     const double r = std::sqrt(u.x);
     const double phi = 2 * pi * u.y;

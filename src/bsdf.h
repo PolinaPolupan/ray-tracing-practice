@@ -16,7 +16,7 @@ public:
 
     virtual ~bsdf() = default;
 
-    [[nodiscard]] virtual bsdf_sample sample_f(const vec3& wo_world, const point2& u) const = 0;
+    [[nodiscard]] virtual bsdf_sample sample_f(const vec3& wo_world, const point2d& u) const = 0;
 
     [[nodiscard]] virtual color f(const vec3& wo_world, const vec3& wi_world) const = 0;
 
@@ -32,7 +32,7 @@ class lambertian_bsdf final: public bsdf {
 public:
     lambertian_bsdf(const color& albedo, const vec3& normal): bsdf(normal), albedo_(albedo) {}
 
-    [[nodiscard]] bsdf_sample sample_f(const vec3& wo_world, const point2& u) const override;
+    [[nodiscard]] bsdf_sample sample_f(const vec3& wo_world, const point2d& u) const override;
 
     [[nodiscard]] color f(const vec3& wo_world, const vec3& wi_world) const override
     {
@@ -63,7 +63,7 @@ public:
 
     [[nodiscard]] bool is_specular() const override { return true; }
 
-    [[nodiscard]] bsdf_sample sample_f(const vec3& wo_world, const point2& u) const override;
+    [[nodiscard]] bsdf_sample sample_f(const vec3& wo_world, const point2d& u) const override;
 
     [[nodiscard]] double pdf(const vec3& wo, const vec3& wi) const override {
         return 0;
@@ -92,7 +92,7 @@ public:
 
     [[nodiscard]] bool is_specular() const override { return true; }
 
-    [[nodiscard]] bsdf_sample sample_f(const vec3& wo_world, const point2& u) const override;
+    [[nodiscard]] bsdf_sample sample_f(const vec3& wo_world, const point2d& u) const override;
 
     [[nodiscard]] color f(const vec3& wo, const vec3& wi) const override { return {0,0,0}; }
     [[nodiscard]] double pdf(const vec3& wo, const vec3& wi) const override { return 0.0; }

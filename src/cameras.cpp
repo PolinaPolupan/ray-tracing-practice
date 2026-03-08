@@ -45,7 +45,7 @@ void camera::init() {
 }
 
 ray camera::gen_ray(const std::shared_ptr<sampler>& sampler, const int i, const int j) const {
-    const point2 u = sampler->gen_2d();
+    const point2d u = sampler->gen_2d();
 
     const auto pixel_sample = pixel00_loc + (i + u.x) * pixel_delta_u + (j + u.y) * pixel_delta_v;
 

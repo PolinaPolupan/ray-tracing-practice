@@ -5,8 +5,9 @@
 
 class ray;
 
+template <typename T>
 struct point2 {
-    double x, y;
+    T x, y;
 
     double operator[](const int i) const {
         return (i == 0) ? x : y;
@@ -15,7 +16,24 @@ struct point2 {
     double& operator[](const int i) {
         return (i == 0) ? x : y;
     }
+
+    [[nodiscard]] double min() const { return std::min(x, y); }
+    [[nodiscard]] double max() const { return std::max(x, y); }
 };
+
+template <typename T>
+point2<T> min(const point2<T>& p1, const point2<T>& p2)
+{
+    return (p1.min() < p2.min()) ? p1 : p2;
+}
+
+template <typename T>
+point2<T> max(const point2<T>& p1, const point2<T>& p2)
+{
+    return (p1.max() < p2.max()) ? p2 : p1;
+}
+
+using  point2d = point2<double>;
 
 class vec3 {
 public:
@@ -84,6 +102,27 @@ public:
 
 interval operator+(const interval& ival, double displacement);
 interval operator+(double displacement, const interval& ival);
+
+/* ---------------- bounds2d ---------------- */
+
+template <typename T>
+class bounds2
+{
+public:
+    bounds2(const point2<T>& p1, const point2<T>& p2): p_min(min(p1, p2)), p_max(max(p1, p2)) {}
+
+    [[nodiscard]] bool is_empty() const { return p_min.x >= p_max.x || p_min.y >= p_max.y; }
+
+    point2<T> p_min, p_max;
+};
+
+template <typename T>
+bounds2<T> intersect(const bounds2<T> &b1, const bounds2<T> &b2)
+{
+    return {min(b1.p_max, b2.p_max), max(b1.p_min, b2.p_min)};
+}
+
+using bounds2i = bounds2<int>;
 
 /* ---------------- bounds3d ---------------- */
 

@@ -1,6 +1,6 @@
 #include "bsdf.h"
 
-bsdf_sample lambertian_bsdf::sample_f(const vec3& wo_world, const point2& u) const
+bsdf_sample lambertian_bsdf::sample_f(const vec3& wo_world, const point2d& u) const
 {
     const vec3 wi_local = cosine_sample_hemisphere(u);
 
@@ -10,7 +10,7 @@ bsdf_sample lambertian_bsdf::sample_f(const vec3& wo_world, const point2& u) con
     return { unit_vector(frame_.from_local(wi_local)), f, pdf };
 }
 
-bsdf_sample dielectric_bsdf::sample_f(const vec3& wo_world, const point2& u) const
+bsdf_sample dielectric_bsdf::sample_f(const vec3& wo_world, const point2d& u) const
 {
     const vec3 wo = frame_.to_local(wo_world);
     const vec3 n(0,0,1);
@@ -47,7 +47,7 @@ bsdf_sample dielectric_bsdf::sample_f(const vec3& wo_world, const point2& u) con
     return {unit_vector(frame_.from_local(wi_local)), color(1.0),1.0 };
 }
 
-bsdf_sample metal_bsdf::sample_f(const vec3& wo_world, const point2& u) const
+bsdf_sample metal_bsdf::sample_f(const vec3& wo_world, const point2d& u) const
 {
     const vec3 wo = frame_.to_local(wo_world);
 
