@@ -24,13 +24,13 @@ vec3 sample_uniform_sphere(const point2d& u)
     return { x, y, z };
 }
 
-point3 defocus_disk_sample(const std::shared_ptr<sampler>& samp, const point3& center, const vec3& du, const vec3& dv)
+point3 defocus_disk_sample(sampler& samp, const point3& center, const vec3& du, const vec3& dv)
 {
     vec3 p;
     do {
         p = vec3(
-            samp->gen_1d() * 2 - 1,
-            samp->gen_1d() * 2 - 1,
+            samp.gen_1d() * 2 - 1,
+            samp.gen_1d() * 2 - 1,
             0
         );
     } while (p.length_squared() >= 1);

@@ -13,8 +13,8 @@ struct pixel {
 
 class film {
 public:
-    film(const int width, const int height) 
-        : width_(width), height_(height), samples_count_(0) 
+    film(const int width, const int height, int spp)
+        : width_(width), height_(height), spp_(spp)
     {
         accumulation_buffer_.resize(width * height, color(0,0,0));
     }
@@ -30,20 +30,15 @@ public:
         accumulation_buffer_[index] += color(r, g, b);
     }
 
-    void increment_sample_count() {
-        samples_count_++;
-    }
-
-    std::vector<pixel> get_display_buffer() const {
+    [[nodiscard]] std::vector<pixel> get_display_buffer() const {
         std::vector<pixel> display_buffer(width_ * height_);
 
-        const double scale = samples_count_ > 0 ? 1.0 / samples_count_ : 1.0;
+        const double scale = (spp_ > 0) ? 1.0 / static_cast<double>(spp_) : 1.0;
 
         for (int i = 0; i < width_ * height_; i++) {
             color c = accumulation_buffer_[i] * scale;
 
             vec3 mapped = aces_approx(c);
-
             double r = std::pow(mapped.x(), 1.0/2.2);
             double g = std::pow(mapped.y(), 1.0/2.2);
             double b = std::pow(mapped.z(), 1.0/2.2);
@@ -67,7 +62,7 @@ public:
 
 private:
     int width_, height_;
-    int samples_count_;
+    int spp_;
     std::vector<color> accumulation_buffer_;
 
     vec3 aces_approx(vec3 v) const {

@@ -18,6 +18,7 @@ public:
     virtual bool start_next_sample() = 0;
     virtual double gen_1d() = 0;
     virtual point2d gen_2d() = 0;
+    virtual std::unique_ptr<sampler> clone() const = 0;
 
     int get_spp() const { return spp_; }
 
@@ -28,6 +29,10 @@ protected:
 class independent_sampler: public sampler {
 public:
     explicit independent_sampler(const int spp) : sampler(spp) {}
+
+    [[nodiscard]] std::unique_ptr<sampler> clone() const override {
+        return std::make_unique<independent_sampler>(*this);
+    }
 
     void start_pixel() override {
         sample_index = 0;
@@ -54,6 +59,10 @@ private:
 class stratified_sampler final : public sampler {
 public:
     explicit stratified_sampler(const int spp): sampler(spp), sqrt_spp(static_cast<int>(std::sqrt(spp))) {}
+
+    [[nodiscard]] std::unique_ptr<sampler> clone() const override {
+        return std::make_unique<stratified_sampler>(*this);
+    }
 
     void start_pixel() override {
         sample_index = 0;
@@ -92,7 +101,7 @@ vec3 sample_uniform_hemisphere(point2d u);
 
 vec3 sample_uniform_sphere(const point2d& u);
 
-point3 defocus_disk_sample(const std::shared_ptr<sampler>& samp, const point3& center, const vec3& du, const vec3& dv);
+point3 defocus_disk_sample(sampler& samp, const point3& center, const vec3& du, const vec3& dv);
 
 vec3 random_to_sphere(point2d u, double radius, double distance_squared);
 

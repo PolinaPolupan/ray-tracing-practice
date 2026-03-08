@@ -32,7 +32,7 @@ public:
 
     void render(RenderCallback on_sample_complete = nullptr) const;
 
-    virtual vec3 li(ray& r, int depth) const = 0;
+    virtual vec3 li(ray &r, sampler& samp, int depth) const = 0;
 
     [[nodiscard]] bool unoccluded(const vec3& p0, const vec3& p1, const double time) const {
         const vec3 dir = p1 - p0;
@@ -89,7 +89,7 @@ public:
         const std::vector<std::shared_ptr<light>>& lights
         ) : integrator(camera, sampler, world, lights) {}
 
-    [[nodiscard]] vec3 li(ray& r, int depth) const override;
+    [[nodiscard]] vec3 li(ray &r, sampler& samp, int depth) const override;
 };
 
 class path_integrator: public integrator
@@ -102,7 +102,7 @@ public:
         const std::vector<std::shared_ptr<light>>& lights
         ) : integrator(camera, sampler, world, lights) {}
 
-    [[nodiscard]] vec3 li(ray& r, int depth) const override;
+    [[nodiscard]] vec3 li(ray &r, sampler& samp, int depth) const override;
 };
 
 #endif //INTEGRATORS_H

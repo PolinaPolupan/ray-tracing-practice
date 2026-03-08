@@ -34,7 +34,7 @@ public:
 
     void init();
 
-    [[nodiscard]] ray gen_ray(const std::shared_ptr<sampler>& sampler, int i, int j) const;
+    [[nodiscard]] ray gen_ray(sampler& sampler, int i, int j) const;
 
     film* get_film() const { return film_; }
 
