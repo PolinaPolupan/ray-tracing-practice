@@ -34,9 +34,9 @@ public:
 
     void init();
 
-    [[nodiscard]] ray gen_ray(sampler& sampler, int i, int j) const;
+    [[nodiscard]] ray gen_ray(sampler& sampler, point2i pixel) const;
 
-    film* get_film() const { return film_; }
+    [[nodiscard]] film* get_film() const { return film_; }
 
 private:
     film* film_;

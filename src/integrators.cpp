@@ -32,23 +32,20 @@ void integrator::render(RenderCallback on_sample_complete) const
         for (int t = 0; t < tiles.size(); ++t)
         {
             const bounds2i tile = tiles[t];
-
-            for (int j = tile.p_min.y; j < tile.p_max.y; ++j)
+            for (point2i pixel : tile)
             {
-                for (int i = tile.p_min.x; i < tile.p_max.x; ++i)
+                thread_sampler->start_pixel();
+
+                color sum(0,0,0);
+
+                while (thread_sampler->start_next_sample())
                 {
-                    thread_sampler->start_pixel();
-
-                    color sum(0, 0, 0);
-                    while (thread_sampler->start_next_sample())
-                    {
-                        ray r = camera_->gen_ray(*thread_sampler, i, j);
-                        sum += li(r, *thread_sampler, max_depth);
-                    }
-
-                    const int index = j * camera_->image_width + i;
-                    camera_->get_film()->add_sample(index, sum);
+                    ray r = camera_->gen_ray(*thread_sampler, pixel);
+                    sum += li(r, *thread_sampler, max_depth);
                 }
+
+                const int index = pixel.y * camera_->image_width + pixel.x;
+                camera_->get_film()->add_sample(index, sum);
             }
 
             tiles_done.fetch_add(1, std::memory_order_relaxed);

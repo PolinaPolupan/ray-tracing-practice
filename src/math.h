@@ -104,6 +104,7 @@ interval operator+(const interval& ival, double displacement);
 interval operator+(double displacement, const interval& ival);
 
 /* ---------------- bounds2d ---------------- */
+class bounds2i_iterator;
 
 template <typename T>
 class bounds2
@@ -112,6 +113,8 @@ public:
     bounds2(const point2<T>& p1, const point2<T>& p2): p_min(min(p1, p2)), p_max(max(p1, p2)) {}
 
     [[nodiscard]] bool is_empty() const { return p_min.x >= p_max.x || p_min.y >= p_max.y; }
+    [[nodiscard]] bounds2i_iterator begin() const;
+    [[nodiscard]] bounds2i_iterator end() const;
 
     point2<T> p_min, p_max;
 };
@@ -123,6 +126,47 @@ bounds2<T> intersect(const bounds2<T> &b1, const bounds2<T> &b2)
 }
 
 using bounds2i = bounds2<int>;
+using point2i = point2<int>;
+
+class bounds2i_iterator {
+public:
+    bounds2i_iterator(const bounds2i* bounds, const point2i p): bounds(bounds), p(p) {}
+
+    point2i operator*() const { return p; }
+
+    bounds2i_iterator& operator++() {
+        p.x++;
+
+        if (p.x >= bounds->p_max.x) {
+            p.x = bounds->p_min.x;
+            p.y++;
+        }
+
+        return *this;
+    }
+
+    bool operator==(const bounds2i_iterator& other) const {
+        return p.x == other.p.x && p.y == other.p.y;
+    }
+
+    bool operator!=(const bounds2i_iterator& other) const {
+        return !(*this == other);
+    }
+
+private:
+    const bounds2i* bounds;
+    point2i p;
+};
+
+template <>
+inline bounds2i_iterator bounds2i::begin() const {
+    return {this,p_min};
+}
+
+template <>
+inline bounds2i_iterator bounds2i::end() const {
+    return {this,{p_min.x, p_max.y}};
+}
 
 /* ---------------- bounds3d ---------------- */
 

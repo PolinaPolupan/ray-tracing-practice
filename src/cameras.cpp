@@ -44,10 +44,10 @@ void camera::init() {
     defocus_disk_v = v * defocus_radius;
 }
 
-ray camera::gen_ray(sampler& sampler, const int i, const int j) const {
+ray camera::gen_ray(sampler& sampler, const point2i pixel) const {
     const point2d u = sampler.gen_2d();
 
-    const auto pixel_sample = pixel00_loc + (i + u.x) * pixel_delta_u + (j + u.y) * pixel_delta_v;
+    const auto pixel_sample = pixel00_loc + (pixel.x + u.x) * pixel_delta_u + (pixel.y + u.y) * pixel_delta_v;
 
     point3 ray_origin =
         (defocus_angle <= 0)
