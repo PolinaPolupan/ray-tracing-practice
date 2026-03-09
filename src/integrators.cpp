@@ -62,9 +62,6 @@ void integrator::render(RenderCallback on_sample_complete) const
         }
     }
 
-    if (on_sample_complete)
-        on_sample_complete(camera_->get_film()->get_display_buffer());
-
     camera_->get_film()->write_color(std::cout);
 }
 
@@ -147,7 +144,7 @@ color path_integrator::li(ray &r, sampler& samp, int d) const {
 
         r = ray(rec.p, wi, r.time());
 
-        if (depth > 1) {
+        if (depth > 3) {
             double max_component = std::max({beta.x(), beta.y(), beta.z()});
             const double p_continue = std::max(0.05, max_component);
             if (samp.gen_1d() > p_continue) {

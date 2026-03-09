@@ -77,7 +77,7 @@ public:
     }
 
     point2d gen_2d() override {
-        const int stratum = sample_index;
+        const int stratum = sample_index - 1;
         const int x = stratum % sqrt_spp;
         const int y = stratum / sqrt_spp;
 
@@ -88,13 +88,13 @@ public:
     }
 
 private:
-    double rng01() {
-        return std::uniform_real_distribution<double>(0, 1)(rng);
-    }
+    double rng01() { return dist_(rng); }
+
+    std::mt19937 rng;
+    std::uniform_real_distribution<double> dist_{0.0, 1.0};
 
     int sqrt_spp;
     int sample_index = 0;
-    std::mt19937 rng;
 };
 
 vec3 sample_uniform_hemisphere(point2d u);

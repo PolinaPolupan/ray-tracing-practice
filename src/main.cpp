@@ -11,8 +11,8 @@
 
 SDL_Renderer* g_renderer = nullptr;
 SDL_Texture* g_texture = nullptr;
-int g_width = 600;
-int g_height = 600;
+int g_width = 200;
+int g_height = 200;
 
 void update_display(const std::vector<pixel>& buffer) {
     std::vector<uint32_t> pixels(g_width * g_height);
@@ -56,12 +56,12 @@ void cornell_box() {
     world.add(box1);
 
     // Glass Sphere
-    auto glass = make_shared<metal>(color(1, 1, 1), 0.0);
-     world.add(make_shared<sphere>(point3(190,90,190), 90, glass));
+    auto glass = make_shared<dielectric>(3.0);
+    world.add(make_shared<sphere>(point3(190,90,190), 90, glass));
 
     auto empty_material = shared_ptr<material>();
 
-    const auto samp = std::make_shared<stratified_sampler>(100);
+    const auto samp = std::make_shared<stratified_sampler>(10);
 
     film film(g_width, g_height, samp->get_spp());
     const auto cam = std::make_shared<camera>(&film);
