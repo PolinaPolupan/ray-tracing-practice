@@ -33,7 +33,7 @@ point2<T> max(const point2<T>& p1, const point2<T>& p2)
     return (p1.max() < p2.max()) ? p2 : p1;
 }
 
-using  point2d = point2<double>;
+using point2d = point2<double>;
 
 class vec3 {
 public:
@@ -79,7 +79,7 @@ vec3 refract(const vec3& uv, const vec3& n, double etai_over_etat);
 std::ostream& operator<<(std::ostream& out, const vec3& v);
 
 using point3 = vec3;
-using color   = vec3;
+using color  = vec3;
 
 /* ---------------- interval ---------------- */
 

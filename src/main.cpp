@@ -11,8 +11,8 @@
 
 SDL_Renderer* g_renderer = nullptr;
 SDL_Texture* g_texture = nullptr;
-int g_width = 200;
-int g_height = 200;
+int g_width = 600;
+int g_height = 600;
 
 void update_display(const std::vector<pixel>& buffer) {
     std::vector<uint32_t> pixels(g_width * g_height);
@@ -43,11 +43,11 @@ void cornell_box() {
     auto white = make_shared<lambertian>(color(.73, .73, .73));
     auto green = make_shared<lambertian>(color(.12, .45, .15));
 
-    world.add(make_shared<quad>(point3(555,0,0), vec3(0,555,0), vec3(0,0,555), green));
-    world.add(make_shared<quad>(point3(0,0,0), vec3(0,555,0), vec3(0,0,555), red));
-    world.add(make_shared<quad>(point3(0,0,0), vec3(555,0,0), vec3(0,0,555), white));
-    world.add(make_shared<quad>(point3(555,555,555), vec3(-555,0,0), vec3(0,0,-555), white));
-    world.add(make_shared<quad>(point3(0,0,555), vec3(555,0,0), vec3(0,555,0), white));
+    world.add(make_quad_mesh(point3(555,0,0), vec3(0,555,0), vec3(0,0,555), green)); // Right
+    world.add(make_quad_mesh(point3(0,0,0), vec3(0,555,0), vec3(0,0,555), red));     // Left
+    world.add(make_quad_mesh(point3(0,0,0), vec3(555,0,0), vec3(0,0,555), white));   // Floor
+    world.add(make_quad_mesh(point3(555,555,555), vec3(-555,0,0), vec3(0,0,-555), white)); // Ceiling
+    world.add(make_quad_mesh(point3(0,0,555), vec3(555,0,0), vec3(0,555,0), white)); // Back Wall
 
     // Box
     shared_ptr<shape> box1 = box(point3(0,0,0), point3(165,330,165), white);
@@ -61,7 +61,7 @@ void cornell_box() {
 
     auto empty_material = shared_ptr<material>();
 
-    const auto samp = std::make_shared<stratified_sampler>(10);
+    const auto samp = std::make_shared<stratified_sampler>(100);
 
     film film(g_width, g_height, samp->get_spp());
     const auto cam = std::make_shared<camera>(&film);
