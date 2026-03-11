@@ -80,40 +80,6 @@ double quad::pdf(const point3& origin, const vec3& direction) const
     return distance_squared / (cosine * area);
 }
 
-std::optional<shape_intersection> hittable_list::intersect(const ray& r, const interval ray_t) const
-{
-    std::optional<shape_intersection> closest_hit;
-    auto closest_so_far = ray_t.max;
-
-    for (const auto& object : objects) {
-        if (const auto temp_hit = object->intersect(r, interval(ray_t.min, closest_so_far))) {
-            closest_so_far = temp_hit->t;
-            closest_hit = temp_hit;
-        }
-    }
-
-    return closest_hit;
-}
-
-double hittable_list::pdf(const point3& origin, const vec3& direction) const
-{
-    const auto weight = 1.0 / objects.size();
-    auto sum = 0.0;
-
-    for (const auto& object : objects)
-        sum += weight * object->pdf(origin, direction);
-
-    return sum;
-}
-
-vec3 hittable_list::random(const point3& origin, const std::shared_ptr<sampler>& sampler) const
-{
-    int idx = static_cast<int>(sampler->gen_1d() * objects.size());
-    idx = std::min(idx, static_cast<int>(objects.size()) - 1);
-
-    return objects[idx]->random(origin, sampler);
-}
-
 RotateY::RotateY(const shared_ptr<shape>& object, const double angle): object(object)
 {
     const auto radians = degrees_to_radians(angle);
@@ -260,49 +226,3 @@ std::optional<shape_intersection> translate::intersect(const ray& r, const inter
     result->p += offset;
     return result;
 }
-
-bvh_node::bvh_node(std::vector<shared_ptr<shape>>& objects, size_t start, size_t end)
-{
-    // Build the bounding box of the span of source objects.
-    bbox = bounds3::empty;
-    for (size_t object_index=start; object_index < end; object_index++)
-        bbox = bounds3(bbox, objects[object_index]->bounds());
-
-    const int axis = bbox.longestAxis();
-
-    const auto comparator = (axis == 0) ? box_x_compare
-                    : (axis == 1) ? box_y_compare
-                                  : box_z_compare;
-
-    const size_t object_span = end - start;
-
-    if (object_span == 1) {
-        left = right = objects[start];
-    } else if (object_span == 2) {
-        left = objects[start];
-        right = objects[start+1];
-    } else {
-        std::sort(std::begin(objects) + start, std::begin(objects) + end, comparator);
-
-        auto mid = start + object_span/2;
-        left = make_shared<bvh_node>(objects, start, mid);
-        right = make_shared<bvh_node>(objects, mid, end);
-    }
-}
-
-std::optional<shape_intersection> bvh_node::intersect(const ray& r, const interval ray_t) const
-{
-    if (!bbox.intersect(r, ray_t))
-        return {};
-
-    auto left_hit = left->intersect(r, ray_t);
-
-    interval right_interval = ray_t;
-    if (left_hit) right_interval.max = left_hit->t;
-
-    auto right_hit = right->intersect(r, right_interval);
-
-    if (right_hit) return right_hit;
-    return left_hit;
-}
-

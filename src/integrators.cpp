@@ -41,7 +41,7 @@ void integrator::render(RenderCallback on_sample_complete) const
                 while (thread_sampler->start_next_sample())
                 {
                     ray r = camera_->gen_ray(*thread_sampler, pixel);
-                    sum += li(r, *thread_sampler, max_depth);
+                    sum += li(r, *thread_sampler, max_depth_);
                 }
 
                 const int index = pixel.y * camera_->image_width + pixel.x;
@@ -69,7 +69,7 @@ color random_walk_integrator::li(ray &r, sampler& samp, const int depth) const {
     if (depth <= 0)
         return {0,0,0};
 
-    const auto rec_opt = world_->intersect(r, interval(0.001, infinity));
+    const auto rec_opt = accelerator_->intersect(r, interval(0.001, infinity));
     if (!rec_opt)
         return {0,0,0};
 
@@ -106,7 +106,8 @@ color path_integrator::li(ray &r, sampler& samp, int d) const {
 
     while (beta)
     {
-        const auto rec_opt = world_->intersect(r, interval(0.001, infinity));
+        const std::optional<shape_intersection> rec_opt =
+            accelerator_->intersect(r, interval(0.001, infinity));
         if (!rec_opt) return {0, 0, 0};
 
         // Emissive surfaces
@@ -114,7 +115,7 @@ color path_integrator::li(ray &r, sampler& samp, int d) const {
         L += beta * rec.mat->Le(r, rec, rec.u, rec.v, rec.p);
 
         // End path if maximum depth reached
-        if (depth++ == max_depth)
+        if (depth++ == max_depth_)
             break;
 
         const auto bsdf = rec.mat->get_bsdf(rec);

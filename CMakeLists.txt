@@ -40,7 +40,8 @@ add_executable (inOneWeekend
         src/lights.h
         src/lights.h
         src/constants.h
-        src/constants.h)
+        src/constants.h
+        src/accel.h)
 
 target_include_directories(inOneWeekend PRIVATE
         ${CMAKE_SOURCE_DIR}/src

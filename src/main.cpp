@@ -37,27 +37,34 @@ void update_display(const std::vector<pixel>& buffer) {
 }
 
 void cornell_box() {
-    hittable_list world;
+    std::vector<std::shared_ptr<shape>> world;
 
     auto red   = make_shared<lambertian>(color(.65, .05, .05));
     auto white = make_shared<lambertian>(color(.73, .73, .73));
     auto green = make_shared<lambertian>(color(.12, .45, .15));
 
-    world.add(make_quad_mesh(point3(555,0,0), vec3(0,555,0), vec3(0,0,555), green)); // Right
-    world.add(make_quad_mesh(point3(0,0,0), vec3(0,555,0), vec3(0,0,555), red));     // Left
-    world.add(make_quad_mesh(point3(0,0,0), vec3(555,0,0), vec3(0,0,555), white));   // Floor
-    world.add(make_quad_mesh(point3(555,555,555), vec3(-555,0,0), vec3(0,0,-555), white)); // Ceiling
-    world.add(make_quad_mesh(point3(0,0,555), vec3(555,0,0), vec3(0,555,0), white)); // Back Wall
+    auto append_mesh = [&](std::vector<std::shared_ptr<shape>> mesh) {
+        world.insert(world.end(), mesh.begin(), mesh.end());
+    };
 
-    // Box
-    shared_ptr<shape> box1 = box(point3(0,0,0), point3(165,330,165), white);
-    box1 = make_shared<RotateY>(box1, 15);
-    box1 = make_shared<translate>(box1, vec3(265,0,295));
-    world.add(box1);
+    append_mesh(make_quad_mesh(point3(555,0,0),       vec3(0,555,0),    vec3(0,0,555),   green)); // Right
+    append_mesh(make_quad_mesh(point3(0,0,0),         vec3(0,555,0),    vec3(0,0,555),   red));   // Left
+    append_mesh(make_quad_mesh(point3(0,0,0),         vec3(555,0,0),    vec3(0,0,555),   white)); // Floor
+    append_mesh(make_quad_mesh(point3(555,555,555),   vec3(-555,0,0),   vec3(0,0,-555),  white)); // Ceiling
+    append_mesh(make_quad_mesh(point3(0,0,555),       vec3(555,0,0),    vec3(0,555,0),   white)); // Back
+
+    auto box1_mesh = box(point3(0,0,0), point3(165,330,165), white);
+
+    for (auto& s : box1_mesh) {
+        std::shared_ptr<shape> obj = s;
+        obj = std::make_shared<RotateY>(obj, 15);
+        obj = std::make_shared<translate>(obj, vec3(265,0,295));
+        world.push_back(obj);
+    }
 
     // Glass Sphere
     auto glass = make_shared<dielectric>(3.0);
-    world.add(make_shared<sphere>(point3(190,90,190), 90, glass));
+    world.push_back(make_shared<sphere>(point3(190,90,190), 90, glass));
 
     auto empty_material = shared_ptr<material>();
 
@@ -79,10 +86,9 @@ void cornell_box() {
     std::vector<std::shared_ptr<light>> lights;
     lights.push_back(std::make_shared<point_light>(vec3(278, 500, 278), 100000.0));
 
-    auto bvh_root = std::make_shared<hittable_list>();
-    bvh_root->add(std::make_shared<bvh_node>(world));
+    std::shared_ptr<accelerator> accelerator = std::make_shared<bvh>(world);
 
-    const auto integrator_ptr = std::make_shared<path_integrator>(cam, samp, bvh_root, lights);
+    const auto integrator_ptr = std::make_shared<path_integrator>(cam, samp, lights, accelerator);
 
     integrator_ptr->render(update_display);
 }

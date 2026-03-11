@@ -35,18 +35,12 @@ public:
 class shape {
 public:
     virtual ~shape() = default;
-
     [[nodiscard]] virtual std::optional<shape_intersection> intersect(const ray& r, interval ray_t) const = 0;
-
     [[nodiscard]] virtual bounds3 bounds() const = 0;
-
-    [[nodiscard]] virtual double pdf(const point3& origin, const vec3& direction) const {
-        return 0.0;
-    }
-
-    [[nodiscard]] virtual vec3 random(const point3& origin, const std::shared_ptr<sampler>& sampler) const {
-        return {1,0,0};
-    }
+    [[nodiscard]] virtual double pdf(const point3& origin, const vec3& direction) const
+    { return 0.0; }
+    [[nodiscard]] virtual vec3 random(const point3& origin, const std::shared_ptr<sampler>& sampler) const
+    { return {1,0,0}; }
 };
 
 struct triangle_mesh
@@ -123,21 +117,15 @@ private:
 class quad final : public shape {
 public:
     quad(const point3& Q, const vec3& u, const vec3& v, const std::shared_ptr<material> &mat);
-
-    void bounding_box();
-
     [[nodiscard]] bounds3 bounds() const override { return bbox; }
-
     [[nodiscard]] std::optional<shape_intersection> intersect(const ray& r, interval ray_t) const override;
-
-    static bool is_interior(double a, double b, shape_intersection& rec);
-
     [[nodiscard]] double pdf(const point3& origin, const vec3& direction) const override;
-
     [[nodiscard]] vec3 random(const point3& origin, const std::shared_ptr<sampler>& sampler) const override {
         const auto p = Q + (sampler->gen_1d() * u) + (sampler->gen_1d() * v);
         return p - origin;
     }
+    void bounding_box();
+    static bool is_interior(double a, double b, shape_intersection& rec);
 
 private:
     point3 Q;
@@ -150,46 +138,10 @@ private:
     double area;
 };
 
-class hittable_list final : public shape {
-public:
-    std::vector<shared_ptr<shape>> objects;
-
-    hittable_list() = default;
-    explicit hittable_list(const shared_ptr<shape>& object) { add(object); }
-
-    auto begin() { return objects.begin(); }
-    auto end() { return objects.end(); }
-
-    [[nodiscard]] auto begin() const { return objects.begin(); }
-    [[nodiscard]] auto end() const { return objects.end(); }
-
-    void clear() { objects.clear(); }
-
-    void add(const shared_ptr<shape>& object) {
-        objects.push_back(object);
-        bbox = bounds3(bbox, object->bounds());
-    }
-
-    [[nodiscard]] std::optional<shape_intersection> intersect(const ray& r, interval ray_t) const override;
-
-    [[nodiscard]] bounds3 bounds() const override { return bbox; }
-
-    [[nodiscard]] double pdf(const point3& origin, const vec3& direction) const override;
-
-    [[nodiscard]] vec3 random(const point3& origin, const std::shared_ptr<sampler>& sampler) const override;
-
-private:
-    bounds3 bbox;
-};
-
-shared_ptr<hittable_list> box(const point3& a, const point3& b, const shared_ptr<material>& mat);
-
 class RotateY final : public shape {
 public:
     RotateY(const shared_ptr<shape>& object, double angle);
-
     [[nodiscard]] std::optional<shape_intersection> intersect(const ray& r, interval ray_t) const override;
-
     [[nodiscard]] bounds3 bounds() const override { return bbox; }
 
 private:
@@ -218,11 +170,8 @@ public:
     }
 
     [[nodiscard]] bounds3 bounds() const override { return bbox; }
-
     [[nodiscard]] std::optional<shape_intersection> intersect(const ray& r, interval ray_t) const override;
-
     [[nodiscard]] double pdf(const point3& origin, const vec3& direction) const override;
-
     [[nodiscard]] vec3 random(const point3& origin, const std::shared_ptr<sampler>& sampler) const override;
 
 private:
@@ -241,7 +190,6 @@ public:
     }
 
     [[nodiscard]] std::optional<shape_intersection> intersect(const ray& r, interval ray_t) const override;
-
     [[nodiscard]] bounds3 bounds() const override { return bbox; }
 
 private:
@@ -250,46 +198,8 @@ private:
     bounds3 bbox;
 };
 
-class bvh_node final : public shape {
-public:
-    explicit bvh_node(hittable_list list) : bvh_node(list.objects, 0, list.objects.size()) {
-        // There's a C++ subtlety here. This constructor (without span indices) creates an
-        // implicit copy of the hittable list, which we will modify. The lifetime of the copied
-        // list only extends until this constructor exits. That's OK, because we only need to
-        // persist the resulting bounding volume hierarchy.
-    }
-
-    bvh_node(std::vector<shared_ptr<shape>>& objects, size_t start, size_t end);
-
-    [[nodiscard]] std::optional<shape_intersection> intersect(const ray& r, interval ray_t) const override;
-
-    [[nodiscard]] bounds3 bounds() const override { return bbox; }
-
-private:
-    shared_ptr<shape> left;
-    shared_ptr<shape> right;
-    bounds3 bbox;
-
-    static bool box_compare(const shared_ptr<shape>& a, const shared_ptr<shape> &b, const int axis_index) {
-        const auto a_axis_interval = a->bounds().axis_interval(axis_index);
-        const auto b_axis_interval = b->bounds().axis_interval(axis_index);
-        return a_axis_interval.min < b_axis_interval.min;
-    }
-
-    static bool box_x_compare(const shared_ptr<shape> &a, const shared_ptr<shape> &b) {
-        return box_compare(a, b, 0);
-    }
-
-    static bool box_y_compare(const shared_ptr<shape> &a, const shared_ptr<shape> &b) {
-        return box_compare(a, b, 1);
-    }
-
-    static bool box_z_compare(const shared_ptr<shape> &a, const shared_ptr<shape> &b) {
-        return box_compare(a, b, 2);
-    }
-};
-
-inline std::shared_ptr<hittable_list> make_quad_mesh(const point3& Q, const vec3& u, const vec3& v, const std::shared_ptr<material>& mat) {
+inline std::vector<std::shared_ptr<shape>>
+make_quad_mesh(const point3& Q, const vec3& u, const vec3& v, const std::shared_ptr<material>& mat) {
     auto mesh = std::make_shared<triangle_mesh>();
     mesh->mat = mat;
 
@@ -306,31 +216,36 @@ inline std::shared_ptr<hittable_list> make_quad_mesh(const point3& Q, const vec3
 
     mesh->n = { normal, normal, normal, normal };
 
-    auto list = std::make_shared<hittable_list>();
-    list->add(std::make_shared<triangle>(mesh, 0));
-    list->add(std::make_shared<triangle>(mesh, 1));
+    std::vector<std::shared_ptr<shape>> shapes;
+    shapes.push_back(std::make_shared<triangle>(mesh, 0));
+    shapes.push_back(std::make_shared<triangle>(mesh, 1));
 
-    return list;
+    return shapes;
 }
 
-inline std::shared_ptr<hittable_list> box(const point3& a, const point3& b, const std::shared_ptr<material>& mat)
+inline std::vector<std::shared_ptr<shape>>
+box(const point3& a, const point3& b, const std::shared_ptr<material>& mat)
 {
-    auto sides = std::make_shared<hittable_list>();
+    std::vector<std::shared_ptr<shape>> sides;
+    sides.reserve(12);
 
-    // Construct the two opposite vertices with the minimum and maximum coordinates.
-    const auto min = point3(std::fmin(a.x(),b.x()), std::fmin(a.y(),b.y()), std::fmin(a.z(),b.z()));
-    const auto max = point3(std::fmax(a.x(),b.x()), std::fmax(a.y(),b.y()), std::fmax(a.z(),b.z()));
+    const auto min = point3(std::fmin(a.x(), b.x()), std::fmin(a.y(), b.y()), std::fmin(a.z(), b.z()));
+    const auto max = point3(std::fmax(a.x(), b.x()), std::fmax(a.y(), b.y()), std::fmax(a.z(), b.z()));
 
     const auto dx = vec3(max.x() - min.x(), 0, 0);
     const auto dy = vec3(0, max.y() - min.y(), 0);
     const auto dz = vec3(0, 0, max.z() - min.z());
 
-    sides->add(make_quad_mesh(point3(min.x(), min.y(), max.z()),  dx,  dy, mat)); // front
-    sides->add(make_quad_mesh(point3(max.x(), min.y(), max.z()), -dz,  dy, mat)); // right
-    sides->add(make_quad_mesh(point3(max.x(), min.y(), min.z()), -dx,  dy, mat)); // back
-    sides->add(make_quad_mesh(point3(min.x(), min.y(), min.z()),  dz,  dy, mat)); // left
-    sides->add(make_quad_mesh(point3(min.x(), max.y(), max.z()),  dx, -dz, mat)); // top
-    sides->add(make_quad_mesh(point3(min.x(), min.y(), min.z()),  dx,  dz, mat)); // bottom
+    auto append = [&](std::vector<std::shared_ptr<shape>> mesh) {
+        sides.insert(sides.end(), mesh.begin(), mesh.end());
+    };
+
+    append(make_quad_mesh(point3(min.x(), min.y(), max.z()),  dx,  dy, mat)); // front
+    append(make_quad_mesh(point3(max.x(), min.y(), max.z()), -dz,  dy, mat)); // right
+    append(make_quad_mesh(point3(max.x(), min.y(), min.z()), -dx,  dy, mat)); // back
+    append(make_quad_mesh(point3(min.x(), min.y(), min.z()),  dz,  dy, mat)); // left
+    append(make_quad_mesh(point3(min.x(), max.y(), max.z()),  dx, -dz, mat)); // top
+    append(make_quad_mesh(point3(min.x(), min.y(), min.z()),  dx,  dz, mat)); // bottom
 
     return sides;
 }
