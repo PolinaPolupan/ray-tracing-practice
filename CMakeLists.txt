@@ -9,13 +9,13 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-project ("Ray Tracing In One Week")
+project ("Ray tracing practice")
 
 # This assumes the SDL source is available in vendored/SDL
 add_subdirectory(external/SDL EXCLUDE_FROM_ALL)
 
 # Add source to this project's executable.
-add_executable (inOneWeekend
+add_executable (RayTracer
         src/main.cpp
         src/ray.h
         src/constants.h
@@ -43,20 +43,18 @@ add_executable (inOneWeekend
         src/constants.h
         src/accel.h)
 
-target_include_directories(inOneWeekend PRIVATE
+target_include_directories(RayTracer PRIVATE
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/external
 )
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET inOneWeekend PROPERTY CXX_STANDARD 20)
+  set_property(TARGET RayTracer PROPERTY CXX_STANDARD 20)
 endif()
 
 # TODO: Add tests and install targets if needed.
 
 # Link to the actual SDL3 library.
-target_link_libraries(inOneWeekend PRIVATE SDL3::SDL3)
-find_package(TBB REQUIRED)
-target_link_libraries(inOneWeekend PRIVATE TBB::tbb)
+target_link_libraries(RayTracer PRIVATE SDL3::SDL3)
 find_package(OpenMP REQUIRED)
-target_link_libraries(inOneWeekend PRIVATE OpenMP::OpenMP_CXX)
+target_link_libraries(RayTracer PRIVATE OpenMP::OpenMP_CXX)
