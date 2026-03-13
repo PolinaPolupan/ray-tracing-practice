@@ -7,6 +7,7 @@ This engine supports:
 - Stratified sampling
 - Simple materials and textures
 - PPM image output
+
 The renderer initially renders a Cornell Box scene.
 Support for loading user-defined scenes will be added in the future.
 ## Requirements:
