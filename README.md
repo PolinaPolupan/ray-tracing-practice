@@ -24,24 +24,9 @@ Clone the repository with submodules:
 ```bash
 git clone --recursive https://github.com/PolinaPolupan/ray-tracing-practice.git
 cd ray-tracing-practice
-````
-
-Create a build directory:
-
-```bash
 mkdir build
 cd build
-```
-
-Configure the project:
-
-```bash
 cmake ..
-```
-
-Build the project:
-
-```bash
 cmake --build .
 ```
 
