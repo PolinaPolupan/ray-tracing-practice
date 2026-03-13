@@ -38,8 +38,6 @@ add_executable (RayTracer
         src/shapes.cpp
         src/shapes.h
         src/lights.h
-        src/lights.h
-        src/constants.h
         src/constants.h
         src/accel.h)
 
