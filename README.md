@@ -31,17 +31,7 @@ Create a build directory:
 ```bash
 mkdir build
 cd build
-```
-
-Configure the project:
-
-```bash
 cmake ..
-```
-
-Build the project:
-
-```bash
 cmake --build .
 ```
 
