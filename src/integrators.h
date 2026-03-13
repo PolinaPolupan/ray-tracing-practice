@@ -1,7 +1,3 @@
-//
-// Created by polup on 11/01/2026.
-//
-
 #ifndef INTEGRATORS_H
 #define INTEGRATORS_H
 

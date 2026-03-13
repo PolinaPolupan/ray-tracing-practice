@@ -1,5 +1,5 @@
-#ifndef RAY_TRACING_IN_ONE_WEEK_TEXTURES_H
-#define RAY_TRACING_IN_ONE_WEEK_TEXTURES_H
+#ifndef TEXTURES_H
+#define TEXTURES_H
 #include "math.h"
 #include "rtw_image.h"
 
@@ -118,4 +118,4 @@ private:
 };
 
 
-#endif //RAY_TRACING_IN_ONE_WEEK_TEXTURES_H
+#endif //TEXTURES_H

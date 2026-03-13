@@ -7,19 +7,20 @@
 #include <iostream>
 #include "math.h"
 
-struct pixel {
+struct pixel
+{
     uint8_t r, g, b;
 };
 
-class film {
+class film
+{
 public:
     film(const int width, const int height, int spp)
         : width_(width), height_(height), spp_(spp)
-    {
-        accumulation_buffer_.resize(width * height, color(0,0,0));
-    }
+    { accumulation_buffer_.resize(width * height, color(0,0,0)); }
 
-    void add_sample(const int index, const color& L) {
+    void add_sample(const int index, const color& L)
+    {
         double r = L.x();
         double g = L.y();
         double b = L.z();
@@ -30,7 +31,8 @@ public:
         accumulation_buffer_[index] += color(r, g, b);
     }
 
-    [[nodiscard]] std::vector<pixel> get_display_buffer() const {
+    [[nodiscard]] std::vector<pixel> get_display_buffer() const
+    {
         std::vector<pixel> display_buffer(width_ * height_);
 
         const double scale = (spp_ > 0) ? 1.0 / static_cast<double>(spp_) : 1.0;
@@ -65,22 +67,23 @@ private:
     int spp_;
     std::vector<color> accumulation_buffer_;
 
-    vec3 aces_approx(vec3 v) const {
+    static vec3 aces_approx(vec3 v)
+    {
         v *= 0.6f;
-        double a = 2.51f;
-        double b = 0.03f;
-        double c = 2.43f;
-        double d = 0.59f;
-        double e = 0.14f;
+        constexpr double a = 2.51f;
+        constexpr double b = 0.03f;
+        constexpr double c = 2.43f;
+        constexpr double d = 0.59f;
+        constexpr double e = 0.14f;
 
-        vec3 numerator = v * (v * a + b);
-        vec3 denominator = v * (v * c + d) + e;
+        const vec3 numerator = v * (v * a + b);
+        const vec3 denominator = v * (v * c + d) + e;
 
-        return vec3(
+        return {
             numerator.x() / denominator.x(),
             numerator.y() / denominator.y(),
             numerator.z() / denominator.z()
-        );
+        };
     }
 };
 

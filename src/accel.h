@@ -1,20 +1,26 @@
-#ifndef RAY_TRACING_IN_ONE_WEEK_AGGREGATES_H
-#define RAY_TRACING_IN_ONE_WEEK_AGGREGATES_H
+#ifndef AGGREGATES_H
+#define AGGREGATES_H
 #include <memory>
 
 #include "shapes.h"
 
-struct node {
-    bounds3 bbox = bounds3::empty;
-    std::shared_ptr<shape> leaf;          // non-null => leaf
-    std::unique_ptr<node> children[2];    // non-null => internal child
-    bool is_leaf() const { return static_cast<bool>(leaf); }
+struct node
+{
+    bounds3                  bbox = bounds3::empty;
+    std::shared_ptr<shape>   leaf;                  // non-null => leaf
+    std::unique_ptr<node>    children[2];           // non-null => internal child
+
+    [[nodiscard]] bool is_leaf() const { return static_cast<bool>(leaf); }
 };
 
-class accelerator {
+class accelerator
+{
 public:
     virtual ~accelerator() = default;
-    [[nodiscard]] virtual std::optional<shape_intersection> intersect(const ray& r, interval ray_t) const = 0;
+
+    [[nodiscard]] virtual std::optional<shape_intersection>
+    intersect(const ray& r, interval ray_t) const = 0;
+
     [[nodiscard]] bounds3 bounds() const { return bbox_; }
 
 protected:
@@ -45,14 +51,19 @@ public:
         if (root_) bbox_ = root_->bbox;
     }
 
-    [[nodiscard]] std::optional<shape_intersection> intersect(const ray& r, interval ray_t) const override {
+    [[nodiscard]] std::optional<shape_intersection>
+    intersect(const ray& r, const interval ray_t) const override {
         return _intersect(root_.get(), r, ray_t);
     }
 
 private:
     std::unique_ptr<node> root_;
 
-    static std::unique_ptr<node> build(std::vector<std::shared_ptr<shape>>& objects, size_t start, size_t end) {
+    static std::unique_ptr<node> build(
+        std::vector<std::shared_ptr<shape>>& objects,
+        const size_t start,
+        const size_t end
+    ) {
         if (start >= end) return nullptr;
 
         auto n = std::make_unique<node>();
@@ -71,15 +82,21 @@ private:
         auto cmp = [axis](const std::shared_ptr<shape>& a, const std::shared_ptr<shape>& b) {
             return box_compare(a, b, axis);
         };
+
         std::sort(objects.begin() + start, objects.begin() + end, cmp);
 
         const size_t mid = start + span / 2;
         n->children[0] = build(objects, start, mid);
         n->children[1] = build(objects, mid, end);
+
         return n;
     }
 
-    static std::optional<shape_intersection> _intersect(const node* n, const ray& r, const interval ray_t) {
+    static std::optional<shape_intersection> _intersect(
+        const node* n,
+        const ray& r,
+        const interval ray_t
+    ) {
         if (!n) return {};
         if (!n->bbox.intersect(r, ray_t)) return {};
 
@@ -97,4 +114,4 @@ private:
 };
 
 
-#endif //RAY_TRACING_IN_ONE_WEEK_AGGREGATES_H
+#endif // AGGREGATES_H

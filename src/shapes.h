@@ -1,9 +1,5 @@
-//
-// Created by polup on 20/01/2026.
-//
-
-#ifndef RAY_TRACING_IN_ONE_WEEK_SHAPES_H
-#define RAY_TRACING_IN_ONE_WEEK_SHAPES_H
+#ifndef SHAPES_H
+#define SHAPES_H
 #include <algorithm>
 #include <optional>
 
@@ -13,7 +9,8 @@
 
 class material;
 
-class shape_intersection {
+class shape_intersection
+{
 public:
     point3 p;
     vec3 normal;
@@ -23,7 +20,8 @@ public:
     double v{};
     bool front_face{};
 
-    void set_face_normal(const ray& r, const vec3& outward_normal) {
+    void set_face_normal(const ray& r, const vec3& outward_normal)
+    {
         // Sets the hit record normal vector.
         // NOTE: the parameter `outward_normal` is assumed to have unit length.
 
@@ -32,15 +30,18 @@ public:
     }
 };
 
-class shape {
+class shape
+{
 public:
     virtual ~shape() = default;
     [[nodiscard]] virtual std::optional<shape_intersection> intersect(const ray& r, interval ray_t) const = 0;
     [[nodiscard]] virtual bounds3 bounds() const = 0;
-    [[nodiscard]] virtual double pdf(const point3& origin, const vec3& direction) const
-    { return 0.0; }
-    [[nodiscard]] virtual vec3 random(const point3& origin, const std::shared_ptr<sampler>& sampler) const
-    { return {1,0,0}; }
+    [[nodiscard]] virtual double pdf(const point3& origin, const vec3& direction) const {
+        return 0.0;
+    }
+    [[nodiscard]] virtual vec3 random(const point3& origin, const std::shared_ptr<sampler>& sampler) const {
+        return {1,0,0};
+    }
 };
 
 struct triangle_mesh
@@ -58,7 +59,8 @@ class triangle final : public shape
 public:
     triangle(const std::shared_ptr<triangle_mesh>& mesh, const int tri_index): tri_index(tri_index), mesh(mesh) {}
 
-    [[nodiscard]] bounds3 bounds() const override {
+    [[nodiscard]] bounds3 bounds() const override
+    {
         const int i0 = mesh->indices[tri_index * 3 + 0];
         const int i1 = mesh->indices[tri_index * 3 + 1];
         const int i2 = mesh->indices[tri_index * 3 + 2];
@@ -72,42 +74,8 @@ public:
         return box;
     }
 
-    [[nodiscard]] std::optional<shape_intersection> intersect(const ray& r, interval ray_t) const override {
-        const int i0 = mesh->indices[tri_index * 3 + 0];
-        const int i1 = mesh->indices[tri_index * 3 + 1];
-        const int i2 = mesh->indices[tri_index * 3 + 2];
-
-        const point3& v0 = mesh->p[i0];
-        const point3& v1 = mesh->p[i1];
-        const point3& v2 = mesh->p[i2];
-
-        const vec3 edge1 = v1 - v0;
-        const vec3 edge2 = v2 - v0;
-        const vec3 h = cross(r.d(), edge2);
-        const double a = dot(edge1, h);
-
-        if (a > -1e-8 && a < 1e-8) return {};
-
-        const double f = 1.0 / a;
-        const vec3 s = r.o() - v0;
-        const double u = f * dot(s, h);
-        if (u < 0.0 || u > 1.0) return {};
-
-        const vec3 q = cross(s, edge1);
-        const double v = f * dot(r.d(), q);
-        if (v < 0.0 || u + v > 1.0) return {};
-
-        const double t = f * dot(edge2, q);
-        if (!ray_t.contains(t)) return {};
-
-        shape_intersection rec;
-        rec.t = t;
-        rec.p = r.at(t);
-        rec.mat = mesh->mat;
-        rec.set_face_normal(r, unit_vector(cross(edge1, edge2)));
-
-        return rec;
-    }
+    [[nodiscard]] std::optional<shape_intersection>
+    intersect(const ray& r, interval ray_t) const override;
 
 private:
     int tri_index = 0;
@@ -120,7 +88,8 @@ public:
     [[nodiscard]] bounds3 bounds() const override { return bbox; }
     [[nodiscard]] std::optional<shape_intersection> intersect(const ray& r, interval ray_t) const override;
     [[nodiscard]] double pdf(const point3& origin, const vec3& direction) const override;
-    [[nodiscard]] vec3 random(const point3& origin, const std::shared_ptr<sampler>& sampler) const override {
+    [[nodiscard]] vec3 random(const point3& origin, const std::shared_ptr<sampler>& sampler) const override
+    {
         const auto p = Q + (sampler->gen_1d() * u) + (sampler->gen_1d() * v);
         return p - origin;
     }
@@ -155,14 +124,16 @@ class sphere final : public shape {
 public:
     // Stationary Sphere
     sphere(const point3& static_center, double radius, const shared_ptr<material> &mat)
-      : center(static_center, vec3(0,0,0)), radius(std::fmax(0,radius)), mat(mat) {
+      : center(static_center, vec3(0,0,0)), radius(std::fmax(0,radius)), mat(mat)
+    {
         const auto rvec = vec3(radius, radius, radius);
         bbox = bounds3(static_center - rvec, static_center + rvec);
     }
 
     // Moving Sphere
     sphere(const point3& center1, const point3& center2, const double radius, const shared_ptr<material> &mat)
-      : center(center1, center2 - center1), radius(std::fmax(0,radius)), mat(mat) {
+      : center(center1, center2 - center1), radius(std::fmax(0,radius)), mat(mat)
+    {
         const auto rvec = vec3(radius, radius, radius);
         const bounds3 box1(center.at(0) - rvec, center.at(0) + rvec);
         const bounds3 box2(center.at(1) - rvec, center.at(1) + rvec);
@@ -183,72 +154,26 @@ private:
     static void get_sphere_uv(const point3& p, double& u, double& v);
 };
 
-class translate final : public shape {
+class translate final : public shape
+{
 public:
-    translate(const shared_ptr<shape>& object, const vec3& offset): object(object), offset(offset) {
-        bbox = object->bounds() + offset;
+    translate(const shared_ptr<shape>& object, const vec3& offset): _object(object), _offset(offset) {
+        _bbox = object->bounds() + offset;
     }
 
     [[nodiscard]] std::optional<shape_intersection> intersect(const ray& r, interval ray_t) const override;
-    [[nodiscard]] bounds3 bounds() const override { return bbox; }
+    [[nodiscard]] bounds3 bounds() const override { return _bbox; }
 
 private:
-    shared_ptr<shape> object;
-    vec3 offset;
-    bounds3 bbox;
+    shared_ptr<shape> _object;
+    vec3 _offset;
+    bounds3 _bbox;
 };
 
-inline std::vector<std::shared_ptr<shape>>
-make_quad_mesh(const point3& Q, const vec3& u, const vec3& v, const std::shared_ptr<material>& mat) {
-    auto mesh = std::make_shared<triangle_mesh>();
-    mesh->mat = mat;
+std::vector<std::shared_ptr<shape>>
+box(const point3& a, const point3& b, const std::shared_ptr<material>& mat);
 
-    point3 p0 = Q;
-    point3 p1 = Q + u;
-    point3 p2 = Q + u + v;
-    point3 p3 = Q + v;
+std::vector<std::shared_ptr<shape>>
+make_quad_mesh(const point3& Q, const vec3& u, const vec3& v, const std::shared_ptr<material>& mat);
 
-    mesh->p = { p0, p1, p2, p3 };
-
-    mesh->indices = { 0, 1, 2, 0, 2, 3 };
-
-    vec3 normal = unit_vector(cross(u, v));
-
-    mesh->n = { normal, normal, normal, normal };
-
-    std::vector<std::shared_ptr<shape>> shapes;
-    shapes.push_back(std::make_shared<triangle>(mesh, 0));
-    shapes.push_back(std::make_shared<triangle>(mesh, 1));
-
-    return shapes;
-}
-
-inline std::vector<std::shared_ptr<shape>>
-box(const point3& a, const point3& b, const std::shared_ptr<material>& mat)
-{
-    std::vector<std::shared_ptr<shape>> sides;
-    sides.reserve(12);
-
-    const auto min = point3(std::fmin(a.x(), b.x()), std::fmin(a.y(), b.y()), std::fmin(a.z(), b.z()));
-    const auto max = point3(std::fmax(a.x(), b.x()), std::fmax(a.y(), b.y()), std::fmax(a.z(), b.z()));
-
-    const auto dx = vec3(max.x() - min.x(), 0, 0);
-    const auto dy = vec3(0, max.y() - min.y(), 0);
-    const auto dz = vec3(0, 0, max.z() - min.z());
-
-    auto append = [&](std::vector<std::shared_ptr<shape>> mesh) {
-        sides.insert(sides.end(), mesh.begin(), mesh.end());
-    };
-
-    append(make_quad_mesh(point3(min.x(), min.y(), max.z()),  dx,  dy, mat)); // front
-    append(make_quad_mesh(point3(max.x(), min.y(), max.z()), -dz,  dy, mat)); // right
-    append(make_quad_mesh(point3(max.x(), min.y(), min.z()), -dx,  dy, mat)); // back
-    append(make_quad_mesh(point3(min.x(), min.y(), min.z()),  dz,  dy, mat)); // left
-    append(make_quad_mesh(point3(min.x(), max.y(), max.z()),  dx, -dz, mat)); // top
-    append(make_quad_mesh(point3(min.x(), min.y(), min.z()),  dx,  dz, mat)); // bottom
-
-    return sides;
-}
-
-
-#endif //RAY_TRACING_IN_ONE_WEEK_SHAPES_H
+#endif //SHAPES_H

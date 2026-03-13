@@ -9,24 +9,26 @@
 #include "math.h"
 
 
-class sampler {
+class sampler
+{
 public:
-    explicit sampler(const int spp) : spp_(spp) {}
+    explicit sampler(const int spp) : _spp(spp) {}
     virtual ~sampler() = default;
 
     virtual void start_pixel() = 0;
     virtual bool start_next_sample() = 0;
     virtual double gen_1d() = 0;
     virtual point2d gen_2d() = 0;
-    virtual std::unique_ptr<sampler> clone() const = 0;
+    [[nodiscard]] virtual std::unique_ptr<sampler> clone() const = 0;
 
-    int get_spp() const { return spp_; }
+    [[nodiscard]] int get_spp() const { return _spp; }
 
 protected:
-    int spp_;
+    int _spp;
 };
 
-class independent_sampler: public sampler {
+class independent_sampler: public sampler
+{
 public:
     explicit independent_sampler(const int spp) : sampler(spp) {}
 
@@ -39,7 +41,7 @@ public:
     }
 
     bool start_next_sample() override {
-        return sample_index++ < spp_;
+        return sample_index++ < _spp;
     }
 
     double gen_1d() override {
@@ -56,20 +58,21 @@ private:
     std::mt19937 generator;
 };
 
-class stratified_sampler final : public sampler {
+class stratified_sampler final : public sampler
+{
 public:
-    explicit stratified_sampler(const int spp): sampler(spp), sqrt_spp(static_cast<int>(std::sqrt(spp))) {}
+    explicit stratified_sampler(const int spp): sampler(spp), _sqrt_spp(static_cast<int>(std::sqrt(spp))) {}
 
     [[nodiscard]] std::unique_ptr<sampler> clone() const override {
         return std::make_unique<stratified_sampler>(*this);
     }
 
     void start_pixel() override {
-        sample_index = 0;
+        _sample_index = 0;
     }
 
     bool start_next_sample() override {
-        return sample_index++ < spp_;
+        return _sample_index++ < _spp;
     }
 
     double gen_1d() override {
@@ -77,24 +80,24 @@ public:
     }
 
     point2d gen_2d() override {
-        const int stratum = sample_index - 1;
-        const int x = stratum % sqrt_spp;
-        const int y = stratum / sqrt_spp;
+        const int stratum = _sample_index - 1;
+        const int x = stratum % _sqrt_spp;
+        const int y = stratum / _sqrt_spp;
 
         return {
-            (x + rng01()) / sqrt_spp,
-            (y + rng01()) / sqrt_spp
+            (x + rng01()) / _sqrt_spp,
+            (y + rng01()) / _sqrt_spp
         };
     }
 
 private:
-    double rng01() { return dist_(rng); }
+    double rng01() { return _dist(_rng); }
 
-    std::mt19937 rng;
-    std::uniform_real_distribution<double> dist_{0.0, 1.0};
+    std::mt19937 _rng;
+    std::uniform_real_distribution<double> _dist{0.0, 1.0};
 
-    int sqrt_spp;
-    int sample_index = 0;
+    int _sqrt_spp;
+    int _sample_index = 0;
 };
 
 vec3 sample_uniform_hemisphere(point2d u);

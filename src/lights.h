@@ -1,5 +1,5 @@
-#ifndef RAY_TRACING_IN_ONE_WEEK_LIGHTS_H
-#define RAY_TRACING_IN_ONE_WEEK_LIGHTS_H
+#ifndef LIGHTS_H
+#define LIGHTS_H
 #include "math.h"
 
 struct light_li_sample
@@ -14,13 +14,9 @@ class light
 {
 public:
     virtual ~light() = default;
-
     light() = default;
-
     explicit light(const vec3& pos): pos(pos) {}
-
     virtual light_li_sample sample_li(const vec3& p) = 0;
-
     [[nodiscard]] virtual double pdf_li() const = 0;
 
 protected:
@@ -43,10 +39,7 @@ public:
         return {li, wi, pos, 1.0};
     }
 
-    [[nodiscard]] double pdf_li() const override
-    {
-        return 0.0;
-    }
+    [[nodiscard]] double pdf_li() const override { return 0.0; }
 
 private:
     double scale;
@@ -75,4 +68,4 @@ private:
     std::vector<std::shared_ptr<light>> lights_;
 };
 
-#endif //RAY_TRACING_IN_ONE_WEEK_LIGHTS_H
+#endif //LIGHTS_H

@@ -4,6 +4,44 @@
 
 #include "shapes.h"
 
+std::optional<shape_intersection> triangle::intersect(const ray& r, interval ray_t) const
+{
+    const int i0 = mesh->indices[tri_index * 3 + 0];
+    const int i1 = mesh->indices[tri_index * 3 + 1];
+    const int i2 = mesh->indices[tri_index * 3 + 2];
+
+    const point3& v0 = mesh->p[i0];
+    const point3& v1 = mesh->p[i1];
+    const point3& v2 = mesh->p[i2];
+
+    const vec3 edge1 = v1 - v0;
+    const vec3 edge2 = v2 - v0;
+    const vec3 h = cross(r.d(), edge2);
+    const double a = dot(edge1, h);
+
+    if (a > -1e-8 && a < 1e-8) return {};
+
+    const double f = 1.0 / a;
+    const vec3 s = r.o() - v0;
+    const double u = f * dot(s, h);
+    if (u < 0.0 || u > 1.0) return {};
+
+    const vec3 q = cross(s, edge1);
+    const double v = f * dot(r.d(), q);
+    if (v < 0.0 || u + v > 1.0) return {};
+
+    const double t = f * dot(edge2, q);
+    if (!ray_t.contains(t)) return {};
+
+    shape_intersection rec;
+    rec.t = t;
+    rec.p = r.at(t);
+    rec.mat = mesh->mat;
+    rec.set_face_normal(r, unit_vector(cross(edge1, edge2)));
+
+    return rec;
+}
+
 quad::quad(const point3& Q, const vec3& u, const vec3& v, const std::shared_ptr<material>& mat): Q(Q), u(u), v(v), mat(mat)
 {
     const auto n = cross(u, v);
@@ -218,11 +256,64 @@ void sphere::get_sphere_uv(const point3& p, double& u, double& v)
 
 std::optional<shape_intersection> translate::intersect(const ray& r, const interval ray_t) const
 {
-    const ray offset_r(r.o() - offset, r.d(), r.time());
+    const ray offset_r(r.o() - _offset, r.d(), r.time());
 
-    auto result = object->intersect(offset_r, ray_t);
+    auto result = _object->intersect(offset_r, ray_t);
     if (!result) return {};
 
-    result->p += offset;
+    result->p += _offset;
     return result;
+}
+
+std::vector<std::shared_ptr<shape>>
+make_quad_mesh(const point3& Q, const vec3& u, const vec3& v, const std::shared_ptr<material>& mat)
+{
+    auto mesh = std::make_shared<triangle_mesh>();
+    mesh->mat = mat;
+
+    point3 p0 = Q;
+    point3 p1 = Q + u;
+    point3 p2 = Q + u + v;
+    point3 p3 = Q + v;
+
+    mesh->p = { p0, p1, p2, p3 };
+
+    mesh->indices = { 0, 1, 2, 0, 2, 3 };
+
+    vec3 normal = unit_vector(cross(u, v));
+
+    mesh->n = { normal, normal, normal, normal };
+
+    std::vector<std::shared_ptr<shape>> shapes;
+    shapes.push_back(std::make_shared<triangle>(mesh, 0));
+    shapes.push_back(std::make_shared<triangle>(mesh, 1));
+
+    return shapes;
+}
+
+std::vector<std::shared_ptr<shape>>
+box(const point3& a, const point3& b, const std::shared_ptr<material>& mat)
+{
+    std::vector<std::shared_ptr<shape>> sides;
+    sides.reserve(12);
+
+    const auto min = point3(std::fmin(a.x(), b.x()), std::fmin(a.y(), b.y()), std::fmin(a.z(), b.z()));
+    const auto max = point3(std::fmax(a.x(), b.x()), std::fmax(a.y(), b.y()), std::fmax(a.z(), b.z()));
+
+    const auto dx = vec3(max.x() - min.x(), 0, 0);
+    const auto dy = vec3(0, max.y() - min.y(), 0);
+    const auto dz = vec3(0, 0, max.z() - min.z());
+
+    auto append = [&](std::vector<std::shared_ptr<shape>> mesh) {
+        sides.insert(sides.end(), mesh.begin(), mesh.end());
+    };
+
+    append(make_quad_mesh(point3(min.x(), min.y(), max.z()),  dx,  dy, mat)); // front
+    append(make_quad_mesh(point3(max.x(), min.y(), max.z()), -dz,  dy, mat)); // right
+    append(make_quad_mesh(point3(max.x(), min.y(), min.z()), -dx,  dy, mat)); // back
+    append(make_quad_mesh(point3(min.x(), min.y(), min.z()),  dz,  dy, mat)); // left
+    append(make_quad_mesh(point3(min.x(), max.y(), max.z()),  dx, -dz, mat)); // top
+    append(make_quad_mesh(point3(min.x(), min.y(), min.z()),  dx,  dz, mat)); // bottom
+
+    return sides;
 }

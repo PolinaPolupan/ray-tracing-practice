@@ -7,7 +7,8 @@
 
 class ray;
 
-class camera {
+class camera
+{
 public:
     double aspect_ratio = 1.0;  // Ratio of image width over height
     int    image_width  = 100;  // Rendered image width in pixel count
@@ -29,13 +30,9 @@ public:
     vec3   defocus_disk_u;       // Defocus disk horizontal radius
     vec3   defocus_disk_v;       // Defocus disk vertical radius
 
-public:
     explicit camera(film* film): film_(film) {}
-
     void init();
-
     [[nodiscard]] ray gen_ray(sampler& sampler, point2i pixel) const;
-
     [[nodiscard]] film* get_film() const { return film_; }
 
 private:
