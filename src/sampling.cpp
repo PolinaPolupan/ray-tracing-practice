@@ -4,7 +4,7 @@
 
 #include "sampling.h"
 
-vec3 sample_uniform_hemisphere(const point2d u)
+vec3d sample_uniform_hemisphere(const point2d u)
 {
     const double z = u.x;
     const double r = std::sqrt(std::max(0.0, 1.0 - z * z));
@@ -13,7 +13,7 @@ vec3 sample_uniform_hemisphere(const point2d u)
     return { r * std::cos(phi), r * std::sin(phi), z };
 }
 
-vec3 sample_uniform_sphere(const point2d& u)
+vec3d sample_uniform_sphere(const point2d& u)
 {
     const double z = 1.0 - 2.0 * u.x;
     const double r = std::sqrt(std::max(0.0, 1.0 - z * z));
@@ -24,11 +24,11 @@ vec3 sample_uniform_sphere(const point2d& u)
     return { x, y, z };
 }
 
-point3 defocus_disk_sample(sampler& samp, const point3& center, const vec3& du, const vec3& dv)
+point3 defocus_disk_sample(sampler& samp, const point3& center, const vec3d& du, const vec3d& dv)
 {
-    vec3 p;
+    vec3d p;
     do {
-        p = vec3(
+        p = vec3d(
             samp.gen_1d() * 2 - 1,
             samp.gen_1d() * 2 - 1,
             0
@@ -38,7 +38,7 @@ point3 defocus_disk_sample(sampler& samp, const point3& center, const vec3& du, 
     return center + p.x() * du + p.y() * dv;
 }
 
-vec3 random_to_sphere(const point2d u, const double radius, const double distance_squared)
+vec3d random_to_sphere(const point2d u, const double radius, const double distance_squared)
 {
     const auto r1 = u.x;
     const auto r2 = u.y;
@@ -51,7 +51,7 @@ vec3 random_to_sphere(const point2d u, const double radius, const double distanc
     return {x, y, z};
 }
 
-vec3 cosine_sample_hemisphere(const point2d& u)
+vec3d cosine_sample_hemisphere(const point2d& u)
 {
     const double r = std::sqrt(u.x);
     const double phi = 2 * pi * u.y;

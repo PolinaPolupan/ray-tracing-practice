@@ -14,19 +14,19 @@ std::optional<shape_intersection> triangle::intersect(const ray& r, interval ray
     const point3& v1 = mesh->p[i1];
     const point3& v2 = mesh->p[i2];
 
-    const vec3 edge1 = v1 - v0;
-    const vec3 edge2 = v2 - v0;
-    const vec3 h = cross(r.d(), edge2);
+    const vec3d edge1 = v1 - v0;
+    const vec3d edge2 = v2 - v0;
+    const vec3d h = cross(r.d(), edge2);
     const double a = dot(edge1, h);
 
     if (a > -1e-8 && a < 1e-8) return {};
 
     const double f = 1.0 / a;
-    const vec3 s = r.o() - v0;
+    const vec3d s = r.o() - v0;
     const double u = f * dot(s, h);
     if (u < 0.0 || u > 1.0) return {};
 
-    const vec3 q = cross(s, edge1);
+    const vec3d q = cross(s, edge1);
     const double v = f * dot(r.d(), q);
     if (v < 0.0 || u + v > 1.0) return {};
 
@@ -42,7 +42,7 @@ std::optional<shape_intersection> triangle::intersect(const ray& r, interval ray
     return rec;
 }
 
-quad::quad(const point3& Q, const vec3& u, const vec3& v, const std::shared_ptr<material>& mat): Q(Q), u(u), v(v), mat(mat)
+quad::quad(const point3& Q, const vec3d& u, const vec3d& v, const std::shared_ptr<material>& mat): Q(Q), u(u), v(v), mat(mat)
 {
     const auto n = cross(u, v);
     normal = unit_vector(n);
@@ -57,9 +57,9 @@ quad::quad(const point3& Q, const vec3& u, const vec3& v, const std::shared_ptr<
 void quad::bounding_box()
 {
     // Compute the bounding box of all four vertices.
-    const auto bbox_diagonal1 = bounds3(Q, Q + u + v);
-    const auto bbox_diagonal2 = bounds3(Q + u, Q + v);
-    bbox = bounds3(bbox_diagonal1, bbox_diagonal2);
+    const auto bbox_diagonal1 = bounds3d(Q, Q + u + v);
+    const auto bbox_diagonal2 = bounds3d(Q + u, Q + v);
+    bbox = bounds3d(bbox_diagonal1, bbox_diagonal2);
 }
 
 std::optional<shape_intersection> quad::intersect(const ray& r, const interval ray_t) const
@@ -74,7 +74,7 @@ std::optional<shape_intersection> quad::intersect(const ray& r, const interval r
         return {};
 
     const auto intersection = r.at(t);
-    const vec3 planar_hitpt_vector = intersection - Q;
+    const vec3d planar_hitpt_vector = intersection - Q;
     const auto alpha = dot(w, cross(planar_hitpt_vector, v));
     const auto beta = dot(w, cross(u, planar_hitpt_vector));
 
@@ -104,7 +104,7 @@ bool quad::is_interior(const double a, const double b, shape_intersection& rec)
     return true;
 }
 
-double quad::pdf(const point3& origin, const vec3& direction) const
+double quad::pdf(const point3& origin, const vec3d& direction) const
 {
     // Use a temporary intersection just to get t and normal for PDF calc if needed,
     // but since we just returned from intersect check, we need the data.
@@ -138,7 +138,7 @@ RotateY::RotateY(const shared_ptr<shape>& object, const double angle): object(ob
                 const auto newx =  cos_theta*x + sin_theta*z;
                 const auto newz = -sin_theta*x + cos_theta*z;
 
-                vec3 tester(newx, y, newz);
+                vec3d tester(newx, y, newz);
 
                 for (int c = 0; c < 3; c++) {
                     min[c] = std::fmin(min[c], tester[c]);
@@ -148,7 +148,7 @@ RotateY::RotateY(const shared_ptr<shape>& object, const double angle): object(ob
         }
     }
 
-    bbox = bounds3(min, max);
+    bbox = bounds3d(min, max);
 }
 
 std::optional<shape_intersection> RotateY::intersect(const ray& r, const interval ray_t) const
@@ -159,7 +159,7 @@ std::optional<shape_intersection> RotateY::intersect(const ray& r, const interva
         (sin_theta * r.o().x()) + (cos_theta * r.o().z())
     );
 
-    const auto direction = vec3(
+    const auto direction = vec3d(
         (cos_theta * r.d().x()) - (sin_theta * r.d().z()),
         r.d().y(),
         (sin_theta * r.d().x()) + (cos_theta * r.d().z())
@@ -176,7 +176,7 @@ std::optional<shape_intersection> RotateY::intersect(const ray& r, const interva
         (-sin_theta * result->p.x()) + (cos_theta * result->p.z())
     );
 
-    result->normal = vec3(
+    result->normal = vec3d(
         (cos_theta * result->normal.x()) + (sin_theta * result->normal.z()),
         result->normal.y(),
         (-sin_theta * result->normal.x()) + (cos_theta * result->normal.z())
@@ -188,7 +188,7 @@ std::optional<shape_intersection> RotateY::intersect(const ray& r, const interva
 std::optional<shape_intersection> sphere::intersect(const ray& r, interval ray_t) const
 {
     const point3 current_center = center.at(r.time());
-    const vec3 oc = current_center - r.o();
+    const vec3d oc = current_center - r.o();
     const auto a = r.d().length_squared();
     const auto h = dot(r.d(), oc);
     const auto c = oc.length_squared() - radius*radius;
@@ -209,7 +209,7 @@ std::optional<shape_intersection> sphere::intersect(const ray& r, interval ray_t
     shape_intersection rec;
     rec.t = root;
     rec.p = r.at(rec.t);
-    const vec3 outward_normal = (rec.p - current_center) / radius;
+    const vec3d outward_normal = (rec.p - current_center) / radius;
     rec.set_face_normal(r, outward_normal);
     get_sphere_uv(outward_normal, rec.u, rec.v);
     rec.mat = mat;
@@ -217,7 +217,7 @@ std::optional<shape_intersection> sphere::intersect(const ray& r, interval ray_t
     return rec;
 }
 
-double sphere::pdf(const point3& origin, const vec3& direction) const
+double sphere::pdf(const point3& origin, const vec3d& direction) const
 {
     // This method only works for stationary spheres.
     if (!this->intersect(ray(origin, direction), interval(0.001, infinity)))
@@ -230,9 +230,9 @@ double sphere::pdf(const point3& origin, const vec3& direction) const
     return  1 / solid_angle;
 }
 
-vec3 sphere::random(const point3& origin, const std::shared_ptr<sampler>& sampler) const
+vec3d sphere::random(const point3& origin, const std::shared_ptr<sampler>& sampler) const
 {
-    const vec3 direction = center.at(0) - origin;
+    const vec3d direction = center.at(0) - origin;
     const auto distance_squared = direction.length_squared();
     const frame uvw(direction);
     return uvw.transform(random_to_sphere(sampler->gen_2d(), radius, distance_squared));
@@ -266,7 +266,7 @@ std::optional<shape_intersection> translate::intersect(const ray& r, const inter
 }
 
 std::vector<std::shared_ptr<shape>>
-make_quad_mesh(const point3& Q, const vec3& u, const vec3& v, const std::shared_ptr<material>& mat)
+make_quad_mesh(const point3& Q, const vec3d& u, const vec3d& v, const std::shared_ptr<material>& mat)
 {
     auto mesh = std::make_shared<triangle_mesh>();
     mesh->mat = mat;
@@ -280,7 +280,7 @@ make_quad_mesh(const point3& Q, const vec3& u, const vec3& v, const std::shared_
 
     mesh->indices = { 0, 1, 2, 0, 2, 3 };
 
-    vec3 normal = unit_vector(cross(u, v));
+    vec3d normal = unit_vector(cross(u, v));
 
     mesh->n = { normal, normal, normal, normal };
 
@@ -300,9 +300,9 @@ box(const point3& a, const point3& b, const std::shared_ptr<material>& mat)
     const auto min = point3(std::fmin(a.x(), b.x()), std::fmin(a.y(), b.y()), std::fmin(a.z(), b.z()));
     const auto max = point3(std::fmax(a.x(), b.x()), std::fmax(a.y(), b.y()), std::fmax(a.z(), b.z()));
 
-    const auto dx = vec3(max.x() - min.x(), 0, 0);
-    const auto dy = vec3(0, max.y() - min.y(), 0);
-    const auto dz = vec3(0, 0, max.z() - min.z());
+    const auto dx = vec3d(max.x() - min.x(), 0, 0);
+    const auto dy = vec3d(0, max.y() - min.y(), 0);
+    const auto dz = vec3d(0, 0, max.z() - min.z());
 
     auto append = [&](std::vector<std::shared_ptr<shape>> mesh) {
         sides.insert(sides.end(), mesh.begin(), mesh.end());

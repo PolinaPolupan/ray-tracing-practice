@@ -32,21 +32,22 @@ point2<T> max(const point2<T>& p1, const point2<T>& p2) {
 
 using point2d = point2<double>;
 
+template <typename T>
 class vec3 {
 public:
-    double e[3];
+    T e[3];
 
     vec3() : e{0,0,0} {}
-    vec3(const double e0) : e{e0,e0,e0} {}
-    vec3(const double e0, const double e1, const double e2) : e{e0,e1,e2} {}
+    vec3(const T e0) : e{e0,e0,e0} {}
+    vec3(const T e0, const T e1, const T e2) : e{e0,e1,e2} {}
 
-    [[nodiscard]] double x() const { return e[0]; }
-    [[nodiscard]] double y() const { return e[1]; }
-    [[nodiscard]] double z() const { return e[2]; }
+    [[nodiscard]] T x() const { return e[0]; }
+    [[nodiscard]] T y() const { return e[1]; }
+    [[nodiscard]] T z() const { return e[2]; }
 
     vec3 operator-() const { return {-e[0], -e[1], -e[2]}; }
-    double operator[](const int i) const { return e[i]; }
-    double& operator[](const int i) { return e[i]; }
+    T operator[](const int i) const { return e[i]; }
+    T& operator[](const int i) { return e[i]; }
     explicit operator bool() const { return e[0] || e[1] || e[2]; }
 
     vec3& operator+=(const vec3& v)
@@ -91,8 +92,8 @@ public:
 };
 
 /* free functions */
-
-inline vec3 operator*(const vec3& u, const vec3& v)
+template <typename T>
+vec3<T> operator*(const vec3<T>& u, const vec3<T>& v)
 {
     return {
         u.e[0] * v.e[0],
@@ -101,42 +102,56 @@ inline vec3 operator*(const vec3& u, const vec3& v)
     };
 }
 
-inline std::ostream& operator<<(std::ostream& out, const vec3& v) {
+template <typename T>
+std::ostream& operator<<(std::ostream& out, const vec3<T>& v) {
     return out << v.e[0] << ' ' << v.e[1] << ' ' << v.e[2];
 }
 
-inline vec3 operator+(const vec3& u, const vec3& v) {
+template <typename T>
+vec3<T> operator+(const vec3<T>& u, const vec3<T>& v) {
     return {u.e[0] + v.e[0], u.e[1] + v.e[1], u.e[2] + v.e[2]};
 }
 
-inline vec3 operator+(const vec3& u, const double v) {
+template <typename T>
+vec3<T> operator+(const vec3<T>& u, const double v) {
     return {u.e[0] + v, u.e[1] + v, u.e[2] + v};
 }
-
-
-inline vec3 operator-(const vec3& u, const vec3& v) {
+template <typename T>
+vec3<T> operator-(const vec3<T>& u, const vec3<T>& v) {
     return {u.e[0] - v.e[0], u.e[1] - v.e[1], u.e[2] - v.e[2]};
 }
 
-inline vec3 operator*(const double t, const vec3& v) {
+template <typename T>
+vec3<T> operator*(const double t, const vec3<T>& v) {
     return {t*v.e[0], t*v.e[1], t*v.e[2]};
 }
 
-inline vec3 operator*(const vec3& v, const double t) {
+template <typename T>
+vec3<T> operator*(const vec3<T>& v, const double t) {
     return t * v;
 }
 
-inline vec3 operator/(const vec3& v, const double t) {
+template <typename T>
+vec3<T> operator/(const vec3<T>& v, const double t) {
     return (1/t) * v;
 }
 
-vec3 refract(const vec3& uv, const vec3& n, double etai_over_etat);
+template <typename T>
+vec3<T> refract(const vec3<T>& uv, const vec3<T>& n, const double etai_over_etat) {
+    const double cos_theta = std::fmin(dot(-uv, n), 1.0);
+    const vec3<T> r_out_perp = etai_over_etat * (uv + cos_theta*n);
+    const vec3<T> r_out_parallel =
+        -std::sqrt(std::fabs(1.0 - r_out_perp.length_squared())) * n;
+    return r_out_perp + r_out_parallel;
+}
 
-inline double dot(const vec3& u, const vec3& v) {
+template <typename T>
+double dot(const vec3<T>& u, const vec3<T>& v) {
     return u.e[0]*v.e[0] + u.e[1]*v.e[1] + u.e[2]*v.e[2];
 }
 
-inline vec3 cross(const vec3& u, const vec3& v) {
+template <typename T>
+vec3<T> cross(const vec3<T>& u, const vec3<T>& v) {
     return {
         u.e[1]*v.e[2] - u.e[2]*v.e[1],
         u.e[2]*v.e[0] - u.e[0]*v.e[2],
@@ -144,16 +159,19 @@ inline vec3 cross(const vec3& u, const vec3& v) {
     };
 }
 
-inline vec3 unit_vector(const vec3& v) {
+template <typename T>
+vec3<T> unit_vector(const vec3<T>& v) {
     return v / v.length();
 }
 
-inline vec3 reflect(const vec3& v, const vec3& n) {
+template <typename T>
+vec3<T> reflect(const vec3<T>& v, const vec3<T>& n) {
     return v - 2*dot(v,n)*n;
 }
 
-using point3 = vec3;
-using color  = vec3;
+using point3 = vec3<double>;
+using color  = vec3<double>;
+using vec3d = vec3<double>;
 
 /* ---------------- interval ---------------- */
 
@@ -258,20 +276,21 @@ inline bounds2i_iterator bounds2i::end() const {
 
 /* ---------------- bounds3d ---------------- */
 
+template <typename T>
 class bounds3 {
 public:
     interval x, y, z;
 
     bounds3() = default;
     bounds3(const interval& x_, const interval& y_, const interval& z_): x(x_), y(y_), z(z_) {
-        padToMinimums();
+        pad_to_minimums();
     }
 
     bounds3(const point3& a, const point3& b) {
         x = interval(std::min(a[0], b[0]), std::max(a[0], b[0]));
         y = interval(std::min(a[1], b[1]), std::max(a[1], b[1]));
         z = interval(std::min(a[2], b[2]), std::max(a[2], b[2]));
-        padToMinimums();
+        pad_to_minimums();
     }
 
     bounds3(const bounds3& a, const bounds3& b) : x(a.x, b.x), y(a.y, b.y), z(a.z, b.z) {}
@@ -290,44 +309,54 @@ public:
     static const bounds3 empty, universe;
 
 private:
-    void padToMinimums();
+    void pad_to_minimums()
+    {
+        constexpr double delta = 0.0001;
+        if (x.size() < delta) x = x.expand(delta);
+        if (y.size() < delta) y = y.expand(delta);
+        if (z.size() < delta) z = z.expand(delta);
+    }
 };
 
-inline bounds3 operator+(const bounds3& bbox, const vec3& offset) {
+using bounds3d = bounds3<double>;
+
+template <typename T>
+bounds3<T> operator+(const bounds3<T>& bbox, const vec3<T>& offset) {
     return {bbox.x + offset.x(), bbox.y + offset.y(), bbox.z + offset.z()};
 }
 
-inline bounds3 operator+(const vec3& offset, const bounds3& bbox) {
+template <typename T>
+bounds3<T> operator+(const vec3<T>& offset, const bounds3<T>& bbox) {
     return bbox + offset;
 }
 
 class frame {
 public:
-    explicit frame(const vec3& n) {
+    explicit frame(const vec3d& n) {
         _axis[2] = unit_vector(n);
-        vec3 a = (std::fabs(_axis[2].x()) > 0.9) ? vec3(0,1,0) : vec3(1,0,0);
+        vec3d a = (std::fabs(_axis[2].x()) > 0.9) ? vec3d(0,1,0) : vec3d(1,0,0);
         _axis[1] = unit_vector(cross(_axis[2], a));
         _axis[0] = cross(_axis[2], _axis[1]);
     }
 
-    [[nodiscard]] const vec3& u() const { return _axis[0]; }
-    [[nodiscard]] const vec3& v() const { return _axis[1]; }
-    [[nodiscard]] const vec3& w() const { return _axis[2]; }
+    [[nodiscard]] const vec3d& u() const { return _axis[0]; }
+    [[nodiscard]] const vec3d& v() const { return _axis[1]; }
+    [[nodiscard]] const vec3d& w() const { return _axis[2]; }
 
-    [[nodiscard]] vec3 transform(const vec3& v) const {
+    [[nodiscard]] vec3d transform(const vec3d& v) const {
         return v[0]*_axis[0] + v[1]*_axis[1] + v[2]*_axis[2];
     }
 
-    [[nodiscard]] vec3 to_local(const vec3& v) const {
+    [[nodiscard]] vec3d to_local(const vec3d& v) const {
         return {dot(v, _axis[0]), dot(v, _axis[1]), dot(v, _axis[2])};
     }
 
-    [[nodiscard]] vec3 from_local(const vec3& v) const {
+    [[nodiscard]] vec3d from_local(const vec3d& v) const {
         return {v.x() * _axis[0] + v.y() * _axis[1] + v.z() * _axis[2]};
     }
 
 private:
-    vec3 _axis[3];
+    vec3d _axis[3];
 };
 
 #endif

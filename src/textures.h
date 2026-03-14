@@ -6,8 +6,9 @@
 class perlin {
 public:
     perlin() {
-        for (auto & i : randvec) {
-            i = unit_vector({random_double(-1.0, 1.0), random_double(-1.0, 1.0), random_double(-1.0, 1.0)});
+        for (vec3d & i : randvec) {
+            vec3d random_vec(random_double(-1.0, 1.0), random_double(-1.0, 1.0), random_double(-1.0, 1.0));
+            i = unit_vector(random_vec);
         }
 
         perlin_generate_perm(perm_x);
@@ -21,7 +22,7 @@ public:
 
 private:
     static constexpr int point_count = 256;
-    vec3 randvec[point_count];
+    vec3d randvec[point_count];
     int perm_x[point_count]{};
     int perm_y[point_count]{};
     int perm_z[point_count]{};
@@ -42,7 +43,7 @@ private:
         }
     }
 
-    static double perlin_interp(const vec3 c[2][2][2], double u, double v, double w);
+    static double perlin_interp(const vec3d c[2][2][2], double u, double v, double w);
 
     static int random_int(const int min, const int max) {
         thread_local std::mt19937 generator{std::random_device{}()};

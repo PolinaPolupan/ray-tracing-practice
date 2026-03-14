@@ -13,7 +13,7 @@ double perlin::noise(const point3& p) const
     const auto i = static_cast<int>(std::floor(p.x()));
     const auto j = static_cast<int>(std::floor(p.y()));
     const auto k = static_cast<int>(std::floor(p.z()));
-    vec3 c[2][2][2];
+    vec3d c[2][2][2];
 
     for (int di=0; di < 2; di++)
         for (int dj=0; dj < 2; dj++)
@@ -42,7 +42,7 @@ double perlin::turb(const point3& p, const int depth) const
     return std::fabs(accum);
 }
 
-double perlin::perlin_interp(const vec3 c[2][2][2], const double u, const double v, const double w)
+double perlin::perlin_interp(const vec3d c[2][2][2], const double u, const double v, const double w)
 {
     const auto uu = u*u*(3-2*u);
     const auto vv = v*v*(3-2*v);
@@ -52,7 +52,7 @@ double perlin::perlin_interp(const vec3 c[2][2][2], const double u, const double
     for (int i=0; i < 2; i++)
         for (int j=0; j < 2; j++)
             for (int k=0; k < 2; k++) {
-                vec3 weight_v(u-i, v-j, w-k);
+                vec3d weight_v(u-i, v-j, w-k);
                 accum += (i*uu + (1-i)*(1-uu))
                        * (j*vv + (1-j)*(1-vv))
                        * (k*ww + (1-k)*(1-ww))

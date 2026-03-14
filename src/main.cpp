@@ -47,18 +47,18 @@ void cornell_box() {
         world.insert(world.end(), mesh.begin(), mesh.end());
     };
 
-    append_mesh(make_quad_mesh(point3(555,0,0),       vec3(0,555,0),    vec3(0,0,555),   green)); // Right
-    append_mesh(make_quad_mesh(point3(0,0,0),         vec3(0,555,0),    vec3(0,0,555),   red));   // Left
-    append_mesh(make_quad_mesh(point3(0,0,0),         vec3(555,0,0),    vec3(0,0,555),   white)); // Floor
-    append_mesh(make_quad_mesh(point3(555,555,555),   vec3(-555,0,0),   vec3(0,0,-555),  white)); // Ceiling
-    append_mesh(make_quad_mesh(point3(0,0,555),       vec3(555,0,0),    vec3(0,555,0),   white)); // Back
+    append_mesh(make_quad_mesh(point3(555,0,0),       vec3d(0,555,0),    vec3d(0,0,555),   green)); // Right
+    append_mesh(make_quad_mesh(point3(0,0,0),         vec3d(0,555,0),    vec3d(0,0,555),   red));   // Left
+    append_mesh(make_quad_mesh(point3(0,0,0),         vec3d(555,0,0),    vec3d(0,0,555),   white)); // Floor
+    append_mesh(make_quad_mesh(point3(555,555,555),   vec3d(-555,0,0),   vec3d(0,0,-555),  white)); // Ceiling
+    append_mesh(make_quad_mesh(point3(0,0,555),       vec3d(555,0,0),    vec3d(0,555,0),   white)); // Back
 
     auto box1_mesh = box(point3(0,0,0), point3(165,330,165), white);
 
     for (auto& s : box1_mesh) {
         std::shared_ptr<shape> obj = s;
         obj = std::make_shared<RotateY>(obj, 15);
-        obj = std::make_shared<translate>(obj, vec3(265,0,295));
+        obj = std::make_shared<translate>(obj, vec3d(265,0,295));
         world.push_back(obj);
     }
 
@@ -79,12 +79,12 @@ void cornell_box() {
     cam->vfov     = 40;
     cam->lookfrom = point3(278, 278, -800);
     cam->lookat   = point3(278, 278, 0);
-    cam->vup      = vec3(0,1,0);
+    cam->vup      = vec3d(0,1,0);
 
     cam->defocus_angle = 0;
 
     std::vector<std::shared_ptr<light>> lights;
-    lights.push_back(std::make_shared<point_light>(vec3(278, 500, 278), 100000.0));
+    lights.push_back(std::make_shared<point_light>(vec3d(278, 500, 278), 100000.0));
 
     std::shared_ptr<accelerator> accelerator = std::make_shared<bvh>(world);
 

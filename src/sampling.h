@@ -100,15 +100,15 @@ private:
     int _sample_index = 0;
 };
 
-vec3 sample_uniform_hemisphere(point2d u);
+vec3d sample_uniform_hemisphere(point2d u);
 
-vec3 sample_uniform_sphere(const point2d& u);
+vec3d sample_uniform_sphere(const point2d& u);
 
-point3 defocus_disk_sample(sampler& samp, const point3& center, const vec3& du, const vec3& dv);
+point3 defocus_disk_sample(sampler& samp, const point3& center, const vec3d& du, const vec3d& dv);
 
-vec3 random_to_sphere(point2d u, double radius, double distance_squared);
+vec3d random_to_sphere(point2d u, double radius, double distance_squared);
 
-vec3 cosine_sample_hemisphere(const point2d& u);
+vec3d cosine_sample_hemisphere(const point2d& u);
 
 
 #endif //SAMPLING_H

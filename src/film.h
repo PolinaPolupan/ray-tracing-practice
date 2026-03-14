@@ -40,7 +40,7 @@ public:
         for (int i = 0; i < width_ * height_; i++) {
             color c = accumulation_buffer_[i] * scale;
 
-            vec3 mapped = aces_approx(c);
+            vec3d mapped = aces_approx(c);
             double r = std::pow(mapped.x(), 1.0/2.2);
             double g = std::pow(mapped.y(), 1.0/2.2);
             double b = std::pow(mapped.z(), 1.0/2.2);
@@ -67,7 +67,7 @@ private:
     int spp_;
     std::vector<color> accumulation_buffer_;
 
-    static vec3 aces_approx(vec3 v)
+    static vec3d aces_approx(vec3d v)
     {
         v *= 0.6f;
         constexpr double a = 2.51f;
@@ -76,8 +76,8 @@ private:
         constexpr double d = 0.59f;
         constexpr double e = 0.14f;
 
-        const vec3 numerator = v * (v * a + b);
-        const vec3 denominator = v * (v * c + d) + e;
+        const vec3d numerator = v * (v * a + b);
+        const vec3d denominator = v * (v * c + d) + e;
 
         return {
             numerator.x() / denominator.x(),

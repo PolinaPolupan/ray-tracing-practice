@@ -32,12 +32,12 @@ public:
     using RenderCallback = std::function<void(const std::vector<pixel>&)>;
 
     void render(RenderCallback on_sample_complete = nullptr) const;
-    virtual vec3 li(ray &r, sampler& samp, int depth) const = 0;
+    virtual vec3d li(ray &r, sampler& samp, int depth) const = 0;
 
-    [[nodiscard]] bool unoccluded(const vec3& p0, const vec3& p1, const double time) const {
-        const vec3 dir = p1 - p0;
+    [[nodiscard]] bool unoccluded(const vec3d& p0, const vec3d& p1, const double time) const {
+        const vec3d dir = p1 - p0;
         const double dist = dir.length();
-        const vec3 dir_norm = dir / dist;
+        const vec3d dir_norm = dir / dist;
         const ray shadow_ray(p0, dir_norm, time);
 
         const std::optional<shape_intersection> hit =
@@ -99,7 +99,7 @@ public:
         const std::shared_ptr<accelerator>& accelerator
         ) : integrator(camera, sampler, lights, accelerator) {}
 
-    [[nodiscard]] vec3 li(ray &r, sampler& samp, int depth) const override;
+    [[nodiscard]] vec3d li(ray &r, sampler& samp, int depth) const override;
 };
 
 class path_integrator: public integrator
@@ -112,7 +112,7 @@ public:
         const std::shared_ptr<accelerator>& accelerator
         ) : integrator(camera, sampler, lights, accelerator) {}
 
-    [[nodiscard]] vec3 li(ray &r, sampler& samp, int depth) const override;
+    [[nodiscard]] vec3d li(ray &r, sampler& samp, int depth) const override;
 };
 
 #endif //INTEGRATORS_H

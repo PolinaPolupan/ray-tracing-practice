@@ -6,7 +6,7 @@
 
 struct node
 {
-    bounds3                  bbox = bounds3::empty;
+    bounds3d                  bbox = bounds3d::empty;
     std::shared_ptr<shape>   leaf;                  // non-null => leaf
     std::unique_ptr<node>    children[2];           // non-null => internal child
 
@@ -21,16 +21,18 @@ public:
     [[nodiscard]] virtual std::optional<shape_intersection>
     intersect(const ray& r, interval ray_t) const = 0;
 
-    [[nodiscard]] bounds3 bounds() const { return bbox_; }
+    [[nodiscard]] bounds3d bounds() const { return bbox_; }
 
 protected:
-    bounds3 bbox_ = bounds3::empty;
+    bounds3d bbox_ = bounds3d::empty;
 };
 
 inline bool box_compare(const shared_ptr<shape>& a, const shared_ptr<shape> &b, const int axis_index)
 {
-    const auto a_axis_interval = a->bounds().axis_interval(axis_index);
-    const auto b_axis_interval = b->bounds().axis_interval(axis_index);
+    const bounds3d& bbox = a->bounds();
+    const bounds3d& bbox2 = b->bounds();
+    const auto a_axis_interval = bbox.axis_interval(axis_index);
+    const auto b_axis_interval = bbox2.axis_interval(axis_index);
     return a_axis_interval.min < b_axis_interval.min;
 }
 
@@ -69,7 +71,7 @@ private:
         auto n = std::make_unique<node>();
 
         for (size_t i = start; i < end; ++i)
-            n->bbox = bounds3(n->bbox, objects[i]->bounds());
+            n->bbox = bounds3d(n->bbox, objects[i]->bounds());
 
         const size_t span = end - start;
 

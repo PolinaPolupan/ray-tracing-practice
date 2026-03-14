@@ -2,15 +2,8 @@
 
 #include "ray.h"
 
-vec3 refract(const vec3& uv, const vec3& n, const double etai_over_etat) {
-    const double cos_theta = std::fmin(dot(-uv, n), 1.0);
-    const vec3 r_out_perp = etai_over_etat * (uv + cos_theta*n);
-    const vec3 r_out_parallel =
-        -std::sqrt(std::fabs(1.0 - r_out_perp.length_squared())) * n;
-    return r_out_perp + r_out_parallel;
-}
-
-bool bounds3::intersect(const ray& r, interval ray_t) const {
+template <typename T>
+bool bounds3<T>::intersect(const ray& r, interval ray_t) const {
     for (int a = 0; a < 3; a++) {
         const double invD = 1.0 / r.d()[a];
         double t0 = (axis_interval(a).min - r.o()[a]) * invD;
@@ -23,18 +16,13 @@ bool bounds3::intersect(const ray& r, interval ray_t) const {
     return true;
 }
 
-void bounds3::padToMinimums() {
-    constexpr double delta = 0.0001;
-    if (x.size() < delta) x = x.expand(delta);
-    if (y.size() < delta) y = y.expand(delta);
-    if (z.size() < delta) z = z.expand(delta);
-}
+template class bounds3<int>;
+template class bounds3<double>;
 
-const bounds3 bounds3::empty =
-    bounds3(interval::empty, interval::empty, interval::empty);
-
-const bounds3 bounds3::universe =
-    bounds3(interval::universe, interval::universe, interval::universe);
+template <> const bounds3<int> bounds3<int>::empty = bounds3<int>();
+template <> const bounds3<int> bounds3<int>::universe = bounds3<int>();
+template <> const bounds3<double> bounds3<double>::empty = bounds3<double>();
+template <> const bounds3<double> bounds3<double>::universe = bounds3<double>();
 
 const interval interval::empty    = interval(+infinity, -infinity);
 const interval interval::universe = interval(-infinity, +infinity);
