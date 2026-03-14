@@ -266,21 +266,25 @@ public:
     bounds3(const interval& x_, const interval& y_, const interval& z_): x(x_), y(y_), z(z_) {
         padToMinimums();
     }
+
     bounds3(const point3& a, const point3& b) {
         x = interval(std::min(a[0], b[0]), std::max(a[0], b[0]));
         y = interval(std::min(a[1], b[1]), std::max(a[1], b[1]));
         z = interval(std::min(a[2], b[2]), std::max(a[2], b[2]));
         padToMinimums();
     }
+
     bounds3(const bounds3& a, const bounds3& b) : x(a.x, b.x), y(a.y, b.y), z(a.z, b.z) {}
 
-    [[nodiscard]] const interval& axis_interval(int n) const {
+    [[nodiscard]] const interval& axis_interval(const int n) const {
         return (n == 0) ? x : (n == 1 ? y : z);
     }
-    [[nodiscard]] int longestAxis() const {
+
+    [[nodiscard]] int longest_axis() const {
         if (x.size() > y.size()) return x.size() > z.size() ? 0 : 2;
         return y.size() > z.size() ? 1 : 2;
     }
+
     [[nodiscard]] bool intersect(const ray& r, interval ray_t) const;
 
     static const bounds3 empty, universe;

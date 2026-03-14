@@ -78,7 +78,7 @@ private:
             return n;
         }
 
-        const int axis = n->bbox.longestAxis();
+        const int axis = n->bbox.longest_axis();
         auto cmp = [axis](const std::shared_ptr<shape>& a, const std::shared_ptr<shape>& b) {
             return box_compare(a, b, axis);
         };

@@ -70,6 +70,14 @@ public:
         return tiles;
     }
 
+    static double power_heuristic(const int nf, const double fPdf, const int ng, const double gPdf) {
+        const double f = nf * fPdf;
+        const double g = ng * gPdf;
+        if (sqrt(f) == infinity)
+            return 1;
+        return sqrt(f) / (sqrt(f) + sqrt(g));
+    }
+
 protected:
     std::shared_ptr<camera> camera_;
     std::shared_ptr<sampler> sampler_;

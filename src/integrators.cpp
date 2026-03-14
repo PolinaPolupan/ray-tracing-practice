@@ -131,7 +131,7 @@ color path_integrator::li(ray &r, sampler& samp, int d) const {
         }
 
         const auto [light, p] = light_sampler_.sample(samp.gen_1d());
-        const light_li_sample ls = light->sample_li(rec.p);
+        const light_li_sample ls = light->sample_li(rec.p, sampler_->gen_2d());
         if (unoccluded(rec.p, ls.p_light, rec.t)) {
             L += beta * bsdf->f(wo, ls.wi) * std::max(0.0, dot(rec.normal, ls.wi)) * ls.li / (ls.pdf * p);
         }
