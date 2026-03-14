@@ -1,7 +1,5 @@
 # Ray Tracing Practice
-
 A small physically-based renderer written in C++.
-
 This engine supports:
 - Path tracing integrator
 - Tile-based multithreaded rendering
@@ -12,30 +10,25 @@ This engine supports:
 
 The renderer initially renders a Cornell Box scene.
 Support for loading user-defined scenes will be added in the future.
-
-Requirements:
+## Requirements:
 - C++20 compiler
-- CMake ≥ 3.8
+- CMake ≥ 3.13
 - OpenMP support (GCC, Clang, or MSVC)
 ## Installation
-
 Clone the repository with submodules:
-
 ```bash
 git clone --recursive https://github.com/PolinaPolupan/ray-tracing-practice.git
 cd ray-tracing-practice
-mkdir build
-cd build
-cmake ..
-cmake --build .
+cmake -S . -B build
+cmake --build build
 ```
-
-The executable will be generated in the `build` directory.
-
 ## Running
-
+The executable will be in build/ (or build/Debug/ on Windows).
 ```bash
-./RayTracer > output_image.ppm
-```
+# Linux/macOS
+./build/RayTracer > output.ppm
 
+# Windows
+.\build\Debug\RayTracer.exe > output.ppm
+```
 The renderer outputs an image in **PPM format**.
