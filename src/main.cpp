@@ -88,6 +88,8 @@ void cornell_box() {
 
     std::shared_ptr<accelerator> accelerator = std::make_shared<bvh>(world);
 
+    lights.push_back(std::make_shared<uniform_infinite_light>(accelerator->bounds(), 0.2));
+
     const auto integrator_ptr = std::make_shared<path_integrator>(cam, samp, lights, accelerator);
 
     integrator_ptr->render(update_display);

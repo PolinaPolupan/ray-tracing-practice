@@ -27,12 +27,18 @@ public:
     sampler_(sampler),
     lights_(lights),
     accelerator_(accelerator),
-    light_sampler_(lights) {}
+    light_sampler_(lights)
+    {
+        for (const auto& light: lights_)
+        {
+            if (light->is_infinite()) infinite_lights_.push_back(light);
+        }
+    }
 
     using RenderCallback = std::function<void(const std::vector<pixel>&)>;
 
     void render(RenderCallback on_sample_complete = nullptr) const;
-    virtual vec3d li(ray &r, sampler& samp, int depth) const = 0;
+    virtual vec3d Li(ray &r, sampler& samp, int depth) const = 0;
 
     [[nodiscard]] bool unoccluded(const vec3d& p0, const vec3d& p1, const double time) const {
         const vec3d dir = p1 - p0;
@@ -70,18 +76,17 @@ public:
         return tiles;
     }
 
-    static double power_heuristic(const int nf, const double fPdf, const int ng, const double gPdf) {
-        const double f = nf * fPdf;
-        const double g = ng * gPdf;
-        if (sqrt(f) == infinity)
+    static double power_heuristic(const double fPdf, const double gPdf) {
+        if (sqrt(fPdf) == infinity)
             return 1;
-        return sqrt(f) / (sqrt(f) + sqrt(g));
+        return sqrt(fPdf) / (sqrt(fPdf) + sqrt(gPdf));
     }
 
 protected:
     std::shared_ptr<camera> camera_;
     std::shared_ptr<sampler> sampler_;
     std::vector<std::shared_ptr<light>> lights_;
+    std::vector<std::shared_ptr<light>> infinite_lights_;
     std::shared_ptr<accelerator> accelerator_;
     light_sampler light_sampler_;
 
@@ -99,7 +104,7 @@ public:
         const std::shared_ptr<accelerator>& accelerator
         ) : integrator(camera, sampler, lights, accelerator) {}
 
-    [[nodiscard]] vec3d li(ray &r, sampler& samp, int depth) const override;
+    [[nodiscard]] vec3d Li(ray &r, sampler& samp, int depth) const override;
 };
 
 class path_integrator: public integrator
@@ -112,7 +117,7 @@ public:
         const std::shared_ptr<accelerator>& accelerator
         ) : integrator(camera, sampler, lights, accelerator) {}
 
-    [[nodiscard]] vec3d li(ray &r, sampler& samp, int depth) const override;
+    [[nodiscard]] vec3d Li(ray &r, sampler& samp, int depth) const override;
 };
 
 #endif //INTEGRATORS_H

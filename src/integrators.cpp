@@ -41,7 +41,7 @@ void integrator::render(RenderCallback on_sample_complete) const
                 while (thread_sampler->start_next_sample())
                 {
                     ray r = camera_->gen_ray(*thread_sampler, pixel);
-                    sum += li(r, *thread_sampler, max_depth_);
+                    sum += Li(r, *thread_sampler, max_depth_);
                 }
 
                 const int index = pixel.y * camera_->image_width + pixel.x;
@@ -65,7 +65,7 @@ void integrator::render(RenderCallback on_sample_complete) const
     camera_->get_film()->write_color(std::cout);
 }
 
-color random_walk_integrator::li(ray &r, sampler& samp, const int depth) const {
+color random_walk_integrator::Li(ray &r, sampler& samp, const int depth) const {
     if (depth <= 0)
         return {0,0,0};
 
@@ -85,7 +85,7 @@ color random_walk_integrator::li(ray &r, sampler& samp, const int depth) const {
     if (bsdf->is_specular()) {
         const auto s = bsdf->sample_f(wo, samp.gen_2d());
         r = ray(rec.p, s.wi, r.time());
-        return L + s.f * li(r, samp, depth - 1);
+        return L + s.f * Li(r, samp, depth - 1);
     }
 
     const frame fr(rec.normal);
@@ -97,21 +97,32 @@ color random_walk_integrator::li(ray &r, sampler& samp, const int depth) const {
     const double cos_theta = std::max(0.0, dot(rec.normal, unit_vector(wi)));
 
     r = ray(rec.p, wi, r.time());
-    return L + f * li(r, samp, depth-1) * cos_theta / (1.0 / (2.0 * pi));
+    return L + f * Li(r, samp, depth-1) * cos_theta / (1.0 / (2.0 * pi));
 }
 
-color path_integrator::li(ray &r, sampler& samp, int d) const {
+color path_integrator::Li(ray &r, sampler& samp, int d) const {
     color L = 0.0f, beta = 1.0f;
     int depth = 0;
 
     while (beta)
     {
-        const std::optional<shape_intersection> rec_opt =
+        const std::optional<shape_intersection> si =
             accelerator_->intersect(r, interval(0.001, infinity));
-        if (!rec_opt) return {0, 0, 0};
+
+        if (!si)
+        {
+            for (const auto& light: infinite_lights_)
+            {
+                const double p_l = light_sampler_.sample(sampler_->gen_1d()).p * light->pdf_Li();
+                const double w_b = power_heuristic(1.0, p_l);
+
+                L += beta * w_b * light->Le();
+            }
+            return L;
+        }
 
         // Emissive surfaces
-        const shape_intersection& rec = *rec_opt;
+        const shape_intersection& rec = *si;
         L += beta * rec.mat->Le(r, rec, rec.u, rec.v, rec.p);
 
         // End path if maximum depth reached
@@ -131,7 +142,7 @@ color path_integrator::li(ray &r, sampler& samp, int d) const {
         }
 
         const auto [light, p] = light_sampler_.sample(samp.gen_1d());
-        const light_li_sample ls = light->sample_li(rec.p, sampler_->gen_2d());
+        const light_li_sample ls = light->sample_Li(rec.p, sampler_->gen_2d());
         if (unoccluded(rec.p, ls.p_light, rec.t)) {
             L += beta * bsdf->f(wo, ls.wi) * std::max(0.0, dot(rec.normal, ls.wi)) * ls.li / (ls.pdf * p);
         }
