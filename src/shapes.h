@@ -59,7 +59,7 @@ class triangle final : public shape
 public:
     triangle(const std::shared_ptr<triangle_mesh>& mesh, const int tri_index): tri_index(tri_index), mesh(mesh) {}
 
-    [[nodiscard]] bounds3d bounds() const override
+    bounds3d bounds() const override
     {
         const int i0 = mesh->indices[tri_index * 3 + 0];
         const int i1 = mesh->indices[tri_index * 3 + 1];
@@ -69,9 +69,15 @@ public:
         const point3d& p1 = mesh->p[i1];
         const point3d& p2 = mesh->p[i2];
 
-        bounds3d box(p0, p1);
-        box = bounds3d(box, bounds3d(p2, p2));
-        return box;
+        const double min_x = std::min({p0.x(), p1.x(), p2.x()});
+        const double min_y = std::min({p0.y(), p1.y(), p2.y()});
+        const double min_z = std::min({p0.z(), p1.z(), p2.z()});
+
+        const double max_x = std::max({p0.x(), p1.x(), p2.x()});
+        const double max_y = std::max({p0.y(), p1.y(), p2.y()});
+        const double max_z = std::max({p0.z(), p1.z(), p2.z()});
+
+        return bounds3d(point3d(min_x, min_y, min_z), point3d(max_x, max_y, max_z));
     }
 
     [[nodiscard]] std::optional<shape_intersection>
@@ -175,5 +181,16 @@ box(const point3d& a, const point3d& b, const std::shared_ptr<material>& mat);
 
 std::vector<std::shared_ptr<shape>>
 make_quad_mesh(const point3d& Q, const vec3d& u, const vec3d& v, const std::shared_ptr<material>& mat);
+
+std::shared_ptr<triangle_mesh> load_obj(
+    const std::string& filename,
+    const point3d& offset,
+    double scale,
+    const std::shared_ptr<material>& mat
+);
+
+std::vector<std::shared_ptr<shape>> make_mesh_triangles(
+    const std::shared_ptr<triangle_mesh>& mesh_ptr
+);
 
 #endif //SHAPES_H

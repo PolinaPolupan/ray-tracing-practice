@@ -1,8 +1,6 @@
-//
-// Created by polup on 20/01/2026.
-//
-
 #include "shapes.h"
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "../external/tinyobj/tiny_obj_loader.h" // Adjust path as needed
 
 std::optional<shape_intersection> triangle::intersect(const ray& r, interval ray_t) const
 {
@@ -316,4 +314,92 @@ box(const point3d& a, const point3d& b, const std::shared_ptr<material>& mat)
     append(make_quad_mesh(point3d(min.x(), min.y(), min.z()),  dx,  dz, mat)); // bottom
 
     return sides;
+}
+
+std::shared_ptr<triangle_mesh> load_obj(const std::string& filename,
+                               const point3d& offset,
+                               double scale,
+                               const std::shared_ptr<material>& mat)
+{
+    tinyobj::ObjReaderConfig reader_config;
+    reader_config.mtl_search_path = "./";
+
+    tinyobj::ObjReader reader;
+
+    if (!reader.ParseFromFile(filename, reader_config)) {
+        if (!reader.Error().empty()) {
+            std::cerr << "TinyObjReader: " << reader.Error();
+        }
+        exit(1);
+    }
+
+    if (!reader.Warning().empty()) {
+        std::cout << "TinyObjReader: " << reader.Warning();
+    }
+
+    auto& attrib = reader.GetAttrib();
+    auto& shapes = reader.GetShapes();
+
+    auto mesh_ptr = std::make_shared<triangle_mesh>();
+    mesh_ptr->mat = mat;
+
+    size_t total_indices = 0;
+    for (const auto & shape : shapes) {
+        for (size_t f = 0; f < shape.mesh.num_face_vertices.size(); f++) {
+            total_indices += shape.mesh.num_face_vertices[f];
+        }
+    }
+
+    mesh_ptr->p.reserve(total_indices);
+    mesh_ptr->n.reserve(total_indices);
+    mesh_ptr->indices.reserve(total_indices);
+
+    for (const auto & shape : shapes) {
+        size_t index_offset = 0;
+
+        for (size_t f = 0; f < shape.mesh.num_face_vertices.size(); f++) {
+            const int fv = shape.mesh.num_face_vertices[f];
+
+            for (size_t v = 0; v < fv; v++) {
+                tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
+
+                const tinyobj::real_t vx = attrib.vertices[3*size_t(idx.vertex_index)+0];
+                const tinyobj::real_t vy = attrib.vertices[3*size_t(idx.vertex_index)+1];
+                const tinyobj::real_t vz = attrib.vertices[3*size_t(idx.vertex_index)+2];
+
+                point3d new_vert(vx, vy, vz);
+                new_vert = (new_vert * scale) + offset;
+
+                mesh_ptr->p.push_back(new_vert);
+
+                if (idx.normal_index >= 0) {
+                    tinyobj::real_t nx = attrib.normals[3*size_t(idx.normal_index)+0];
+                    tinyobj::real_t ny = attrib.normals[3*size_t(idx.normal_index)+1];
+                    tinyobj::real_t nz = attrib.normals[3*size_t(idx.normal_index)+2];
+                    mesh_ptr->n.emplace_back(nx, ny, nz);
+                } else {
+                    mesh_ptr->n.emplace_back(0, 1, 0);
+                }
+
+                mesh_ptr->indices.push_back(mesh_ptr->p.size() - 1);
+            }
+            index_offset += fv;
+        }
+    }
+
+    std::cout << "Loaded " << filename << ": " << mesh_ptr->indices.size() / 3 << " triangles." << std::endl;
+    return mesh_ptr;
+}
+
+std::vector<std::shared_ptr<shape>> make_mesh_triangles(
+    const std::shared_ptr<triangle_mesh>& mesh_ptr)
+{
+    std::vector<std::shared_ptr<shape>> triangles;
+    int triangle_count = mesh_ptr->indices.size() / 3;
+    triangles.reserve(triangle_count);
+
+    for (int i = 0; i < triangle_count; ++i) {
+        triangles.push_back(std::make_shared<triangle>(mesh_ptr, i));
+    }
+    return triangles;
 }

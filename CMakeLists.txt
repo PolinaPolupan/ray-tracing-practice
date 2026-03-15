@@ -54,5 +54,7 @@ endif()
 
 # Link to the actual SDL3 library.
 target_link_libraries(RayTracer PRIVATE SDL3::SDL3)
+find_package(TBB REQUIRED)
+target_link_libraries(RayTracer PRIVATE TBB::tbb)
 find_package(OpenMP REQUIRED)
 target_link_libraries(RayTracer PRIVATE OpenMP::OpenMP_CXX)

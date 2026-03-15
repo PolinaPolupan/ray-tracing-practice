@@ -11,8 +11,8 @@
 
 SDL_Renderer* g_renderer = nullptr;
 SDL_Texture* g_texture = nullptr;
-int g_width = 600;
-int g_height = 600;
+int g_width = 300;
+int g_height = 300;
 
 void update_display(const std::vector<pixel>& buffer) {
     std::vector<uint32_t> pixels(g_width * g_height);
@@ -47,11 +47,11 @@ void cornell_box() {
         world.insert(world.end(), mesh.begin(), mesh.end());
     };
 
-    append_mesh(make_quad_mesh(point3d(555,0,0),       vec3d(0,555,0),    vec3d(0,0,555),   green)); // Right
-    append_mesh(make_quad_mesh(point3d(0,0,0),         vec3d(0,555,0),    vec3d(0,0,555),   red));   // Left
-    append_mesh(make_quad_mesh(point3d(0,0,0),         vec3d(555,0,0),    vec3d(0,0,555),   white)); // Floor
-    append_mesh(make_quad_mesh(point3d(555,555,555),   vec3d(-555,0,0),   vec3d(0,0,-555),  white)); // Ceiling
-    append_mesh(make_quad_mesh(point3d(0,0,555),       vec3d(555,0,0),    vec3d(0,555,0),   white)); // Back
+   append_mesh(make_quad_mesh(point3d(555,0,0),       vec3d(0,555,0),    vec3d(0,0,555),   green)); // Right
+   append_mesh(make_quad_mesh(point3d(0,0,0),         vec3d(0,555,0),    vec3d(0,0,555),   red));   // Left
+   append_mesh(make_quad_mesh(point3d(0,0,0),         vec3d(555,0,0),    vec3d(0,0,555),   white)); // Floor
+   append_mesh(make_quad_mesh(point3d(555,555,555),   vec3d(-555,0,0),   vec3d(0,0,-555),  white)); // Ceiling
+   append_mesh(make_quad_mesh(point3d(0,0,555),       vec3d(555,0,0),    vec3d(0,555,0),   white)); // Back
 
     auto box1_mesh = box(point3d(0,0,0), point3d(165,330,165), white);
 
@@ -84,11 +84,48 @@ void cornell_box() {
     cam->defocus_angle = 0;
 
     std::vector<std::shared_ptr<light>> lights;
-    lights.push_back(std::make_shared<point_light>(vec3d(278, 500, 278), 100000.0));
+    lights.push_back(std::make_shared<point_light>(vec3d(278, 400, -400), 300000.0));
 
     std::shared_ptr<accelerator> accelerator = std::make_shared<bvh>(world);
 
-    lights.push_back(std::make_shared<uniform_infinite_light>(accelerator->bounds(), 0.2));
+    lights.push_back(std::make_shared<uniform_infinite_light>(accelerator->bounds(), 0.1));
+
+    const auto integrator_ptr = std::make_shared<path_integrator>(cam, samp, lights, accelerator);
+
+    integrator_ptr->render(update_display);
+}
+
+void bunny()
+{
+    std::vector<std::shared_ptr<shape>> world;
+
+    const auto samp = std::make_shared<stratified_sampler>(4);
+
+    film film(g_width, g_height, samp->get_spp());
+    const auto cam = std::make_shared<camera>(&film);
+
+    cam->aspect_ratio      = 1.0;
+    cam->image_width       = g_width;
+
+    cam->vfov     = 40;
+    cam->lookfrom = point3d(278, 278, -800);
+    cam->lookat   = point3d(278, 278, 0);
+    cam->vup      = vec3d(0,1,0);
+
+    cam->defocus_angle = 0;
+
+    const auto bunny_mat = make_shared<lambertian>(color(0.8, 0.2, 0.2));
+    const auto bunny_mesh = load_obj("objects/bunny.obj", point3d(278, 0, 278), 300.0, bunny_mat);
+    auto dragon_tris = make_mesh_triangles(bunny_mesh);
+
+    world.insert(world.end(), dragon_tris.begin(), dragon_tris.end());
+
+    std::vector<std::shared_ptr<light>> lights;
+    lights.push_back(std::make_shared<point_light>(vec3d(278, 400, -400), 300000.0));
+
+    std::shared_ptr<accelerator> accelerator = std::make_shared<bvh>(world);
+
+    lights.push_back(std::make_shared<uniform_infinite_light>(accelerator->bounds(), 0.1));
 
     const auto integrator_ptr = std::make_shared<path_integrator>(cam, samp, lights, accelerator);
 
@@ -114,7 +151,7 @@ int main() {
 
     const auto start = clock::now();
 
-    cornell_box();
+    bunny();
 
     const auto end = clock::now();
 
