@@ -6,8 +6,8 @@ template <typename T>
 bool bounds3<T>::intersect(const ray& r, interval ray_t) const {
     for (int a = 0; a < 3; a++) {
         const double invD = 1.0 / r.d()[a];
-        double t0 = (axis_interval(a).min - r.o()[a]) * invD;
-        double t1 = (axis_interval(a).max - r.o()[a]) * invD;
+        double t0 = (p_min[a] - r.o()[a]) * invD;
+        double t1 = (p_max[a] - r.o()[a]) * invD;
         if (invD < 0.0) std::swap(t0, t1);
         ray_t.min = std::max(t0, ray_t.min);
         ray_t.max = std::min(t1, ray_t.max);

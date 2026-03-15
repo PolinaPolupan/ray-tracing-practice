@@ -131,9 +131,9 @@ RotateY::RotateY(const shared_ptr<shape>& object, const double angle): object(ob
     for (int i = 0; i < 2; i++) {
         for (int j = 0; j < 2; j++) {
             for (int k = 0; k < 2; k++) {
-                const auto x = i*bbox.x.max + (1-i)*bbox.x.min;
-                const auto y = j*bbox.y.max + (1-j)*bbox.y.min;
-                const auto z = k*bbox.z.max + (1-k)*bbox.z.min;
+                const auto x = i*bbox.p_max.x() + (1-i)*bbox.p_min.x();
+                const auto y = j*bbox.p_max.y() + (1-j)*bbox.p_min.y();
+                const auto z = k*bbox.p_max.z() + (1-k)*bbox.p_min.z();
 
                 const auto newx =  cos_theta*x + sin_theta*z;
                 const auto newz = -sin_theta*x + cos_theta*z;

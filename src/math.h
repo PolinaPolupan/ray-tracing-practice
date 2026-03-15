@@ -169,6 +169,24 @@ vec3<T> reflect(const vec3<T>& v, const vec3<T>& n) {
     return v - 2*dot(v,n)*n;
 }
 
+template <typename T>
+vec3<T> min(const vec3<T>& a, const vec3<T>& b) {
+    return {
+        std::min(a[0], b[0]),
+        std::min(a[1], b[1]),
+        std::min(a[2], b[2])
+    };
+}
+
+template <typename T>
+vec3<T> max(const vec3<T>& a, const vec3<T>& b) {
+    return {
+        std::max(a[0], b[0]),
+        std::max(a[1], b[1]),
+        std::max(a[2], b[2])
+    };
+}
+
 using color  = vec3<double>;
 using vec3d = vec3<double>;
 template <typename T>
@@ -281,30 +299,29 @@ inline bounds2i_iterator bounds2i::end() const {
 template <typename T>
 class bounds3 {
 public:
-    interval x, y, z;
     point3<T> p_min, p_max;
 
     bounds3() = default;
-    bounds3(const interval& x_, const interval& y_, const interval& z_): x(x_), y(y_), z(z_) {
-        pad_to_minimums();
-    }
 
     bounds3(const point3<T>& a, const point3<T>& b) {
-        x = interval(std::min(a[0], b[0]), std::max(a[0], b[0]));
-        y = interval(std::min(a[1], b[1]), std::max(a[1], b[1]));
-        z = interval(std::min(a[2], b[2]), std::max(a[2], b[2]));
+        p_min = min(a, b);
+        p_max = max(a, b);
         pad_to_minimums();
     }
 
-    bounds3(const bounds3& a, const bounds3& b) : x(a.x, b.x), y(a.y, b.y), z(a.z, b.z) {}
-
-    [[nodiscard]] const interval& axis_interval(const int n) const {
-        return (n == 0) ? x : (n == 1 ? y : z);
+    bounds3(const bounds3& a, const bounds3& b) {
+        p_min = min(a.p_min, b.p_min);
+        p_max = max(a.p_max, b.p_max);
+        pad_to_minimums();
     }
 
+    vec3<T> diagonal() const { return p_max - p_min; }
+
     [[nodiscard]] int longest_axis() const {
-        if (x.size() > y.size()) return x.size() > z.size() ? 0 : 2;
-        return y.size() > z.size() ? 1 : 2;
+        vec3<T> d = diagonal();
+        if (d[0] > d[1] && d[0] > d[2]) return 0;
+        if (d[1] > d[2]) return 1;
+        return 2;
     }
 
     [[nodiscard]] bool intersect(const ray& r, interval ray_t) const;
@@ -312,12 +329,15 @@ public:
     static const bounds3 empty, universe;
 
 private:
-    void pad_to_minimums()
-    {
-        constexpr double delta = 0.0001;
-        if (x.size() < delta) x = x.expand(delta);
-        if (y.size() < delta) y = y.expand(delta);
-        if (z.size() < delta) z = z.expand(delta);
+    void pad_to_minimums() {
+        constexpr T delta = static_cast<T>(0.0001);
+        for (int i = 0; i < 3; i++) {
+            if (p_max[i] - p_min[i] < delta) {
+                T padding = (delta - (p_max[i] - p_min[i])) / 2;
+                p_min[i] -= padding;
+                p_max[i] += padding;
+            }
+        }
     }
 };
 
@@ -325,7 +345,7 @@ using bounds3d = bounds3<double>;
 
 template <typename T>
 bounds3<T> operator+(const bounds3<T>& bbox, const vec3<T>& offset) {
-    return {bbox.x + offset.x(), bbox.y + offset.y(), bbox.z + offset.z()};
+    return {bbox.p_min + offset, bbox.p_max + offset};
 }
 
 template <typename T>

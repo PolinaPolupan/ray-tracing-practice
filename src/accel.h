@@ -31,9 +31,7 @@ inline bool box_compare(const shared_ptr<shape>& a, const shared_ptr<shape> &b, 
 {
     const bounds3d& bbox = a->bounds();
     const bounds3d& bbox2 = b->bounds();
-    const auto a_axis_interval = bbox.axis_interval(axis_index);
-    const auto b_axis_interval = bbox2.axis_interval(axis_index);
-    return a_axis_interval.min < b_axis_interval.min;
+    return bbox.p_min[axis_index] < bbox2.p_min[axis_index];
 }
 
 inline bool box_x_compare(const shared_ptr<shape> &a, const shared_ptr<shape> &b)
