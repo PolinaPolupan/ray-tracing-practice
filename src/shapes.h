@@ -12,7 +12,7 @@ class material;
 class shape_intersection
 {
 public:
-    point3 p;
+    point3d p;
     vec3d normal;
     shared_ptr<material> mat;
     double t{};
@@ -36,17 +36,17 @@ public:
     virtual ~shape() = default;
     [[nodiscard]] virtual std::optional<shape_intersection> intersect(const ray& r, interval ray_t) const = 0;
     [[nodiscard]] virtual bounds3d bounds() const = 0;
-    [[nodiscard]] virtual double pdf(const point3& origin, const vec3d& direction) const {
+    [[nodiscard]] virtual double pdf(const point3d& origin, const vec3d& direction) const {
         return 0.0;
     }
-    [[nodiscard]] virtual vec3d random(const point3& origin, const std::shared_ptr<sampler>& sampler) const {
+    [[nodiscard]] virtual vec3d random(const point3d& origin, const std::shared_ptr<sampler>& sampler) const {
         return {1,0,0};
     }
 };
 
 struct triangle_mesh
 {
-    std::vector<point3> p;
+    std::vector<point3d> p;
     std::vector<vec3d> n;
     std::vector<int> indices;
     std::shared_ptr<material> mat;
@@ -65,9 +65,9 @@ public:
         const int i1 = mesh->indices[tri_index * 3 + 1];
         const int i2 = mesh->indices[tri_index * 3 + 2];
 
-        const point3& p0 = mesh->p[i0];
-        const point3& p1 = mesh->p[i1];
-        const point3& p2 = mesh->p[i2];
+        const point3d& p0 = mesh->p[i0];
+        const point3d& p1 = mesh->p[i1];
+        const point3d& p2 = mesh->p[i2];
 
         bounds3d box(p0, p1);
         box = bounds3d(box, bounds3d(p2, p2));
@@ -84,11 +84,11 @@ private:
 
 class quad final : public shape {
 public:
-    quad(const point3& Q, const vec3d& u, const vec3d& v, const std::shared_ptr<material> &mat);
+    quad(const point3d& Q, const vec3d& u, const vec3d& v, const std::shared_ptr<material> &mat);
     [[nodiscard]] bounds3d bounds() const override { return bbox; }
     [[nodiscard]] std::optional<shape_intersection> intersect(const ray& r, interval ray_t) const override;
-    [[nodiscard]] double pdf(const point3& origin, const vec3d& direction) const override;
-    [[nodiscard]] vec3d random(const point3& origin, const std::shared_ptr<sampler>& sampler) const override
+    [[nodiscard]] double pdf(const point3d& origin, const vec3d& direction) const override;
+    [[nodiscard]] vec3d random(const point3d& origin, const std::shared_ptr<sampler>& sampler) const override
     {
         const auto p = Q + (sampler->gen_1d() * u) + (sampler->gen_1d() * v);
         return p - origin;
@@ -97,7 +97,7 @@ public:
     static bool is_interior(double a, double b, shape_intersection& rec);
 
 private:
-    point3 Q;
+    point3d Q;
     vec3d u, v;
     vec3d w;
     shared_ptr<material> mat;
@@ -123,7 +123,7 @@ private:
 class sphere final : public shape {
 public:
     // Stationary Sphere
-    sphere(const point3& static_center, double radius, const shared_ptr<material> &mat)
+    sphere(const point3d& static_center, double radius, const shared_ptr<material> &mat)
       : center(static_center, vec3d(0,0,0)), radius(std::fmax(0,radius)), mat(mat)
     {
         const auto rvec = vec3d(radius, radius, radius);
@@ -131,7 +131,7 @@ public:
     }
 
     // Moving Sphere
-    sphere(const point3& center1, const point3& center2, const double radius, const shared_ptr<material> &mat)
+    sphere(const point3d& center1, const point3d& center2, const double radius, const shared_ptr<material> &mat)
       : center(center1, center2 - center1), radius(std::fmax(0,radius)), mat(mat)
     {
         const auto rvec = vec3d(radius, radius, radius);
@@ -142,8 +142,8 @@ public:
 
     [[nodiscard]] bounds3d bounds() const override { return bbox; }
     [[nodiscard]] std::optional<shape_intersection> intersect(const ray& r, interval ray_t) const override;
-    [[nodiscard]] double pdf(const point3& origin, const vec3d& direction) const override;
-    [[nodiscard]] vec3d random(const point3& origin, const std::shared_ptr<sampler>& sampler) const override;
+    [[nodiscard]] double pdf(const point3d& origin, const vec3d& direction) const override;
+    [[nodiscard]] vec3d random(const point3d& origin, const std::shared_ptr<sampler>& sampler) const override;
 
 private:
     ray center;
@@ -151,7 +151,7 @@ private:
     shared_ptr<material> mat;
     bounds3d bbox;
 
-    static void get_sphere_uv(const point3& p, double& u, double& v);
+    static void get_sphere_uv(const point3d& p, double& u, double& v);
 };
 
 class translate final : public shape
@@ -171,9 +171,9 @@ private:
 };
 
 std::vector<std::shared_ptr<shape>>
-box(const point3& a, const point3& b, const std::shared_ptr<material>& mat);
+box(const point3d& a, const point3d& b, const std::shared_ptr<material>& mat);
 
 std::vector<std::shared_ptr<shape>>
-make_quad_mesh(const point3& Q, const vec3d& u, const vec3d& v, const std::shared_ptr<material>& mat);
+make_quad_mesh(const point3d& Q, const vec3d& u, const vec3d& v, const std::shared_ptr<material>& mat);
 
 #endif //SHAPES_H

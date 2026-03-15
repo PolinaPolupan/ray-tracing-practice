@@ -16,9 +16,9 @@ public:
         perlin_generate_perm(perm_z);
     }
 
-    [[nodiscard]] double noise(const point3& p) const;
+    [[nodiscard]] double noise(const point3d& p) const;
 
-    [[nodiscard]] double turb(const point3& p, int depth) const;
+    [[nodiscard]] double turb(const point3d& p, int depth) const;
 
 private:
     static constexpr int point_count = 256;
@@ -62,7 +62,7 @@ class texture {
 public:
     virtual ~texture() = default;
 
-    [[nodiscard]] virtual color value(double u, double v, const point3& p) const = 0;
+    [[nodiscard]] virtual color value(double u, double v, const point3d& p) const = 0;
 };
 
 class solid_color final : public texture {
@@ -71,7 +71,7 @@ public:
 
     solid_color(const double red, const double green, const double blue) : solid_color(color(red,green,blue)) {}
 
-    [[nodiscard]] color value(double u, double v, const point3& p) const override {
+    [[nodiscard]] color value(double u, double v, const point3d& p) const override {
         return albedo_;
     }
 
@@ -83,7 +83,7 @@ class noise final : public texture {
 public:
     explicit noise(const double scale) : scale_(scale) {}
 
-    [[nodiscard]] color value(double u, double v, const point3& p) const override {
+    [[nodiscard]] color value(double u, double v, const point3d& p) const override {
         return color(.5, .5, .5) * (1 + std::sin(scale_ * p.z() + 10 * noise_.turb(p, 7)));
     }
 
@@ -96,7 +96,7 @@ class image final : public texture {
 public:
     explicit image(const char* filename) : image_(filename) {}
 
-    [[nodiscard]] color value(double u, double v, const point3& p) const override;
+    [[nodiscard]] color value(double u, double v, const point3d& p) const override;
 
 private:
     rtw_image image_;
@@ -110,7 +110,7 @@ public:
     checker(const double scale, const color& c1, const color& c2)
       : checker(scale, std::make_shared<solid_color>(c1), std::make_shared<solid_color>(c2)) {}
 
-    [[nodiscard]] color value(double u, double v, const point3& p) const override;
+    [[nodiscard]] color value(double u, double v, const point3d& p) const override;
 
 private:
     double inv_scale_;

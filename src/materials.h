@@ -19,7 +19,7 @@ public:
         const shape_intersection& rec,
         double u,
         double v,
-        const point3& p) const { return {0,0,0}; }
+        const point3d& p) const { return {0,0,0}; }
 };
 
 class lambertian final : public material
@@ -78,7 +78,7 @@ public:
         const shape_intersection& rec,
         const double u,
         const double v,
-        const point3& p) const override
+        const point3d& p) const override
     {
         if (!rec.front_face)
             return {0,0,0};

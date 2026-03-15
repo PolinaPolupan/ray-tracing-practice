@@ -169,9 +169,11 @@ vec3<T> reflect(const vec3<T>& v, const vec3<T>& n) {
     return v - 2*dot(v,n)*n;
 }
 
-using point3 = vec3<double>;
 using color  = vec3<double>;
 using vec3d = vec3<double>;
+template <typename T>
+using point3 = vec3<T>;
+using point3d = vec3<double>;
 
 /* ---------------- interval ---------------- */
 
@@ -280,13 +282,14 @@ template <typename T>
 class bounds3 {
 public:
     interval x, y, z;
+    point3<T> p_min, p_max;
 
     bounds3() = default;
     bounds3(const interval& x_, const interval& y_, const interval& z_): x(x_), y(y_), z(z_) {
         pad_to_minimums();
     }
 
-    bounds3(const point3& a, const point3& b) {
+    bounds3(const point3<T>& a, const point3<T>& b) {
         x = interval(std::min(a[0], b[0]), std::max(a[0], b[0]));
         y = interval(std::min(a[1], b[1]), std::max(a[1], b[1]));
         z = interval(std::min(a[2], b[2]), std::max(a[2], b[2]));

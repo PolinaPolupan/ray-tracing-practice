@@ -104,7 +104,7 @@ vec3d sample_uniform_hemisphere(point2d u);
 
 vec3d sample_uniform_sphere(const point2d& u);
 
-point3 defocus_disk_sample(sampler& samp, const point3& center, const vec3d& du, const vec3d& dv);
+point3d defocus_disk_sample(sampler& samp, const point3d& center, const vec3d& du, const vec3d& dv);
 
 vec3d random_to_sphere(point2d u, double radius, double distance_squared);
 

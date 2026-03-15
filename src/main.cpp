@@ -47,13 +47,13 @@ void cornell_box() {
         world.insert(world.end(), mesh.begin(), mesh.end());
     };
 
-    append_mesh(make_quad_mesh(point3(555,0,0),       vec3d(0,555,0),    vec3d(0,0,555),   green)); // Right
-    append_mesh(make_quad_mesh(point3(0,0,0),         vec3d(0,555,0),    vec3d(0,0,555),   red));   // Left
-    append_mesh(make_quad_mesh(point3(0,0,0),         vec3d(555,0,0),    vec3d(0,0,555),   white)); // Floor
-    append_mesh(make_quad_mesh(point3(555,555,555),   vec3d(-555,0,0),   vec3d(0,0,-555),  white)); // Ceiling
-    append_mesh(make_quad_mesh(point3(0,0,555),       vec3d(555,0,0),    vec3d(0,555,0),   white)); // Back
+    append_mesh(make_quad_mesh(point3d(555,0,0),       vec3d(0,555,0),    vec3d(0,0,555),   green)); // Right
+    append_mesh(make_quad_mesh(point3d(0,0,0),         vec3d(0,555,0),    vec3d(0,0,555),   red));   // Left
+    append_mesh(make_quad_mesh(point3d(0,0,0),         vec3d(555,0,0),    vec3d(0,0,555),   white)); // Floor
+    append_mesh(make_quad_mesh(point3d(555,555,555),   vec3d(-555,0,0),   vec3d(0,0,-555),  white)); // Ceiling
+    append_mesh(make_quad_mesh(point3d(0,0,555),       vec3d(555,0,0),    vec3d(0,555,0),   white)); // Back
 
-    auto box1_mesh = box(point3(0,0,0), point3(165,330,165), white);
+    auto box1_mesh = box(point3d(0,0,0), point3d(165,330,165), white);
 
     for (auto& s : box1_mesh) {
         std::shared_ptr<shape> obj = s;
@@ -64,7 +64,7 @@ void cornell_box() {
 
     // Glass Sphere
     auto glass = make_shared<dielectric>(3.0);
-    world.push_back(make_shared<sphere>(point3(190,90,190), 90, glass));
+    world.push_back(make_shared<sphere>(point3d(190,90,190), 90, glass));
 
     auto empty_material = shared_ptr<material>();
 
@@ -77,8 +77,8 @@ void cornell_box() {
     cam->image_width       = g_width;
 
     cam->vfov     = 40;
-    cam->lookfrom = point3(278, 278, -800);
-    cam->lookat   = point3(278, 278, 0);
+    cam->lookfrom = point3d(278, 278, -800);
+    cam->lookat   = point3d(278, 278, 0);
     cam->vup      = vec3d(0,1,0);
 
     cam->defocus_angle = 0;

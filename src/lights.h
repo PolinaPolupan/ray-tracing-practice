@@ -64,7 +64,7 @@ public:
 
 private:
     double scale_;
-    point3 center_;
+    point3d center_;
     double radius_;
 };
 

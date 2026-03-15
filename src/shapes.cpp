@@ -10,9 +10,9 @@ std::optional<shape_intersection> triangle::intersect(const ray& r, interval ray
     const int i1 = mesh->indices[tri_index * 3 + 1];
     const int i2 = mesh->indices[tri_index * 3 + 2];
 
-    const point3& v0 = mesh->p[i0];
-    const point3& v1 = mesh->p[i1];
-    const point3& v2 = mesh->p[i2];
+    const point3d& v0 = mesh->p[i0];
+    const point3d& v1 = mesh->p[i1];
+    const point3d& v2 = mesh->p[i2];
 
     const vec3d edge1 = v1 - v0;
     const vec3d edge2 = v2 - v0;
@@ -42,7 +42,7 @@ std::optional<shape_intersection> triangle::intersect(const ray& r, interval ray
     return rec;
 }
 
-quad::quad(const point3& Q, const vec3d& u, const vec3d& v, const std::shared_ptr<material>& mat): Q(Q), u(u), v(v), mat(mat)
+quad::quad(const point3d& Q, const vec3d& u, const vec3d& v, const std::shared_ptr<material>& mat): Q(Q), u(u), v(v), mat(mat)
 {
     const auto n = cross(u, v);
     normal = unit_vector(n);
@@ -104,7 +104,7 @@ bool quad::is_interior(const double a, const double b, shape_intersection& rec)
     return true;
 }
 
-double quad::pdf(const point3& origin, const vec3d& direction) const
+double quad::pdf(const point3d& origin, const vec3d& direction) const
 {
     // Use a temporary intersection just to get t and normal for PDF calc if needed,
     // but since we just returned from intersect check, we need the data.
@@ -125,8 +125,8 @@ RotateY::RotateY(const shared_ptr<shape>& object, const double angle): object(ob
     cos_theta = std::cos(radians);
     bbox = object->bounds();
 
-    point3 min(infinity,  infinity,  infinity);
-    point3 max(-infinity, -infinity, -infinity);
+    point3d min(infinity,  infinity,  infinity);
+    point3d max(-infinity, -infinity, -infinity);
 
     for (int i = 0; i < 2; i++) {
         for (int j = 0; j < 2; j++) {
@@ -153,7 +153,7 @@ RotateY::RotateY(const shared_ptr<shape>& object, const double angle): object(ob
 
 std::optional<shape_intersection> RotateY::intersect(const ray& r, const interval ray_t) const
 {
-    const auto origin = point3(
+    const auto origin = point3d(
         (cos_theta * r.o().x()) - (sin_theta * r.o().z()),
         r.o().y(),
         (sin_theta * r.o().x()) + (cos_theta * r.o().z())
@@ -170,7 +170,7 @@ std::optional<shape_intersection> RotateY::intersect(const ray& r, const interva
     auto result = object->intersect(rotated_r, ray_t);
     if (!result) return {};
 
-    result->p = point3(
+    result->p = point3d(
         (cos_theta * result->p.x()) + (sin_theta * result->p.z()),
         result->p.y(),
         (-sin_theta * result->p.x()) + (cos_theta * result->p.z())
@@ -187,7 +187,7 @@ std::optional<shape_intersection> RotateY::intersect(const ray& r, const interva
 
 std::optional<shape_intersection> sphere::intersect(const ray& r, interval ray_t) const
 {
-    const point3 current_center = center.at(r.time());
+    const point3d current_center = center.at(r.time());
     const vec3d oc = current_center - r.o();
     const auto a = r.d().length_squared();
     const auto h = dot(r.d(), oc);
@@ -217,7 +217,7 @@ std::optional<shape_intersection> sphere::intersect(const ray& r, interval ray_t
     return rec;
 }
 
-double sphere::pdf(const point3& origin, const vec3d& direction) const
+double sphere::pdf(const point3d& origin, const vec3d& direction) const
 {
     // This method only works for stationary spheres.
     if (!this->intersect(ray(origin, direction), interval(0.001, infinity)))
@@ -230,7 +230,7 @@ double sphere::pdf(const point3& origin, const vec3d& direction) const
     return  1 / solid_angle;
 }
 
-vec3d sphere::random(const point3& origin, const std::shared_ptr<sampler>& sampler) const
+vec3d sphere::random(const point3d& origin, const std::shared_ptr<sampler>& sampler) const
 {
     const vec3d direction = center.at(0) - origin;
     const auto distance_squared = direction.length_squared();
@@ -238,7 +238,7 @@ vec3d sphere::random(const point3& origin, const std::shared_ptr<sampler>& sampl
     return uvw.transform(random_to_sphere(sampler->gen_2d(), radius, distance_squared));
 }
 
-void sphere::get_sphere_uv(const point3& p, double& u, double& v)
+void sphere::get_sphere_uv(const point3d& p, double& u, double& v)
 {
     // p: a given point on the sphere of radius one, centered at the origin.
     // u: returned value [0,1] of angle around the Y axis from X=-1.
@@ -266,15 +266,15 @@ std::optional<shape_intersection> translate::intersect(const ray& r, const inter
 }
 
 std::vector<std::shared_ptr<shape>>
-make_quad_mesh(const point3& Q, const vec3d& u, const vec3d& v, const std::shared_ptr<material>& mat)
+make_quad_mesh(const point3d& Q, const vec3d& u, const vec3d& v, const std::shared_ptr<material>& mat)
 {
     auto mesh = std::make_shared<triangle_mesh>();
     mesh->mat = mat;
 
-    point3 p0 = Q;
-    point3 p1 = Q + u;
-    point3 p2 = Q + u + v;
-    point3 p3 = Q + v;
+    point3d p0 = Q;
+    point3d p1 = Q + u;
+    point3d p2 = Q + u + v;
+    point3d p3 = Q + v;
 
     mesh->p = { p0, p1, p2, p3 };
 
@@ -292,13 +292,13 @@ make_quad_mesh(const point3& Q, const vec3d& u, const vec3d& v, const std::share
 }
 
 std::vector<std::shared_ptr<shape>>
-box(const point3& a, const point3& b, const std::shared_ptr<material>& mat)
+box(const point3d& a, const point3d& b, const std::shared_ptr<material>& mat)
 {
     std::vector<std::shared_ptr<shape>> sides;
     sides.reserve(12);
 
-    const auto min = point3(std::fmin(a.x(), b.x()), std::fmin(a.y(), b.y()), std::fmin(a.z(), b.z()));
-    const auto max = point3(std::fmax(a.x(), b.x()), std::fmax(a.y(), b.y()), std::fmax(a.z(), b.z()));
+    const auto min = point3d(std::fmin(a.x(), b.x()), std::fmin(a.y(), b.y()), std::fmin(a.z(), b.z()));
+    const auto max = point3d(std::fmax(a.x(), b.x()), std::fmax(a.y(), b.y()), std::fmax(a.z(), b.z()));
 
     const auto dx = vec3d(max.x() - min.x(), 0, 0);
     const auto dy = vec3d(0, max.y() - min.y(), 0);
@@ -308,12 +308,12 @@ box(const point3& a, const point3& b, const std::shared_ptr<material>& mat)
         sides.insert(sides.end(), mesh.begin(), mesh.end());
     };
 
-    append(make_quad_mesh(point3(min.x(), min.y(), max.z()),  dx,  dy, mat)); // front
-    append(make_quad_mesh(point3(max.x(), min.y(), max.z()), -dz,  dy, mat)); // right
-    append(make_quad_mesh(point3(max.x(), min.y(), min.z()), -dx,  dy, mat)); // back
-    append(make_quad_mesh(point3(min.x(), min.y(), min.z()),  dz,  dy, mat)); // left
-    append(make_quad_mesh(point3(min.x(), max.y(), max.z()),  dx, -dz, mat)); // top
-    append(make_quad_mesh(point3(min.x(), min.y(), min.z()),  dx,  dz, mat)); // bottom
+    append(make_quad_mesh(point3d(min.x(), min.y(), max.z()),  dx,  dy, mat)); // front
+    append(make_quad_mesh(point3d(max.x(), min.y(), max.z()), -dz,  dy, mat)); // right
+    append(make_quad_mesh(point3d(max.x(), min.y(), min.z()), -dx,  dy, mat)); // back
+    append(make_quad_mesh(point3d(min.x(), min.y(), min.z()),  dz,  dy, mat)); // left
+    append(make_quad_mesh(point3d(min.x(), max.y(), max.z()),  dx, -dz, mat)); // top
+    append(make_quad_mesh(point3d(min.x(), min.y(), min.z()),  dx,  dz, mat)); // bottom
 
     return sides;
 }

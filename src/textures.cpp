@@ -4,7 +4,7 @@
 
 #include "textures.h"
 
-double perlin::noise(const point3& p) const
+double perlin::noise(const point3d& p) const
 {
     const auto u = p.x() - std::floor(p.x());
     const auto v = p.y() - std::floor(p.y());
@@ -27,7 +27,7 @@ double perlin::noise(const point3& p) const
     return perlin_interp(c, u, v, w);
 }
 
-double perlin::turb(const point3& p, const int depth) const
+double perlin::turb(const point3d& p, const int depth) const
 {
     auto accum = 0.0;
     auto temp_p = p;
@@ -62,7 +62,7 @@ double perlin::perlin_interp(const vec3d c[2][2][2], const double u, const doubl
     return accum;
 }
 
-color image::value(double u, double v, const point3& p) const
+color image::value(double u, double v, const point3d& p) const
 {
     // If we have no texture data, then return solid cyan as a debugging aid.
     if (image_.height() <= 0) return {0,1,1};
@@ -79,7 +79,7 @@ color image::value(double u, double v, const point3& p) const
     return {colorScale*pixel[0], colorScale*pixel[1], colorScale*pixel[2]};
 }
 
-color checker::value(const double u, const double v, const point3& p) const
+color checker::value(const double u, const double v, const point3d& p) const
 {
     const auto xInteger = static_cast<int>(std::floor(inv_scale_ * p.x()));
     const auto yInteger = static_cast<int>(std::floor(inv_scale_ * p.y()));
