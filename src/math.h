@@ -353,6 +353,13 @@ bounds3<T> operator+(const vec3<T>& offset, const bounds3<T>& bbox) {
     return bbox + offset;
 }
 
+template <typename T>
+bounds3<T> expand(const bounds3<T>& a, const bounds3<T>& b) {
+    point3<T> p_min = min(a.p_min, b.p_min);
+    point3<T> p_max = max(a.p_max, b.p_max);
+    return {p_min, p_max};
+}
+
 class frame {
 public:
     explicit frame(const vec3d& n) {

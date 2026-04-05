@@ -151,7 +151,7 @@ int main() {
 
     const auto start = clock::now();
 
-    bunny();
+    cornell_box();
 
     const auto end = clock::now();
 

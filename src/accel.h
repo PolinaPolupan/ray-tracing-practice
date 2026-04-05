@@ -67,18 +67,22 @@ private:
         if (start >= end) return nullptr;
 
         auto n = std::make_unique<node>();
+        bounds3d centroid_bounds;
 
         for (size_t i = start; i < end; ++i)
-            n->bbox = bounds3d(n->bbox, objects[i]->bounds());
+        {
+            centroid_bounds = expand(centroid_bounds, objects[i]->bounds());
+        }
 
         const size_t span = end - start;
 
         if (span == 1) {
             n->leaf = objects[start];
+            n->bbox = centroid_bounds;
             return n;
         }
 
-        const int axis = n->bbox.longest_axis();
+        const int axis = centroid_bounds.longest_axis();
         auto cmp = [axis](const std::shared_ptr<shape>& a, const std::shared_ptr<shape>& b) {
             return box_compare(a, b, axis);
         };
@@ -110,6 +114,39 @@ private:
 
         auto right_hit = _intersect(n->children[1].get(), r, right_interval);
         return right_hit ? right_hit : left_hit;
+    }
+
+    static std::unique_ptr<node> split_median(
+        std::vector<std::shared_ptr<shape>>& objects,
+        const size_t start,
+        const size_t end
+    ) {
+        if (start >= end) return nullptr;
+
+        auto n = std::make_unique<node>();
+
+        for (size_t i = start; i < end; ++i)
+            n->bbox = bounds3d(n->bbox, objects[i]->bounds());
+
+        const size_t span = end - start;
+
+        if (span == 1) {
+            n->leaf = objects[start];
+            return n;
+        }
+
+        const int axis = n->bbox.longest_axis();
+        auto cmp = [axis](const std::shared_ptr<shape>& a, const std::shared_ptr<shape>& b) {
+            return box_compare(a, b, axis);
+        };
+
+        std::sort(objects.begin() + start, objects.begin() + end, cmp);
+
+        const size_t mid = start + span / 2;
+        n->children[0] = build(objects, start, mid);
+        n->children[1] = build(objects, mid, end);
+
+        return n;
     }
 };
 
