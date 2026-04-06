@@ -41,6 +41,10 @@ public:
     vec3(const T e0) : e{e0,e0,e0} {}
     vec3(const T e0, const T e1, const T e2) : e{e0,e1,e2} {}
 
+    T& x() { return e[0]; }
+    T& y() { return e[1]; }
+    T& z() { return e[2]; }
+
     [[nodiscard]] T x() const { return e[0]; }
     [[nodiscard]] T y() const { return e[1]; }
     [[nodiscard]] T z() const { return e[2]; }
@@ -301,7 +305,10 @@ class bounds3 {
 public:
     point3<T> p_min, p_max;
 
-    bounds3() = default;
+    bounds3() {
+        p_min = point3<T>(+infinity);
+        p_max = point3<T>(-infinity);
+    }
 
     bounds3(const point3<T>& a, const point3<T>& b) {
         p_min = min(a, b);
@@ -317,11 +324,57 @@ public:
 
     vec3<T> diagonal() const { return p_max - p_min; }
 
+    T surface_area() const {
+        vec3<T> d = diagonal();
+        return 2 * (d.x() * d.y() + d.z() * d.x() + d.y() * d.z());
+    }
+
     [[nodiscard]] int longest_axis() const {
         vec3<T> d = diagonal();
         if (d[0] > d[1] && d[0] > d[2]) return 0;
         if (d[1] > d[2]) return 1;
         return 2;
+    }
+
+    point3<T> centroid() const {
+        return 0.5 * (p_min + p_max);
+    }
+
+    /**
+     * Compute normalized offset of a point inside the bounding box.
+     *
+     * Bounding Box example along X, Y, Z:
+     *   pMin = (0, 0, 0)
+     *   pMax = (1, 2, 1)   // Y axis taller than X/Z
+     *
+     * Example Points:
+     * 1) p = (0.5, 1, 0.5)
+     *    → offset(p) = (0.5, 0.5, 0.5)
+     *    Explanation: X/Z scaled to [0,1], Y scaled by height 2 → 1/2 = 0.5
+     *
+     * 2) p = (0, 0.25, 0)
+     *    → offset(p) = (0, 0.125, 0)
+     *    Explanation: X/Z unchanged (0), Y normalized 0.25/2 = 0.125
+     *
+     * 3) p = (1.5, 3, 2)
+     *    → offset(p) = (1.5, 1, 2)
+     *    Explanation: Outside the box → values can exceed [0,1]; Y hits max → 3/2 = 1.5 if not clamped
+     *
+     * Flat axis example:
+     *   pMin = (0, 0, 0)
+     *   pMax = (0, 2, 1)   // X is flat
+     *
+     *   p = (0, 1, 0.5)
+     *   → offset(p) = (0, 0.5, 0.5)
+     *   Explanation: X axis is flat → offset remains 0; Y/Z normalized normally
+     */
+    vec3<T> offset(point3<T> p) const {
+        vec3<T> o = p - p_min;
+        if (p_max.x() > p_min.x()) o.x() /= p_max.x() - p_min.x();
+        if (p_max.y() > p_min.y()) o.y() /= p_max.y() - p_min.y();
+        if (p_max.z() > p_min.z()) o.z() /= p_max.z() - p_min.z();
+
+        return o;
     }
 
     [[nodiscard]] bool intersect(const ray& r, interval ray_t) const;
@@ -357,6 +410,13 @@ template <typename T>
 bounds3<T> expand(const bounds3<T>& a, const bounds3<T>& b) {
     point3<T> p_min = min(a.p_min, b.p_min);
     point3<T> p_max = max(a.p_max, b.p_max);
+    return {p_min, p_max};
+}
+
+template <typename T>
+bounds3<T> expand(const bounds3<T>& a, const point3<T>& p) {
+    point3<T> p_min = min(a.p_min, p);
+    point3<T> p_max = max(a.p_max, p);
     return {p_min, p_max};
 }
 

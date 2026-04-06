@@ -11,8 +11,8 @@
 
 SDL_Renderer* g_renderer = nullptr;
 SDL_Texture* g_texture = nullptr;
-int g_width = 300;
-int g_height = 300;
+int g_width = 600;
+int g_height = 600;
 
 void update_display(const std::vector<pixel>& buffer) {
     std::vector<uint32_t> pixels(g_width * g_height);
@@ -84,11 +84,9 @@ void cornell_box() {
     cam->defocus_angle = 0;
 
     std::vector<std::shared_ptr<light>> lights;
-    lights.push_back(std::make_shared<point_light>(vec3d(278, 400, -400), 300000.0));
+    lights.push_back(std::make_shared<point_light>(vec3d(278, 500, 278), 100000.0));
 
     std::shared_ptr<accelerator> accelerator = std::make_shared<bvh>(world);
-
-    lights.push_back(std::make_shared<uniform_infinite_light>(accelerator->bounds(), 0.1));
 
     const auto integrator_ptr = std::make_shared<path_integrator>(cam, samp, lights, accelerator);
 
@@ -99,7 +97,7 @@ void bunny()
 {
     std::vector<std::shared_ptr<shape>> world;
 
-    const auto samp = std::make_shared<stratified_sampler>(4);
+    const auto samp = std::make_shared<stratified_sampler>(100);
 
     film film(g_width, g_height, samp->get_spp());
     const auto cam = std::make_shared<camera>(&film);
@@ -117,11 +115,15 @@ void bunny()
     const auto bunny_mat = make_shared<lambertian>(color(0.8, 0.2, 0.2));
     const auto bunny_mesh = load_obj("objects/bunny.obj", point3d(278, 0, 278), 300.0, bunny_mat);
     auto dragon_tris = make_mesh_triangles(bunny_mesh);
-
-    world.insert(world.end(), dragon_tris.begin(), dragon_tris.end());
+    for (auto& s : dragon_tris) {
+        std::shared_ptr<shape> obj = s;
+        obj = std::make_shared<RotateY>(obj, 180);
+        obj = std::make_shared<translate>(obj, vec3d(500, 0, 450));
+        world.push_back(obj);
+    }
 
     std::vector<std::shared_ptr<light>> lights;
-    lights.push_back(std::make_shared<point_light>(vec3d(278, 400, -400), 300000.0));
+    lights.push_back(std::make_shared<point_light>(vec3d(278, 600, -400), 700000.0));
 
     std::shared_ptr<accelerator> accelerator = std::make_shared<bvh>(world);
 
@@ -151,7 +153,7 @@ int main() {
 
     const auto start = clock::now();
 
-    cornell_box();
+    bunny();
 
     const auto end = clock::now();
 

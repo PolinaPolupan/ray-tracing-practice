@@ -6,7 +6,7 @@
 
 struct node
 {
-    bounds3d                  bbox = bounds3d::empty;
+    bounds3d                 bbox = bounds3d::empty;
     std::shared_ptr<shape>   leaf;                  // non-null => leaf
     std::unique_ptr<node>    children[2];           // non-null => internal child
 
@@ -27,23 +27,6 @@ protected:
     bounds3d bbox_ = bounds3d::empty;
 };
 
-inline bool box_compare(const shared_ptr<shape>& a, const shared_ptr<shape> &b, const int axis_index)
-{
-    const bounds3d& bbox = a->bounds();
-    const bounds3d& bbox2 = b->bounds();
-    return bbox.p_min[axis_index] < bbox2.p_min[axis_index];
-}
-
-inline bool box_x_compare(const shared_ptr<shape> &a, const shared_ptr<shape> &b)
-{ return box_compare(a, b, 0); }
-
-inline bool box_y_compare(const shared_ptr<shape> &a, const shared_ptr<shape> &b)
-{ return box_compare(a, b, 1); }
-
-inline bool box_z_compare(const shared_ptr<shape> &a, const shared_ptr<shape> &b)
-{ return box_compare(a, b, 2); }
-
-
 class bvh final : public accelerator {
 public:
     explicit bvh(std::vector<std::shared_ptr<shape>> objects) {
@@ -56,6 +39,14 @@ public:
         return _intersect(root_.get(), r, ray_t);
     }
 
+    enum class split_mode { MIDDLE, SAH };
+    inline static auto split_mode_ = split_mode::SAH;
+
+    struct bvh_split_bucket {
+        int count{};
+        bounds3d bounds;
+    };
+
 private:
     std::unique_ptr<node> root_;
 
@@ -67,31 +58,114 @@ private:
         if (start >= end) return nullptr;
 
         auto n = std::make_unique<node>();
-        bounds3d centroid_bounds;
+        bounds3d bounds;
 
         for (size_t i = start; i < end; ++i)
-        {
-            centroid_bounds = expand(centroid_bounds, objects[i]->bounds());
-        }
+            bounds = expand(bounds, objects[i]->bounds());
 
         const size_t span = end - start;
 
-        if (span == 1) {
+        if (span == 1 || bounds.surface_area() == 0) {
             n->leaf = objects[start];
-            n->bbox = centroid_bounds;
+            n->bbox = bounds;
             return n;
         }
 
-        const int axis = centroid_bounds.longest_axis();
-        auto cmp = [axis](const std::shared_ptr<shape>& a, const std::shared_ptr<shape>& b) {
-            return box_compare(a, b, axis);
-        };
+        bounds3d centroid_bounds;
+        for (size_t i = start; i < end; ++i)
+            centroid_bounds = expand(centroid_bounds, objects[i]->bounds().centroid());
 
-        std::sort(objects.begin() + start, objects.begin() + end, cmp);
+        const int dim = centroid_bounds.longest_axis();
 
-        const size_t mid = start + span / 2;
+        // degenerate dimensions
+        if (centroid_bounds.p_max[dim] == centroid_bounds.p_min[dim]) {
+            n->leaf = objects[start];
+            n->bbox = bounds;
+            return n;
+        }
+
+        size_t mid = start + span / 2;
+
+        switch (split_mode_) {
+            case split_mode::MIDDLE: {
+                middle_split(objects, start, end, dim);
+                break;
+            }
+            case split_mode::SAH: {
+                if (span == 2) {
+                    middle_split(objects, start, end, dim);
+                }
+
+                constexpr int n_buckets = 12;
+                bvh_split_bucket buckets[n_buckets];
+
+                for (size_t i = start; i < end; ++i) {
+                    int b = static_cast<int>(n_buckets * centroid_bounds.offset(objects[i]->bounds().centroid())[dim]);
+                    b = std::min(b, n_buckets - 1);
+                    b = std::max(b, 0);
+                    buckets[b].count++;
+                    buckets[b].bounds = expand(buckets[b].bounds, objects[i]->bounds());
+                }
+
+                constexpr int n_splits = n_buckets - 1;
+                double costs[n_splits] = {};
+
+                int count_left = 0;
+                bounds3d bounds_left;
+                for (int i = 0; i < n_splits; ++i) {
+                    bounds_left = expand(bounds_left, buckets[i].bounds);
+                    count_left += buckets[i].count;
+                    costs[i] += count_left * bounds_left.surface_area();
+                }
+
+                int count_right = 0;
+                bounds3d bounds_right;
+                for (int i = n_splits; i >= 1; --i) {
+                    bounds_right = expand(bounds_right, buckets[i].bounds);
+                    count_right += buckets[i].count;
+                    costs[i - 1] += count_right * bounds_right.surface_area();
+                }
+
+                int min_cost_split_bucket = -1;
+                double min_cost = infinity;
+
+                for (int i = 0; i < n_splits; ++i) {
+                    if (costs[i] < min_cost) {
+                        min_cost = costs[i];
+                        min_cost_split_bucket = i;
+                    }
+                }
+
+                const size_t leaf_cost = span;
+                constexpr size_t max_prims_in_node = 4;
+
+                bool should_split = (span > max_prims_in_node) && (min_cost < leaf_cost);
+
+                if (!should_split) {
+                    // fallback to middle split instead of collapsing
+                    middle_split(objects, start, end, dim);
+                    mid = start + span / 2;
+                } else {
+                    auto midIter = std::partition(
+                        objects.begin() + start, objects.begin() + end,
+                        [=](const std::shared_ptr<shape>& obj) {
+                            int b = static_cast<int>(
+                                n_buckets * centroid_bounds.offset(obj->bounds().centroid())[dim]);
+                            b = std::min(b, n_buckets - 1);
+                            return b <= min_cost_split_bucket;
+                        });
+                    mid = midIter - objects.begin();
+                }
+
+                if (mid == start || mid == end) {
+                    mid = start + span / 2;
+                }
+            }
+        }
+
         n->children[0] = build(objects, start, mid);
         n->children[1] = build(objects, mid, end);
+        n->bbox = bounds;
 
         return n;
     }
@@ -116,39 +190,23 @@ private:
         return right_hit ? right_hit : left_hit;
     }
 
-    static std::unique_ptr<node> split_median(
+    static void middle_split(
         std::vector<std::shared_ptr<shape>>& objects,
         const size_t start,
-        const size_t end
-    ) {
-        if (start >= end) return nullptr;
+        const size_t end,
+        const int dim)
+    {
+        const size_t mid = start + (end - start) / 2;
 
-        auto n = std::make_unique<node>();
-
-        for (size_t i = start; i < end; ++i)
-            n->bbox = bounds3d(n->bbox, objects[i]->bounds());
-
-        const size_t span = end - start;
-
-        if (span == 1) {
-            n->leaf = objects[start];
-            return n;
-        }
-
-        const int axis = n->bbox.longest_axis();
-        auto cmp = [axis](const std::shared_ptr<shape>& a, const std::shared_ptr<shape>& b) {
-            return box_compare(a, b, axis);
+        auto cmp = [dim](const std::shared_ptr<shape>& a, const std::shared_ptr<shape>& b) {
+            return a->bounds().centroid()[dim] < b->bounds().centroid()[dim];
         };
 
-        std::sort(objects.begin() + start, objects.begin() + end, cmp);
-
-        const size_t mid = start + span / 2;
-        n->children[0] = build(objects, start, mid);
-        n->children[1] = build(objects, mid, end);
-
-        return n;
+        std::nth_element(objects.begin() + start,
+                         objects.begin() + mid,
+                         objects.begin() + end,
+                         cmp);
     }
 };
-
 
 #endif // AGGREGATES_H
