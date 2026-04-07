@@ -21,7 +21,7 @@ public:
         const std::shared_ptr<camera>&camera,
         const std::shared_ptr<sampler>& sampler,
         const std::vector<std::shared_ptr<light>>& lights,
-        const std::shared_ptr<accelerator>& accelerator
+        const std::shared_ptr<Accelerator>& accelerator
         ) :
     camera_(camera),
     sampler_(sampler),
@@ -87,7 +87,7 @@ protected:
     std::shared_ptr<sampler> sampler_;
     std::vector<std::shared_ptr<light>> lights_;
     std::vector<std::shared_ptr<light>> infinite_lights_;
-    std::shared_ptr<accelerator> accelerator_;
+    std::shared_ptr<Accelerator> accelerator_;
     light_sampler light_sampler_;
 
     int max_depth_ = 10;   // Maximum number of ray bounces into scene
@@ -101,7 +101,7 @@ public:
         const std::shared_ptr<camera>&camera,
         const std::shared_ptr<sampler>& sampler,
         const std::vector<std::shared_ptr<light>>& lights,
-        const std::shared_ptr<accelerator>& accelerator
+        const std::shared_ptr<Accelerator>& accelerator
         ) : integrator(camera, sampler, lights, accelerator) {}
 
     [[nodiscard]] vec3d Li(ray &r, sampler& samp, int depth) const override;
@@ -114,7 +114,7 @@ public:
         const std::shared_ptr<camera>&camera,
         const std::shared_ptr<sampler>& sampler,
         const std::vector<std::shared_ptr<light>>& lights,
-        const std::shared_ptr<accelerator>& accelerator
+        const std::shared_ptr<Accelerator>& accelerator
         ) : integrator(camera, sampler, lights, accelerator) {}
 
     [[nodiscard]] vec3d Li(ray &r, sampler& samp, int depth) const override;

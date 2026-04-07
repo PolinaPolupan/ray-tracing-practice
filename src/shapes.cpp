@@ -387,7 +387,6 @@ std::shared_ptr<triangle_mesh> load_obj(const std::string& filename,
         }
     }
 
-    std::cout << "Loaded " << filename << ": " << mesh_ptr->indices.size() / 3 << " triangles." << std::endl;
     return mesh_ptr;
 }
 

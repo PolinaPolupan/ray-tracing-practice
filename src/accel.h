@@ -1,22 +1,50 @@
 #ifndef AGGREGATES_H
 #define AGGREGATES_H
+
 #include <memory>
+#include <vector>
+#include <optional>
+#include <algorithm>
 
 #include "shapes.h"
 
-struct node
-{
-    bounds3d                  bbox = bounds3d::empty;
-    std::shared_ptr<shape>   leaf;                  // non-null => leaf
-    std::unique_ptr<node>    children[2];           // non-null => internal child
+struct node {
+    bounds3d bounds_ = bounds3d::empty;
+    std::unique_ptr<node> children[2];
 
-    [[nodiscard]] bool is_leaf() const { return static_cast<bool>(leaf); }
+    int offset_ = 0;
+    int n_primitives_ = 0;
+    int dim_ = 0;
+
+    void init_leaf(const int offset, const int n, const bounds3d& bounds) {
+        offset_ = offset;
+        n_primitives_ = n;
+        bounds_ = bounds;
+    }
+
+    void init_interior(std::unique_ptr<node> a,
+                       std::unique_ptr<node> b,
+                       const int dim) {
+        children[0] = std::move(a);
+        children[1] = std::move(b);
+
+        n_primitives_ = 0;
+        bounds_ = expand(children[0]->bounds_, children[1]->bounds_);
+        dim_ = dim;
+    }
 };
 
-class accelerator
-{
+struct linear_node {
+    bounds3d bounds_ = bounds3d::empty;
+    int offset_ = 0;
+    int second_child_offset_ = 0;
+    int n_primitives_ = 0;
+    int dim_ = 0;
+};
+
+class Accelerator {
 public:
-    virtual ~accelerator() = default;
+    virtual ~Accelerator() = default;
 
     [[nodiscard]] virtual std::optional<shape_intersection>
     intersect(const ray& r, interval ray_t) const = 0;
@@ -27,91 +55,119 @@ protected:
     bounds3d bbox_ = bounds3d::empty;
 };
 
-inline bool box_compare(const shared_ptr<shape>& a, const shared_ptr<shape> &b, const int axis_index)
-{
-    const bounds3d& bbox = a->bounds();
-    const bounds3d& bbox2 = b->bounds();
-    return bbox.p_min[axis_index] < bbox2.p_min[axis_index];
-}
-
-inline bool box_x_compare(const shared_ptr<shape> &a, const shared_ptr<shape> &b)
-{ return box_compare(a, b, 0); }
-
-inline bool box_y_compare(const shared_ptr<shape> &a, const shared_ptr<shape> &b)
-{ return box_compare(a, b, 1); }
-
-inline bool box_z_compare(const shared_ptr<shape> &a, const shared_ptr<shape> &b)
-{ return box_compare(a, b, 2); }
-
-
-class bvh final : public accelerator {
+/** Bounding Volume Hierarchy (BVH) acceleration structure.
+ *
+ * Stores objects in a binary tree, then flattens it into a linear array
+ * for cache-friendly ray traversal.
+ *
+ * Example scene with 4 primitives:
+ *   Primitives A,B,C,D with centroids at x={1,2,6,7}
+ *
+ * Build produces tree:
+ *          Root
+ *         /    \
+ *      Node1   Node2
+ *     /   \   /   \
+ *    A     B C     D
+ *
+ * Flattened linear nodes:
+ * Index | Node Type | Data
+ * 0     | Interior  | axis=x, second_child_offset=4
+ * 1     | Interior  | axis=x, second_child_offset=3
+ * 2     | Leaf      | offset=0 (A)
+ * 3     | Leaf      | offset=1 (B)
+ * 4     | Interior  | axis=x, second_child_offset=6
+ * 5     | Leaf      | offset=2 (C)
+ * 6     | Leaf      | offset=3 (D)
+ */
+class Bvh final : public Accelerator {
 public:
-    explicit bvh(std::vector<std::shared_ptr<shape>> objects) {
-        root_ = build(objects, 0, objects.size());
-        if (root_) bbox_ = root_->bbox;
+    /** Construct BVH from objects. Builds tree and flattens it.
+     * Example:
+     *   std::vector<std::shared_ptr<shape>> objs = {A,B,C,D};
+     *   Bvh bvh(objs);
+     */
+    explicit Bvh(std::vector<std::shared_ptr<shape>> objects) {
+        int offset = 0;
+        ordered_prims_.resize(objects.size());
+
+        int total_nodes = 0;
+        root_ = build(objects, ordered_prims_, 0, objects.size(), offset, total_nodes);
+
+        if (root_) {
+            bbox_ = root_->bounds_;
+        }
+
+        nodes_.resize(total_nodes);
+
+        int linear_offset = 0;
+        flatten(root_, linear_offset);
     }
 
+    /** Traverse BVH and return first intersection of ray.
+     *
+     * Traverses linear nodes in depth-first order using a small stack.
+     * Example: ray hits primitive B at t=1.2:
+     *   intersect(ray, {0, infinity}) -> {B, 1.2}
+     */
     [[nodiscard]] std::optional<shape_intersection>
-    intersect(const ray& r, const interval ray_t) const override {
-        return _intersect(root_.get(), r, ray_t);
-    }
+    intersect(const ray& r, interval ray_t) const override;
+
+    enum class split_mode { middle, sah };
+    inline static split_mode split_mode_ = split_mode::sah;
+
+    struct bvh_split_bucket {
+        int count = 0;
+        bounds3d bounds;
+    };
+
+private:
+    /** Recursive BVH builder.
+     * Returns root node of subtree.
+     *
+     * Example:
+     *   Primitives A,B,C,D with centroids x={1,2,6,7}
+     *   build(...) produces tree:
+     *          Root
+     *         /    \
+     *      Node1   Node2
+     *     /   \   /   \
+     *    A     B C     D
+     */
+    static std::unique_ptr<node> build(
+        std::vector<std::shared_ptr<shape>>& objects,
+        std::vector<shape*>& ordered_prims,
+        size_t start,
+        size_t end,
+        int& offset,
+        int& total_nodes
+    );
+
+    /** Flatten tree into linear array for fast traversal.
+     *
+     * Example tree:
+     *       Root
+     *      /    \
+     *   Node1   Node2
+     *  /   \   /   \
+     * A     B C     D
+     *
+     * Becomes linear array:
+     * 0=Root, 1=Node1, 2=A, 3=B, 4=Node2, 5=C, 6=D
+     */
+    int flatten(const std::unique_ptr<node>& node, int& offset);
+
+    /** Middle-split helper: split objects by median along axis. */
+    static void middle_split(
+        std::vector<std::shared_ptr<shape>>& objects,
+        size_t start,
+        size_t end,
+        int dim);
 
 private:
     std::unique_ptr<node> root_;
-
-    static std::unique_ptr<node> build(
-        std::vector<std::shared_ptr<shape>>& objects,
-        const size_t start,
-        const size_t end
-    ) {
-        if (start >= end) return nullptr;
-
-        auto n = std::make_unique<node>();
-
-        for (size_t i = start; i < end; ++i)
-            n->bbox = bounds3d(n->bbox, objects[i]->bounds());
-
-        const size_t span = end - start;
-
-        if (span == 1) {
-            n->leaf = objects[start];
-            return n;
-        }
-
-        const int axis = n->bbox.longest_axis();
-        auto cmp = [axis](const std::shared_ptr<shape>& a, const std::shared_ptr<shape>& b) {
-            return box_compare(a, b, axis);
-        };
-
-        std::sort(objects.begin() + start, objects.begin() + end, cmp);
-
-        const size_t mid = start + span / 2;
-        n->children[0] = build(objects, start, mid);
-        n->children[1] = build(objects, mid, end);
-
-        return n;
-    }
-
-    static std::optional<shape_intersection> _intersect(
-        const node* n,
-        const ray& r,
-        const interval ray_t
-    ) {
-        if (!n) return {};
-        if (!n->bbox.intersect(r, ray_t)) return {};
-
-        if (n->is_leaf())
-            return n->leaf->intersect(r, ray_t);
-
-        auto left_hit = _intersect(n->children[0].get(), r, ray_t);
-
-        interval right_interval = ray_t;
-        if (left_hit) right_interval.max = left_hit->t;
-
-        auto right_hit = _intersect(n->children[1].get(), r, right_interval);
-        return right_hit ? right_hit : left_hit;
-    }
+    std::vector<shape*> ordered_prims_;
+    std::vector<linear_node> nodes_;
 };
-
 
 #endif // AGGREGATES_H
