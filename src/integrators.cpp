@@ -113,7 +113,7 @@ color path_integrator::Li(ray &r, sampler& samp, int d) const {
         {
             for (const auto& light: infinite_lights_)
             {
-                const double p_l = light_sampler_.sample(sampler_->gen_1d()).p * light->pdf_Li();
+                const double p_l = light_sampler_.sample(samp.gen_1d()).p * light->pdf_Li();
                 const double w_b = power_heuristic(1.0, p_l);
 
                 L += beta * w_b * light->Le();
@@ -142,7 +142,7 @@ color path_integrator::Li(ray &r, sampler& samp, int d) const {
         }
 
         const auto [light, p] = light_sampler_.sample(samp.gen_1d());
-        const light_li_sample ls = light->sample_Li(rec.p, sampler_->gen_2d());
+        const light_li_sample ls = light->sample_Li(rec.p, samp.gen_2d());
         if (unoccluded(rec.p, ls.p_light, rec.t)) {
             L += beta * bsdf->f(wo, ls.wi) * std::max(0.0, dot(rec.normal, ls.wi)) * ls.li / (ls.pdf * p);
         }
