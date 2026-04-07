@@ -39,7 +39,8 @@ add_executable (RayTracer
         src/shapes.h
         src/lights.h
         src/constants.h
-        src/accel.h)
+        src/accel.h
+        src/accel.cpp)
 
 target_include_directories(RayTracer PRIVATE
         ${CMAKE_SOURCE_DIR}/src

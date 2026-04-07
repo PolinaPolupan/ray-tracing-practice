@@ -86,7 +86,7 @@ void cornell_box() {
     std::vector<std::shared_ptr<light>> lights;
     lights.push_back(std::make_shared<point_light>(vec3d(278, 500, 278), 100000.0));
 
-    std::shared_ptr<accelerator> accelerator = std::make_shared<bvh>(world);
+    std::shared_ptr<Accelerator> accelerator = std::make_shared<Bvh>(world);
 
     const auto integrator_ptr = std::make_shared<path_integrator>(cam, samp, lights, accelerator);
 
@@ -125,7 +125,7 @@ void bunny()
     std::vector<std::shared_ptr<light>> lights;
     lights.push_back(std::make_shared<point_light>(vec3d(278, 600, -400), 700000.0));
 
-    std::shared_ptr<accelerator> accelerator = std::make_shared<bvh>(world);
+    std::shared_ptr<Accelerator> accelerator = std::make_shared<Bvh>(world);
 
     lights.push_back(std::make_shared<uniform_infinite_light>(accelerator->bounds(), 0.1));
 

@@ -62,7 +62,7 @@ void integrator::render(RenderCallback on_sample_complete) const
         }
     }
 
-    camera_->get_film()->write_color(std::cout);
+    // camera_->get_film()->write_color(std::cout);
 }
 
 color random_walk_integrator::Li(ray &r, sampler& samp, const int depth) const {
