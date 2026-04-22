@@ -13,38 +13,35 @@ bsdf_sample lambertian_bsdf::sample_f(const vec3d& wo_world, const point2d& u) c
 bsdf_sample dielectric_bsdf::sample_f(const vec3d& wo_world, const point2d& u) const
 {
     const vec3d wo = frame_.to_local(wo_world);
-    const vec3d n(0,0,1);
+    const vec3d n(0, 0, 1);
 
     double eta_i = 1.0;
     double eta_t = ior_;
-
-    const bool entering = wo.z() > 0;
-
-    if (!entering)
-        std::swap(eta_i, eta_t);
-
-    const double eta = eta_i / eta_t;
+    if (!front_face_) std::swap(eta_i, eta_t);
+    double eta = eta_i / eta_t;
 
     const vec3d wi_in = -wo;
 
-    const double cos_theta = std::abs(wo.z());
-    const double sin_theta = std::sqrt(std::max(0.0, 1 - cos_theta*cos_theta));
+    double cos_theta = std::abs(wo.z());
+    const double sin_theta = std::sqrt(std::max(0.0, 1.0 - cos_theta*cos_theta));
 
     const bool cannot_refract = eta * sin_theta > 1.0;
 
-    const double Fr = reflectance(cos_theta, eta);
+    double schlick_cosine = cos_theta;
+    if (eta_i > eta_t && !cannot_refract) {
+        schlick_cosine = std::sqrt(1.0 - eta * eta * (1.0 - cos_theta * cos_theta));
+    }
+
+    const double Fr = reflectance(schlick_cosine, ior_);
 
     vec3d wi_local;
-
     if (cannot_refract || u.x < Fr) {
-        // reflect
         wi_local = reflect(wi_in, n);
     } else {
-        // refract
         wi_local = refract(wi_in, n, eta);
     }
 
-    return {unit_vector(frame_.from_local(wi_local)), color(1.0),1.0 };
+    return {unit_vector(frame_.from_local(wi_local)), color(1.0), 1.0 };
 }
 
 bsdf_sample metal_bsdf::sample_f(const vec3d& wo_world, const point2d& u) const

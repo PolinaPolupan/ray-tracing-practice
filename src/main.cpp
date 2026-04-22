@@ -63,7 +63,7 @@ void cornell_box() {
     }
 
     // Glass Sphere
-    auto glass = make_shared<dielectric>(3.0);
+    auto glass = make_shared<dielectric>(1.1);
     world.push_back(make_shared<sphere>(point3d(190,90,190), 90, glass));
 
     auto empty_material = shared_ptr<material>();
@@ -112,8 +112,8 @@ void bunny()
 
     cam->defocus_angle = 0;
 
-    const auto bunny_mat = make_shared<lambertian>(color(0.8, 0.2, 0.2));
-    const auto bunny_mesh = load_obj("objects/bunny.obj", point3d(278, 0, 278), 300.0, bunny_mat);
+    const auto bunny_mat = make_shared<dielectric>(1.3);
+    const auto bunny_mesh = load_obj("../objects/bunny.obj", point3d(278, 0, 278), 300.0, bunny_mat);
     auto dragon_tris = make_mesh_triangles(bunny_mesh);
     for (auto& s : dragon_tris) {
         std::shared_ptr<shape> obj = s;
@@ -122,12 +122,19 @@ void bunny()
         world.push_back(obj);
     }
 
+    auto append_mesh = [&](std::vector<std::shared_ptr<shape>> mesh) {
+        world.insert(world.end(), mesh.begin(), mesh.end());
+    };
+
+    auto white = make_shared<lambertian>(color(.73, .73, .73));
+    append_mesh(make_quad_mesh(point3d(-200,0,-100),     vec3d(1000,0,0),    vec3d(0,0,1000),   white));
+
     std::vector<std::shared_ptr<light>> lights;
     lights.push_back(std::make_shared<point_light>(vec3d(278, 600, -400), 700000.0));
 
     std::shared_ptr<Accelerator> accelerator = std::make_shared<Bvh>(world);
 
-    lights.push_back(std::make_shared<uniform_infinite_light>(accelerator->bounds(), 0.1));
+    lights.push_back(std::make_shared<environment_light>("../images/sundowner_overlook_4k.hdr", accelerator->bounds(), 1.0));
 
     const auto integrator_ptr = std::make_shared<path_integrator>(cam, samp, lights, accelerator);
 

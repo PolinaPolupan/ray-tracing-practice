@@ -1,6 +1,7 @@
 #ifndef LIGHTS_H
 #define LIGHTS_H
 #include "math.h"
+#include "rtw_image.h"
 
 struct light_li_sample
 {
@@ -18,7 +19,7 @@ public:
     explicit light(const vec3d& pos): pos_(pos) {}
     virtual light_li_sample sample_Li(const vec3d& p, const point2d& u) = 0;
     [[nodiscard]] virtual double pdf_Li() const = 0;
-    virtual double Le() = 0;
+    virtual color Le(const vec3d& dir) = 0;
     virtual bool is_infinite() = 0;
 
 protected:
@@ -43,7 +44,7 @@ public:
 
     [[nodiscard]] double pdf_Li() const override { return 0.0; }
 
-    double Le() override { return scale_; }
+    color Le(const vec3d& dir) override { return scale_; }
 
     bool is_infinite() override { return false; }
 
@@ -75,7 +76,7 @@ public:
 
     bool is_infinite() override { return true; }
 
-    double Le() override { return scale_; }
+    color Le(const vec3d& dir) override { return vec3d(scale_); }
 
 private:
     double scale_;
@@ -104,6 +105,55 @@ public:
 
 private:
     std::vector<std::shared_ptr<light>> lights_;
+};
+
+class environment_light : public light
+{
+public:
+    environment_light(const std::string& image_filename, const bounds3d& scene_bounds, double scale = 1.0)
+        : image_(image_filename.c_str()), scale_(scale)
+    {
+        center_ = (scene_bounds.p_min + scene_bounds.p_max) / 2.0;
+        radius_ = (scene_bounds.p_max - center_).length();
+    }
+
+    light_li_sample sample_Li(const vec3d& p, const point2d& u) override
+    {
+        const vec3d wi = sample_uniform_sphere(u);
+        const point3d light_pos = p + wi * (2 * radius_);
+
+        return {Le(wi), wi, light_pos, pdf_Li()};
+    }
+
+    [[nodiscard]] double pdf_Li() const override { return 1.0 / (4.0 * pi); }
+
+    bool is_infinite() override { return true; }
+
+    color Le(const vec3d& dir) override
+    {
+        if (image_.width() == 0) return {0, 0, 0};
+
+        const vec3d d = unit_vector(dir);
+
+        const double theta = std::acos(d.y());
+        const double phi = std::atan2(-d.z(), d.x()) + pi;
+
+        const double u = phi / (2 * pi);
+        const double v = theta / pi;
+
+        const int i = static_cast<int>(u * image_.width());
+        const int j = static_cast<int>(v * image_.height());
+
+        const auto pixel = image_.pixelData(i, j);
+
+        return scale_ * color(pixel[0] / 255.0, pixel[1] / 255.0, pixel[2] / 255.0);
+    }
+
+private:
+    rtw_image image_;
+    double scale_;
+    point3d center_;
+    double radius_;
 };
 
 #endif //LIGHTS_H
