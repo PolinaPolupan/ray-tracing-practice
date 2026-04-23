@@ -129,12 +129,22 @@ void bunny()
     auto white = make_shared<lambertian>(color(.73, .73, .73));
     append_mesh(make_quad_mesh(point3d(-200,0,-100),     vec3d(1000,0,0),    vec3d(0,0,1000),   white));
 
+    auto light_mat = std::make_shared<lambertian>(color(40.0));
+
+    auto light_quad = std::make_shared<quad>(
+        point3d(200, 600, 278),
+        vec3d(200, 0, 0),
+        vec3d(0, 0, 200),
+        light_mat
+    );
+
+    world.push_back(light_quad);
+
     std::vector<std::shared_ptr<light>> lights;
-    lights.push_back(std::make_shared<point_light>(vec3d(278, 600, -400), 700000.0));
 
     std::shared_ptr<Accelerator> accelerator = std::make_shared<Bvh>(world);
 
-    lights.push_back(std::make_shared<environment_light>("../images/sundowner_overlook_4k.hdr", accelerator->bounds(), 1.0));
+    lights.push_back(std::make_shared<environment_light>("../images/studio_small_03_4k.hdr", accelerator->bounds(), 1));
 
     const auto integrator_ptr = std::make_shared<path_integrator>(cam, samp, lights, accelerator);
 

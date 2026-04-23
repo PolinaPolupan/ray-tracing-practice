@@ -2,6 +2,7 @@
 #define LIGHTS_H
 #include "math.h"
 #include "rtw_image.h"
+#include "shapes.h"
 
 struct light_li_sample
 {
@@ -154,6 +155,55 @@ private:
     double scale_;
     point3d center_;
     double radius_;
+};
+
+class AreaLight : public light {
+public:
+    AreaLight(std::shared_ptr<shape> shape, double scale)
+        : shape_(std::move(shape)), scale_(scale) {}
+
+    light_li_sample sample_Li(const vec3d& p, const point2d& u) override
+    {
+        shape_sample s = shape_->sample(u);
+
+        vec3d wi = s.p - p;
+        const double dist2 = wi.length_squared();
+        wi = unit_vector(wi);
+
+        const double cos_theta = dot(s.n, -wi);
+
+        if (cos_theta <= 0.0) {
+            return {
+                color(0, 0, 0),
+                wi,
+                s.p,
+                0.0
+            };
+        }
+
+        const double pdf = s.pdf * dist2 / cos_theta;
+
+        return {
+            scale_,
+            wi,
+            s.p,
+            pdf
+        };
+    }
+
+    [[nodiscard]] double pdf_Li() const override {
+        return 0.0;
+    }
+
+    color Le(const vec3d&) override {
+        return scale_;
+    }
+
+    bool is_infinite() override { return false; }
+
+private:
+    std::shared_ptr<shape> shape_;
+    double scale_;
 };
 
 #endif //LIGHTS_H

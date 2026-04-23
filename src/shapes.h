@@ -9,6 +9,13 @@
 
 class material;
 
+struct shape_sample
+{
+    point3d p;
+    vec3d n;
+    double pdf;
+};
+
 class shape_intersection
 {
 public:
@@ -42,6 +49,10 @@ public:
     [[nodiscard]] virtual vec3d random(const point3d& origin, const std::shared_ptr<sampler>& sampler) const {
         return {1,0,0};
     }
+
+    virtual shape_sample sample(const point2d& p) {
+        return {0,0};
+    }
 };
 
 struct triangle_mesh
@@ -59,7 +70,7 @@ class triangle final : public shape
 public:
     triangle(const std::shared_ptr<triangle_mesh>& mesh, const int tri_index): tri_index(tri_index), mesh(mesh) {}
 
-    bounds3d bounds() const override
+    [[nodiscard]] bounds3d bounds() const override
     {
         const int i0 = mesh->indices[tri_index * 3 + 0];
         const int i1 = mesh->indices[tri_index * 3 + 1];
@@ -77,7 +88,38 @@ public:
         const double max_y = std::max({p0.y(), p1.y(), p2.y()});
         const double max_z = std::max({p0.z(), p1.z(), p2.z()});
 
-        return bounds3d(point3d(min_x, min_y, min_z), point3d(max_x, max_y, max_z));
+        return {point3d(min_x, min_y, min_z), point3d(max_x, max_y, max_z)};
+    }
+
+    shape_sample sample(const point2d& u) override {
+        const int i0 = mesh->indices[tri_index * 3 + 0];
+        const int i1 = mesh->indices[tri_index * 3 + 1];
+        const int i2 = mesh->indices[tri_index * 3 + 2];
+
+        const point3d &p0 = mesh->p[i0];
+        const point3d &p1 = mesh->p[i1];
+        const point3d &p2 = mesh->p[i2];
+
+        const double su0 = std::sqrt(u.x);
+
+        const double b0 = 1.0 - su0;
+        const double b1 = u.y * su0;
+        const double b2 = 1.0 - b0 - b1;
+
+        const point3d p =
+            b0 * p0 +
+            b1 * p1 +
+            b2 * p2;
+
+        const double area = 0.5 * cross(p1 - p0, p2 - p0).length();
+
+        vec3d normal = unit_vector(cross(p1 - p0, p2 - p0));
+
+        return {
+            p,
+            normal,
+            1.0 / area
+        };
     }
 
     [[nodiscard]] std::optional<shape_intersection>
@@ -91,15 +133,34 @@ private:
 class quad final : public shape {
 public:
     quad(const point3d& Q, const vec3d& u, const vec3d& v, const std::shared_ptr<material> &mat);
+
     [[nodiscard]] bounds3d bounds() const override { return bbox; }
+
     [[nodiscard]] std::optional<shape_intersection> intersect(const ray& r, interval ray_t) const override;
+
+    shape_sample sample(const point2d& u) override {
+        const double su = u.x;
+        const double sv = u.y;
+
+        const point3d p = Q + su * this->u + sv * this->v;
+
+        shape_sample s;
+        s.p = p;
+        s.n = normal;
+        s.pdf = 1.0 / area;
+
+        return s;
+    }
+
     [[nodiscard]] double pdf(const point3d& origin, const vec3d& direction) const override;
+
     [[nodiscard]] vec3d random(const point3d& origin, const std::shared_ptr<sampler>& sampler) const override
     {
         const auto p = Q + (sampler->gen_1d() * u) + (sampler->gen_1d() * v);
         return p - origin;
     }
     void bounding_box();
+
     static bool is_interior(double a, double b, shape_intersection& rec);
 
 private:
@@ -144,6 +205,17 @@ public:
         const bounds3d box1(center.at(0) - rvec, center.at(0) + rvec);
         const bounds3d box2(center.at(1) - rvec, center.at(1) + rvec);
         bbox = bounds3d(box1, box2);
+    }
+
+    shape_sample sample(const point2d& u) override {
+        const vec3d d = sample_uniform_sphere(u);
+
+        shape_sample s;
+        s.p = center.at(0) + radius * d;
+        s.n = d;
+        s.pdf = 1.0 / (4.0 * pi * radius * radius);
+
+        return s;
     }
 
     [[nodiscard]] bounds3d bounds() const override { return bbox; }
