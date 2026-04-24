@@ -19,7 +19,7 @@ public:
     light() = default;
     explicit light(const vec3d& pos): pos_(pos) {}
     virtual light_li_sample sample_Li(const vec3d& p, const point2d& u) = 0;
-    [[nodiscard]] virtual double pdf_Li() const = 0;
+    [[nodiscard]] virtual double pdf_Li(const point3d& origin, const vec3d& dir) const = 0;
     virtual color Le(const vec3d& dir) = 0;
     virtual bool is_infinite() = 0;
 
@@ -43,7 +43,7 @@ public:
         return {li, wi, pos_, 1.0};
     }
 
-    [[nodiscard]] double pdf_Li() const override { return 0.0; }
+    [[nodiscard]] double pdf_Li(const point3d& origin, const vec3d& dir) const override { return 0.0; }
 
     color Le(const vec3d& dir) override { return scale_; }
 
@@ -73,7 +73,7 @@ public:
         return {scale_, wi, light_pos, 1 / (4 * pi)};
     }
 
-    [[nodiscard]] double pdf_Li() const override { return 1 / (4 * pi); }
+    [[nodiscard]] double pdf_Li(const point3d& origin, const vec3d& dir) const override { return 1 / (4 * pi); }
 
     bool is_infinite() override { return true; }
 
@@ -123,10 +123,10 @@ public:
         const vec3d wi = sample_uniform_sphere(u);
         const point3d light_pos = p + wi * (2 * radius_);
 
-        return {Le(wi), wi, light_pos, pdf_Li()};
+        return {Le(wi), wi, light_pos, pdf_Li(p, wi)};
     }
 
-    [[nodiscard]] double pdf_Li() const override { return 1.0 / (4.0 * pi); }
+    [[nodiscard]] double pdf_Li(const point3d& origin, const vec3d& dir) const override { return 1.0 / (4.0 * pi); }
 
     bool is_infinite() override { return true; }
 
@@ -160,7 +160,10 @@ private:
 class AreaLight : public light {
 public:
     AreaLight(std::shared_ptr<shape> shape, double scale)
-        : shape_(std::move(shape)), scale_(scale) {}
+        : shape_(std::move(shape)), scale_(scale)
+    {
+        shape_->area_light = std::shared_ptr<light>(this, [](light*){});
+    }
 
     light_li_sample sample_Li(const vec3d& p, const point2d& u) override
     {
@@ -191,8 +194,8 @@ public:
         };
     }
 
-    [[nodiscard]] double pdf_Li() const override {
-        return 0.0;
+    [[nodiscard]] double pdf_Li(const point3d& origin, const vec3d& dir) const override {
+        return shape_->pdf(origin, dir);
     }
 
     color Le(const vec3d&) override {

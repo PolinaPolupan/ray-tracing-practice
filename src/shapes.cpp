@@ -36,6 +36,7 @@ std::optional<shape_intersection> triangle::intersect(const ray& r, interval ray
     rec.p = r.at(t);
     rec.mat = mesh->mat;
     rec.set_face_normal(r, unit_vector(cross(edge1, edge2)));
+    rec.area_light = this->area_light;
 
     return rec;
 }
@@ -84,6 +85,7 @@ std::optional<shape_intersection> quad::intersect(const ray& r, const interval r
     rec.p = intersection;
     rec.mat = mat;
     rec.set_face_normal(r, normal);
+    rec.area_light = this->area_light;
 
     return rec;
 }
@@ -211,6 +213,7 @@ std::optional<shape_intersection> sphere::intersect(const ray& r, interval ray_t
     rec.set_face_normal(r, outward_normal);
     get_sphere_uv(outward_normal, rec.u, rec.v);
     rec.mat = mat;
+    rec.area_light = this->area_light;
 
     return rec;
 }
@@ -322,7 +325,6 @@ std::shared_ptr<triangle_mesh> load_obj(const std::string& filename,
                                const std::shared_ptr<material>& mat)
 {
     tinyobj::ObjReaderConfig reader_config;
-    reader_config.mtl_search_path = "./";
 
     tinyobj::ObjReader reader;
 

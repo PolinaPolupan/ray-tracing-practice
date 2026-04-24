@@ -68,7 +68,7 @@ void cornell_box() {
 
     auto empty_material = shared_ptr<material>();
 
-    const auto samp = std::make_shared<stratified_sampler>(100);
+    const auto samp = std::make_shared<independent_sampler>(100);
 
     film film(g_width, g_height, samp->get_spp());
     const auto cam = std::make_shared<camera>(&film);
@@ -90,6 +90,74 @@ void cornell_box() {
 
     const auto integrator_ptr = std::make_shared<path_integrator>(cam, samp, lights, accelerator);
 
+    integrator_ptr->render_debug(update_display);
+}
+
+#include <random>
+
+inline double random_double(double min = 0.0, double max = 1.0)
+{
+    static thread_local std::mt19937 generator(std::random_device{}());
+    std::uniform_real_distribution<double> distribution(min, max);
+    return distribution(generator);
+}
+
+void nebula()
+{
+    std::vector<std::shared_ptr<shape>> world;
+
+    const auto samp = std::make_shared<stratified_sampler>(100);
+
+    film film(g_width, g_height, samp->get_spp());
+    const auto cam = std::make_shared<camera>(&film);
+
+    cam->aspect_ratio      = 1.0;
+    cam->image_width       = g_width;
+
+    cam->vfov     = 40;
+    cam->lookfrom = point3d(278, 278, -800);
+    cam->lookat   = point3d(278, 278, 0);
+    cam->vup      = vec3d(0,1,0);
+
+    cam->defocus_angle = 0;
+
+    auto white = make_shared<lambertian>(color(.73, .73, .73));
+    const auto bunny_mat = make_shared<dielectric>(1.3);
+    const auto bunny_mesh = load_obj("./objects/nebula_front1.obj", point3d(278, 0, 278), 14, white);
+    auto dragon_tris = make_mesh_triangles(bunny_mesh);
+    for (auto& s : dragon_tris) {
+        std::shared_ptr<shape> obj = s;
+        obj = std::make_shared<RotateY>(obj, 160);
+        obj = std::make_shared<translate>(obj, vec3d(500, 0, 1100));
+        world.push_back(obj);
+    }
+
+    auto append_mesh = [&](std::vector<std::shared_ptr<shape>> mesh) {
+        world.insert(world.end(), mesh.begin(), mesh.end());
+    };
+
+    std::vector<std::shared_ptr<light>> lights;
+   // append_mesh(make_quad_mesh(point3d(-200,0,-100),     vec3d(1000,0,0),    vec3d(0,0,1000),   white));
+
+    auto light_mat = std::make_shared<diffuse_light>(color(1.0));
+
+    auto light_quad = std::make_shared<quad>(
+        point3d(400, 600, 0),
+        vec3d(200, -200, 0),
+        vec3d(0, 0, 200),
+        light_mat
+    );
+
+    world.push_back(light_quad);
+
+    lights.push_back(std::make_shared<AreaLight>(light_quad, 40.0));
+
+    std::shared_ptr<Accelerator> accelerator = std::make_shared<Bvh>(world);
+
+    lights.push_back(std::make_shared<environment_light>("./images/studio_small_03_4k.hdr", accelerator->bounds(), 0.5));
+
+    const auto integrator_ptr = std::make_shared<path_integrator>(cam, samp, lights, accelerator);
+
     integrator_ptr->render(update_display);
 }
 
@@ -97,7 +165,7 @@ void bunny()
 {
     std::vector<std::shared_ptr<shape>> world;
 
-    const auto samp = std::make_shared<stratified_sampler>(100);
+    const auto samp = std::make_shared<independent_sampler>(100);
 
     film film(g_width, g_height, samp->get_spp());
     const auto cam = std::make_shared<camera>(&film);
@@ -129,18 +197,18 @@ void bunny()
     auto white = make_shared<lambertian>(color(.73, .73, .73));
     append_mesh(make_quad_mesh(point3d(-200,0,-100),     vec3d(1000,0,0),    vec3d(0,0,1000),   white));
 
-    auto light_mat = std::make_shared<lambertian>(color(40.0));
+    auto light_mat = std::make_shared<diffuse_light>(color(40.0));
 
     auto light_quad = std::make_shared<quad>(
-        point3d(200, 600, 278),
-        vec3d(200, 0, 0),
-        vec3d(0, 0, 200),
-        light_mat
+        point3d(200, 600, 278), vec3d(200, 0, 0), vec3d(0, 0, 200), light_mat
     );
-
     world.push_back(light_quad);
 
+    auto area_light = std::make_shared<AreaLight>(light_quad, 40.0);
+
     std::vector<std::shared_ptr<light>> lights;
+
+    lights.push_back(area_light);
 
     std::shared_ptr<Accelerator> accelerator = std::make_shared<Bvh>(world);
 
@@ -148,7 +216,7 @@ void bunny()
 
     const auto integrator_ptr = std::make_shared<path_integrator>(cam, samp, lights, accelerator);
 
-    integrator_ptr->render(update_display);
+    integrator_ptr->render_debug(update_display);
 }
 
 int main() {

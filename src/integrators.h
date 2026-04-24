@@ -38,6 +38,7 @@ public:
     using RenderCallback = std::function<void(const std::vector<pixel>&)>;
 
     void render(RenderCallback on_sample_complete = nullptr) const;
+    void render_debug(RenderCallback on_sample_complete = nullptr) const;
     virtual vec3d Li(ray &r, sampler& samp, int depth) const = 0;
 
     [[nodiscard]] bool unoccluded(const vec3d& p0, const vec3d& p1, const double time) const {
@@ -80,6 +81,12 @@ public:
         if (sqrt(fPdf) == infinity)
             return 1;
         return sqrt(fPdf) / (sqrt(fPdf) + sqrt(gPdf));
+    }
+
+    static double power_heuristic(double nf, double fPdf, double ng, double gPdf) {
+        double f = nf * fPdf;
+        double g = ng * gPdf;
+        return (f * f) / (f * f + g * g);
     }
 
 protected:

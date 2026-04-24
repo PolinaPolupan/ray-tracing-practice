@@ -40,12 +40,20 @@ void integrator::render(RenderCallback on_sample_complete) const
 
                 while (thread_sampler->start_next_sample())
                 {
-                    ray r = camera_->gen_ray(*thread_sampler, pixel);
-                    sum += Li(r, *thread_sampler, max_depth_);
-                }
+                    point2d jitter = thread_sampler->gen_2d();
 
-                const int index = pixel.y * camera_->image_width + pixel.x;
-                camera_->get_film()->add_sample(index, sum);
+                    ray r = camera_->gen_ray(*thread_sampler, pixel);
+
+                    color L = Li(r, *thread_sampler, max_depth_);
+
+                    camera_->get_film()->add_sample(
+                        pixel.x,
+                        pixel.y,
+                        L,
+                        jitter.x,
+                        jitter.y
+                    );
+                }
             }
 
             tiles_done.fetch_add(1, std::memory_order_relaxed);
@@ -63,6 +71,96 @@ void integrator::render(RenderCallback on_sample_complete) const
     }
 
     camera_->get_film()->write_color(std::cout);
+}
+
+void integrator::render_debug(RenderCallback on_sample_complete) const
+{
+    camera_->init();
+
+    std::cout << "P3\n" << camera_->image_width << " "
+              << camera_->image_height << "\n255\n";
+
+    const std::vector<bounds2i> tiles = get_tiles();
+
+    std::atomic tiles_done{0};
+
+    std::atomic<double> total_image_noise{0.0};
+
+    using clock = std::chrono::steady_clock;
+    auto last_update = clock::now();
+    constexpr auto update_interval = std::chrono::milliseconds(500);
+
+#pragma omp parallel
+    {
+        const auto thread_sampler = sampler_->clone();
+
+#pragma omp for schedule(dynamic, 1)
+        for (int t = 0; t < tiles.size(); ++t)
+        {
+            const bounds2i tile = tiles[t];
+            for (point2i pixel : tile)
+            {
+                thread_sampler->start_pixel();
+
+                color mean(0,0,0);
+                color M2(0,0,0);
+                int sample_count = 0;
+
+                while (thread_sampler->start_next_sample())
+                {
+                    sample_count++;
+                    point2d jitter = thread_sampler->gen_2d();
+
+                    ray r = camera_->gen_ray(*thread_sampler, pixel);
+
+                    color L = Li(r, *thread_sampler, max_depth_);
+
+                    color delta = L - mean;
+                    mean += delta / sample_count;
+                    color delta2 = L - mean;
+
+                    M2 += color(
+                        delta.x() * delta2.x(),
+                        delta.y() * delta2.y(),
+                        delta.z() * delta2.z()
+                    );
+
+                    camera_->get_film()->add_sample(
+                        pixel.x,
+                        pixel.y,
+                        L,
+                        jitter.x,
+                        jitter.y
+                    );
+                }
+
+                if (sample_count > 1) {
+                    color pixel_variance = M2 / (sample_count - 1);
+                    double pixel_noise = (pixel_variance.x() + pixel_variance.y() + pixel_variance.z()) / 3.0;
+
+                    total_image_noise.store(total_image_noise.load(std::memory_order_relaxed) + pixel_noise, std::memory_order_relaxed);
+                }
+            }
+
+            tiles_done.fetch_add(1, std::memory_order_relaxed);
+
+            if (on_sample_complete && omp_get_thread_num() == 0)
+            {
+                auto now = clock::now();
+                if (now - last_update >= update_interval)
+                {
+                    on_sample_complete(camera_->get_film()->get_display_buffer());
+                    last_update = now;
+                }
+            }
+        }
+    }
+
+    camera_->get_film()->write_color(std::cout);
+
+    std::cout << "Average Image Variance: "
+              << total_image_noise.load() / (camera_->image_width * camera_->image_height)
+              << "\n";
 }
 
 color random_walk_integrator::Li(ray &r, sampler& samp, const int depth) const {
@@ -104,6 +202,9 @@ color path_integrator::Li(ray &r, sampler& samp, int d) const {
     color L = 0.0f, beta = 1.0f;
     int depth = 0;
 
+    bool specular_bounce = true;
+    double last_bsdf_pdf = 1.0;
+
     while (beta)
     {
         const std::optional<shape_intersection> si =
@@ -113,38 +214,63 @@ color path_integrator::Li(ray &r, sampler& samp, int d) const {
         {
             for (const auto& light: infinite_lights_)
             {
-                const double p_l = light_sampler_.sample(samp.gen_1d()).p * light->pdf_Li();
-                const double w_b = power_heuristic(1.0, p_l);
-
-                L += beta * w_b * light->Le(unit_vector(r.d()));
+                if (specular_bounce) {
+                    L += beta * light->Le(unit_vector(r.d()));
+                } else {
+                    const double p_l = light_sampler_.sample(samp.gen_1d()).p * light->pdf_Li(r.o(), r.d());
+                    const double w_b = power_heuristic(1.0, last_bsdf_pdf, 1.0, p_l);
+                    L += beta * w_b * light->Le(unit_vector(r.d()));
+                }
             }
             return L;
         }
 
-        // Emissive surfaces
         const shape_intersection& rec = *si;
-        L += beta * rec.mat->Le(r, rec, rec.u, rec.v, rec.p);
+        color Le = rec.mat->Le(r, rec, rec.u, rec.v, rec.p);
 
-        // End path if maximum depth reached
+        const vec3 wo = -unit_vector(r.d());
+
+        if (Le.x() > 0 || Le.y() > 0 || Le.z() > 0) {
+            if (specular_bounce) {
+                L += beta * Le;
+            } else {
+                double total_light_pdf = 0.0;
+
+                if (rec.area_light) {
+                    const double p_select = 1.0 / infinite_lights_.size();
+                    const double pdf_light = rec.area_light->pdf_Li(r.o(), r.d());
+                    total_light_pdf = p_select * pdf_light;
+                }
+
+                const double w_b = power_heuristic(1.0, last_bsdf_pdf, 1.0, total_light_pdf);
+                L += beta * w_b * Le;
+            }
+        }
+
         if (depth++ == max_depth_)
             break;
 
         const auto bsdf = rec.mat->get_bsdf(rec);
         if (!bsdf) return L;
 
-        const vec3 wo = -unit_vector(r.d());
-
         if (bsdf->is_specular()) {
             const auto s = bsdf->sample_f(wo, samp.gen_2d());
             beta *= s.f;
             r = ray(rec.p, s.wi, r.time());
+            specular_bounce = true;
             continue;
         }
 
         const auto [light, p] = light_sampler_.sample(samp.gen_1d());
         const light_li_sample ls = light->sample_Li(rec.p, samp.gen_2d());
+
         if (unoccluded(rec.p, ls.p_light, rec.t)) {
-            L += beta * bsdf->f(wo, ls.wi) * std::max(0.0, dot(rec.normal, ls.wi)) * ls.li / (ls.pdf * p);
+            const double bsdf_pdf = bsdf->pdf(wo, ls.wi);
+            const double total_light_pdf = p * ls.pdf;
+
+            const double weight_light = power_heuristic(1.0, total_light_pdf, 1.0, bsdf_pdf);
+
+            L += beta * bsdf->f(wo, ls.wi) * std::max(0.0, dot(rec.normal, ls.wi)) * ls.li * weight_light / total_light_pdf;
         }
 
         auto [wi, f, pdf] = bsdf->sample_f(wo, samp.gen_2d());
@@ -156,9 +282,12 @@ color path_integrator::Li(ray &r, sampler& samp, int d) const {
 
         r = ray(rec.p, wi, r.time());
 
+        specular_bounce = false;
+        last_bsdf_pdf = pdf;
+
         if (depth > 3) {
             double max_component = std::max({beta.x(), beta.y(), beta.z()});
-            const double p_continue = std::max(0.05, max_component);
+            const double p_continue = std::max(0.05, std::min(1.0, max_component));
             if (samp.gen_1d() > p_continue) {
                 break;
             }

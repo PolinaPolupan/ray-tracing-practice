@@ -7,6 +7,7 @@
 #include "ray.h"
 #include "sampling.h"
 
+class light;
 class material;
 
 struct shape_sample
@@ -26,6 +27,8 @@ public:
     double u{};
     double v{};
     bool front_face{};
+
+    std::shared_ptr<light> area_light = nullptr;
 
     void set_face_normal(const ray& r, const vec3d& outward_normal)
     {
@@ -53,6 +56,8 @@ public:
     virtual shape_sample sample(const point2d& p) {
         return {0,0};
     }
+
+    std::shared_ptr<light> area_light = nullptr;
 };
 
 struct triangle_mesh
