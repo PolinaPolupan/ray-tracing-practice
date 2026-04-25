@@ -30,13 +30,13 @@ public:
     vec3d   defocus_disk_u;       // Defocus disk horizontal radius
     vec3d   defocus_disk_v;       // Defocus disk vertical radius
 
-    explicit camera(film* film): film_(film) {}
+    explicit camera(Film* film): film_(film) {}
     void init();
     [[nodiscard]] ray gen_ray(sampler& sampler, point2i pixel) const;
-    [[nodiscard]] film* get_film() const { return film_; }
+    [[nodiscard]] Film* get_film() const { return film_; }
 
 private:
-    film* film_;
+    Film* film_;
 };
 
 #endif

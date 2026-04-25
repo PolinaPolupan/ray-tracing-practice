@@ -9,7 +9,7 @@
 #include <chrono>
 #include <omp.h>
 
-void integrator::render(RenderCallback on_sample_complete) const
+void Integrator::render(const RenderCallback& on_sample_complete) const
 {
     camera_->init();
 
@@ -32,24 +32,24 @@ void integrator::render(RenderCallback on_sample_complete) const
         for (int t = 0; t < tiles.size(); ++t)
         {
             const bounds2i tile = tiles[t];
-            for (point2i pixel : tile)
+            for (point2i const pixel : tile)
             {
                 thread_sampler->start_pixel();
 
-                color sum(0,0,0);
+                color const sum(0,0,0);
 
                 while (thread_sampler->start_next_sample())
                 {
-                    point2d jitter = thread_sampler->gen_2d();
+                    point2d const jitter = thread_sampler->gen_2d();
 
                     ray r = camera_->gen_ray(*thread_sampler, pixel);
 
-                    color L = Li(r, *thread_sampler, max_depth_);
+                    color const l = li(r, *thread_sampler, max_depth_);
 
                     camera_->get_film()->add_sample(
                         pixel.x,
                         pixel.y,
-                        L,
+                        l,
                         jitter.x,
                         jitter.y
                     );
@@ -73,7 +73,7 @@ void integrator::render(RenderCallback on_sample_complete) const
     camera_->get_film()->write_color(std::cout);
 }
 
-void integrator::render_debug(RenderCallback on_sample_complete) const
+void Integrator::render_debug(const RenderCallback& on_sample_complete) const
 {
     camera_->init();
 
@@ -98,28 +98,28 @@ void integrator::render_debug(RenderCallback on_sample_complete) const
         for (int t = 0; t < tiles.size(); ++t)
         {
             const bounds2i tile = tiles[t];
-            for (point2i pixel : tile)
+            for (point2i const pixel : tile)
             {
                 thread_sampler->start_pixel();
 
                 color mean(0,0,0);
-                color M2(0,0,0);
+                color m2(0,0,0);
                 int sample_count = 0;
 
                 while (thread_sampler->start_next_sample())
                 {
                     sample_count++;
-                    point2d jitter = thread_sampler->gen_2d();
+                    point2d const jitter = thread_sampler->gen_2d();
 
                     ray r = camera_->gen_ray(*thread_sampler, pixel);
 
-                    color L = Li(r, *thread_sampler, max_depth_);
+                    color const l = li(r, *thread_sampler, max_depth_);
 
-                    color delta = L - mean;
+                    color delta = l - mean;
                     mean += delta / sample_count;
-                    color delta2 = L - mean;
+                    color delta2 = l - mean;
 
-                    M2 += color(
+                    m2 += color(
                         delta.x() * delta2.x(),
                         delta.y() * delta2.y(),
                         delta.z() * delta2.z()
@@ -128,15 +128,15 @@ void integrator::render_debug(RenderCallback on_sample_complete) const
                     camera_->get_film()->add_sample(
                         pixel.x,
                         pixel.y,
-                        L,
+                        l,
                         jitter.x,
                         jitter.y
                     );
                 }
 
                 if (sample_count > 1) {
-                    color pixel_variance = M2 / (sample_count - 1);
-                    double pixel_noise = (pixel_variance.x() + pixel_variance.y() + pixel_variance.z()) / 3.0;
+                    color pixel_variance = m2 / (sample_count - 1);
+                    double const pixel_noise = (pixel_variance.x() + pixel_variance.y() + pixel_variance.z()) / 3.0;
 
                     total_image_noise.store(total_image_noise.load(std::memory_order_relaxed) + pixel_noise, std::memory_order_relaxed);
                 }
@@ -163,27 +163,30 @@ void integrator::render_debug(RenderCallback on_sample_complete) const
               << "\n";
 }
 
-color random_walk_integrator::Li(ray &r, sampler& samp, const int depth) const {
-    if (depth <= 0)
+color RandomWalkIntegrator::li(ray &r, sampler& samp, const int depth) const {
+    if (depth <= 0) {
         return {0,0,0};
+}
 
     const auto rec_opt = accelerator_->intersect(r, interval(0.001, infinity));
-    if (!rec_opt)
+    if (!rec_opt) {
         return {0,0,0};
+}
 
     const shape_intersection& rec = *rec_opt;
 
-    const color L = rec.mat->Le(r, rec, rec.u, rec.v, rec.p);
+    const color l = rec.mat->le(r, rec, rec.u, rec.v, rec.p);
 
     const auto bsdf = rec.mat->get_bsdf(rec);
-    if (!bsdf) return L;
+    if (!bsdf) { return l;
+}
 
     const vec3 wo = -unit_vector(r.d());
 
     if (bsdf->is_specular()) {
         const auto s = bsdf->sample_f(wo, samp.gen_2d());
-        r = ray(rec.p, s.wi, r.time());
-        return L + s.f * Li(r, samp, depth - 1);
+        r = ray(rec.p, s.wi_, r.time());
+        return l + s.f_ * li(r, samp, depth - 1);
     }
 
     const frame fr(rec.normal);
@@ -195,11 +198,12 @@ color random_walk_integrator::Li(ray &r, sampler& samp, const int depth) const {
     const double cos_theta = std::max(0.0, dot(rec.normal, unit_vector(wi)));
 
     r = ray(rec.p, wi, r.time());
-    return L + f * Li(r, samp, depth-1) * cos_theta / (1.0 / (2.0 * pi));
+    return l + f * li(r, samp, depth-1) * cos_theta / (1.0 / (2.0 * pi));
 }
 
-color path_integrator::Li(ray &r, sampler& samp, int d) const {
-    color L = 0.0f, beta = 1.0f;
+color PathIntegrator::li(ray &r, sampler& samp, int  /*d*/) const {
+    color l = 0.0f;
+    color beta = 1.0f;
     int depth = 0;
 
     bool specular_bounce = true;
@@ -215,24 +219,24 @@ color path_integrator::Li(ray &r, sampler& samp, int d) const {
             for (const auto& light: infinite_lights_)
             {
                 if (specular_bounce) {
-                    L += beta * light->Le(unit_vector(r.d()));
+                    l += beta * light->Le(unit_vector(r.d()));
                 } else {
                     const double p_l = light_sampler_.sample(samp.gen_1d()).p * light->pdf_Li(r.o(), r.d());
                     const double w_b = power_heuristic(1.0, last_bsdf_pdf, 1.0, p_l);
-                    L += beta * w_b * light->Le(unit_vector(r.d()));
+                    l += beta * w_b * light->Le(unit_vector(r.d()));
                 }
             }
-            return L;
+            return l;
         }
 
         const shape_intersection& rec = *si;
-        color Le = rec.mat->Le(r, rec, rec.u, rec.v, rec.p);
+        color le = rec.mat->le(r, rec, rec.u, rec.v, rec.p);
 
         const vec3 wo = -unit_vector(r.d());
 
-        if (Le.x() > 0 || Le.y() > 0 || Le.z() > 0) {
+        if (le.x() > 0 || le.y() > 0 || le.z() > 0) {
             if (specular_bounce) {
-                L += beta * Le;
+                l += beta * le;
             } else {
                 double total_light_pdf = 0.0;
 
@@ -243,20 +247,22 @@ color path_integrator::Li(ray &r, sampler& samp, int d) const {
                 }
 
                 const double w_b = power_heuristic(1.0, last_bsdf_pdf, 1.0, total_light_pdf);
-                L += beta * w_b * Le;
+                l += beta * w_b * le;
             }
         }
 
-        if (depth++ == max_depth_)
+        if (depth++ == max_depth_) {
             break;
+}
 
         const auto bsdf = rec.mat->get_bsdf(rec);
-        if (!bsdf) return L;
+        if (!bsdf) { return l;
+}
 
         if (bsdf->is_specular()) {
             const auto s = bsdf->sample_f(wo, samp.gen_2d());
-            beta *= s.f;
-            r = ray(rec.p, s.wi, r.time());
+            beta *= s.f_;
+            r = ray(rec.p, s.wi_, r.time());
             specular_bounce = true;
             continue;
         }
@@ -270,12 +276,13 @@ color path_integrator::Li(ray &r, sampler& samp, int d) const {
 
             const double weight_light = power_heuristic(1.0, total_light_pdf, 1.0, bsdf_pdf);
 
-            L += beta * bsdf->f(wo, ls.wi) * std::max(0.0, dot(rec.normal, ls.wi)) * ls.li * weight_light / total_light_pdf;
+            l += beta * bsdf->f(wo, ls.wi) * std::max(0.0, dot(rec.normal, ls.wi)) * ls.li * weight_light / total_light_pdf;
         }
 
         auto [wi, f, pdf] = bsdf->sample_f(wo, samp.gen_2d());
 
-        if (pdf <= 1e-8) break;
+        if (pdf <= 1e-8) { break;
+}
 
         const double cos_theta = std::max(0.0, dot(rec.normal, wi));
         beta *= f * cos_theta / pdf;
@@ -286,7 +293,7 @@ color path_integrator::Li(ray &r, sampler& samp, int d) const {
         last_bsdf_pdf = pdf;
 
         if (depth > 3) {
-            double max_component = std::max({beta.x(), beta.y(), beta.z()});
+            double const max_component = std::max({beta.x(), beta.y(), beta.z()});
             const double p_continue = std::max(0.05, std::min(1.0, max_component));
             if (samp.gen_1d() > p_continue) {
                 break;
@@ -295,5 +302,5 @@ color path_integrator::Li(ray &r, sampler& samp, int d) const {
         }
     }
 
-    return L;
+    return l;
 }

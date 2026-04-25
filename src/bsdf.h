@@ -5,16 +5,16 @@
 
 struct bsdf_sample
 {
-    vec3d wi;        // sampled direction
-    color f;        // BSDF value
-    double pdf{};   // probability of wi
+    vec3d wi_;        // sampled direction
+    color f_;        // BSDF value
+    double pdf_{};   // probability of wi
 };
 
-class bsdf
+class Bsdf
 {
 public:
-    explicit bsdf(const vec3d& n): frame_(n) {}
-    virtual ~bsdf() = default;
+    explicit Bsdf(const vec3d& n): frame_(n) {}
+    virtual ~Bsdf() = default;
     [[nodiscard]] virtual bsdf_sample sample_f(const vec3d& wo_world, const point2d& u) const = 0;
     [[nodiscard]] virtual bool is_specular() const { return false; }
     [[nodiscard]] virtual color f(const vec3d& wo_world, const vec3d& wi_world) const = 0;
@@ -24,27 +24,29 @@ protected:
     frame frame_;
 };
 
-class lambertian_bsdf final: public bsdf
+class LambertianBsdf final: public Bsdf
 {
 public:
-    lambertian_bsdf(const color& albedo, const vec3d& normal): bsdf(normal), albedo_(albedo) {}
+    LambertianBsdf(const color& albedo, const vec3d& normal): Bsdf(normal), albedo_(albedo) {}
 
     [[nodiscard]] bsdf_sample sample_f(const vec3d& wo_world, const point2d& u) const override;
 
-    [[nodiscard]] color f(const vec3d& wo_world, const vec3d& wi_world) const override
+    [[nodiscard]] color f(const vec3d&  /*wo_world*/, const vec3d& wi_world) const override
     {
         const vec3d wi = frame_.to_local(wi_world);
 
-        if (wi.z() <= 0) return {0,0,0};
+        if (wi.z() <= 0) { return {0,0,0};
+}
 
         return albedo_ / pi;
     }
 
-    [[nodiscard]] double pdf(const vec3d& wo_world, const vec3d& wi_world) const override
+    [[nodiscard]] double pdf(const vec3d&  /*wo_world*/, const vec3d& wi_world) const override
     {
         const vec3d wi = frame_.to_local(wi_world);
 
-        if (wi.z() <= 0) return 0;
+        if (wi.z() <= 0) { return 0;
+}
 
         return wi.z() / pi;
     }
@@ -53,17 +55,17 @@ private:
     color albedo_;
 };
 
-class dielectric_bsdf final : public bsdf
+class DielectricBsdf final : public Bsdf
 {
 public:
-    dielectric_bsdf(const double ior, const vec3d& normal, const bool front_face):
-    bsdf(normal), ior_(ior), front_face_(front_face) {}
+    DielectricBsdf(const double ior, const vec3d& normal, const bool front_face):
+    Bsdf(normal), ior_(ior), front_face_(front_face) {}
 
     [[nodiscard]] bsdf_sample sample_f(const vec3d& wo_world, const point2d& u) const override;
 
     [[nodiscard]] bool is_specular() const override { return true; }
-    [[nodiscard]] double pdf(const vec3d& wo, const vec3d& wi) const override { return 0; }
-    [[nodiscard]] color f(const vec3d& wo, const vec3d& wi) const override { return {0, 0, 0}; }
+    [[nodiscard]] double pdf(const vec3d&  /*wo*/, const vec3d&  /*wi*/) const override { return 0; }
+    [[nodiscard]] color f(const vec3d&  /*wo*/, const vec3d&  /*wi*/) const override { return {0, 0, 0}; }
 
 private:
     double ior_;
@@ -73,21 +75,21 @@ private:
         // Use Schlick's approximation for reflectance.
         auto r0 = (1 - refraction_index) / (1 + refraction_index);
         r0 = r0 * r0;
-        return r0 + (1 - r0) * std::pow((1 - cosine), 5);
+        return r0 + ((1 - r0) * std::pow((1 - cosine), 5));
     }
 };
 
-class metal_bsdf final : public bsdf
+class MetalBsdf final : public Bsdf
 {
 public:
-    metal_bsdf(const color& albedo, const double fuzz, const vec3d& normal)
-        : bsdf(normal), albedo_(albedo), fuzz_(fuzz) {}
+    MetalBsdf(const color& albedo, const double fuzz, const vec3d& normal)
+        : Bsdf(normal), albedo_(albedo), fuzz_(fuzz) {}
 
     [[nodiscard]] bsdf_sample sample_f(const vec3d& wo_world, const point2d& u) const override;
 
     [[nodiscard]] bool is_specular() const override { return true; }
-    [[nodiscard]] color f(const vec3d& wo, const vec3d& wi) const override { return {0,0,0}; }
-    [[nodiscard]] double pdf(const vec3d& wo, const vec3d& wi) const override { return 0.0; }
+    [[nodiscard]] color f(const vec3d&  /*wo*/, const vec3d&  /*wi*/) const override { return {0,0,0}; }
+    [[nodiscard]] double pdf(const vec3d&  /*wo*/, const vec3d&  /*wi*/) const override { return 0.0; }
 
 private:
     color albedo_;

@@ -113,7 +113,7 @@ std::unique_ptr<node> Bvh::build(
 
      size_t mid = start + span / 2;
 
-     switch (split_mode_) {
+     switch (split_mode) {
          case split_mode::middle: {
              middle_split(objects, start, end, dim);
              break;
@@ -135,9 +135,9 @@ std::unique_ptr<node> Bvh::build(
 
                  b = std::clamp(b, 0, n_buckets - 1);
 
-                 buckets[b].count++;
-                 buckets[b].bounds =
-                     expand(buckets[b].bounds, objects[i]->bounds());
+                 buckets[b].count_++;
+                 buckets[b].bounds_ =
+                     expand(buckets[b].bounds_, objects[i]->bounds());
              }
 
              constexpr int n_splits = n_buckets - 1;
@@ -147,8 +147,8 @@ std::unique_ptr<node> Bvh::build(
              bounds3d bounds_left;
 
              for (int i = 0; i < n_splits; ++i) {
-                 bounds_left = expand(bounds_left, buckets[i].bounds);
-                 count_left += buckets[i].count;
+                 bounds_left = expand(bounds_left, buckets[i].bounds_);
+                 count_left += buckets[i].count_;
                  costs[i] += count_left * bounds_left.surface_area();
              }
 
@@ -156,8 +156,8 @@ std::unique_ptr<node> Bvh::build(
              bounds3d bounds_right;
 
              for (int i = n_splits; i >= 1; --i) {
-                 bounds_right = expand(bounds_right, buckets[i].bounds);
-                 count_right += buckets[i].count;
+                 bounds_right = expand(bounds_right, buckets[i].bounds_);
+                 count_right += buckets[i].count_;
                  costs[i - 1] += count_right * bounds_right.surface_area();
              }
 
@@ -230,8 +230,8 @@ int Bvh::flatten(const std::unique_ptr<node>& node, int& offset) {
         ln.n_primitives_ = 0;
         ln.dim_ = node->dim_;
 
-        flatten(node->children[0], offset);
-        ln.second_child_offset_ = flatten(node->children[1], offset);
+        flatten(node->children_[0], offset);
+        ln.second_child_offset_ = flatten(node->children_[1], offset);
     }
 
     return node_offset;

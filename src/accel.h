@@ -10,7 +10,7 @@
 
 struct node {
     bounds3d bounds_ = bounds3d::empty;
-    std::unique_ptr<node> children[2];
+    std::unique_ptr<node> children_[2];
 
     int offset_ = 0;
     int n_primitives_ = 0;
@@ -25,11 +25,11 @@ struct node {
     void init_interior(std::unique_ptr<node> a,
                        std::unique_ptr<node> b,
                        const int dim) {
-        children[0] = std::move(a);
-        children[1] = std::move(b);
+        children_[0] = std::move(a);
+        children_[1] = std::move(b);
 
         n_primitives_ = 0;
-        bounds_ = expand(children[0]->bounds_, children[1]->bounds_);
+        bounds_ = expand(children_[0]->bounds_, children_[1]->bounds_);
         dim_ = dim;
     }
 };
@@ -46,10 +46,10 @@ class Accelerator {
 public:
     virtual ~Accelerator() = default;
 
-    [[nodiscard]] virtual std::optional<shape_intersection>
-    intersect(const ray& r, interval ray_t) const = 0;
+    [[nodiscard]] virtual auto
+    intersect(const ray& r, interval ray_t) const -> std::optional<shape_intersection> = 0;
 
-    [[nodiscard]] bounds3d bounds() const { return bbox_; }
+    [[nodiscard]] auto bounds() const -> bounds3d { return bbox_; }
 
 protected:
     bounds3d bbox_ = bounds3d::empty;
@@ -110,15 +110,15 @@ public:
      * Example: ray hits primitive B at t=1.2:
      *   intersect(ray, {0, infinity}) -> {B, 1.2}
      */
-    [[nodiscard]] std::optional<shape_intersection>
-    intersect(const ray& r, interval ray_t) const override;
+    [[nodiscard]] auto
+    intersect(const ray& r, interval ray_t) const -> std::optional<shape_intersection> override;
 
     enum class split_mode { middle, sah };
-    inline static split_mode split_mode_ = split_mode::sah;
+    inline static split_mode split_mode = split_mode::sah;
 
     struct bvh_split_bucket {
-        int count = 0;
-        bounds3d bounds;
+        int count_ = 0;
+        bounds3d bounds_;
     };
 
 private:
@@ -134,14 +134,14 @@ private:
      *     /   \   /   \
      *    A     B C     D
      */
-    static std::unique_ptr<node> build(
+    static auto build(
         std::vector<std::shared_ptr<shape>>& objects,
         std::vector<shape*>& ordered_prims,
         size_t start,
         size_t end,
         int& offset,
         int& total_nodes
-    );
+    ) -> std::unique_ptr<node>;
 
     /** Flatten tree into linear array for fast traversal.
      *
@@ -155,7 +155,7 @@ private:
      * Becomes linear array:
      * 0=Root, 1=Node1, 2=A, 3=B, 4=Node2, 5=C, 6=D
      */
-    int flatten(const std::unique_ptr<node>& node, int& offset);
+    auto flatten(const std::unique_ptr<node>& node, int& offset) -> int;
 
     /** Middle-split helper: split objects by median along axis. */
     static void middle_split(
@@ -164,7 +164,7 @@ private:
         size_t end,
         int dim);
 
-private:
+
     std::unique_ptr<node> root_;
     std::vector<shape*> ordered_prims_;
     std::vector<linear_node> nodes_;

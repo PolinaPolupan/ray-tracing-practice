@@ -14,10 +14,10 @@
 class ray;
 
 
-class integrator {
+class Integrator {
 public:
-    virtual ~integrator() = default;
-    explicit integrator(
+    virtual ~Integrator() = default;
+    explicit Integrator(
         const std::shared_ptr<camera>&camera,
         const std::shared_ptr<sampler>& sampler,
         const std::vector<std::shared_ptr<light>>& lights,
@@ -31,17 +31,17 @@ public:
     {
         for (const auto& light: lights_)
         {
-            if (light->is_infinite()) infinite_lights_.push_back(light);
+            if (light->is_infinite()) { infinite_lights_.push_back(light); }
         }
     }
 
     using RenderCallback = std::function<void(const std::vector<pixel>&)>;
 
-    void render(RenderCallback on_sample_complete = nullptr) const;
-    void render_debug(RenderCallback on_sample_complete = nullptr) const;
-    virtual vec3d Li(ray &r, sampler& samp, int depth) const = 0;
+    void render(const RenderCallback& on_sample_complete = nullptr) const;
+    void render_debug(const RenderCallback& on_sample_complete = nullptr) const;
+    virtual auto li(ray &r, sampler& samp, int depth) const -> vec3d = 0;
 
-    [[nodiscard]] bool unoccluded(const vec3d& p0, const vec3d& p1, const double time) const {
+    [[nodiscard]] auto unoccluded(const vec3d& p0, const vec3d& p1, const double time) const -> bool {
         const vec3d dir = p1 - p0;
         const double dist = dir.length();
         const vec3d dir_norm = dir / dist;
@@ -53,18 +53,18 @@ public:
         return !hit.has_value();
     }
 
-    [[nodiscard]] std::vector<bounds2i> get_tiles() const
+    [[nodiscard]] auto get_tiles() const -> std::vector<bounds2i>
     {
         std::vector<bounds2i> tiles;
-        const bounds2i extent({0, 0}, {camera_->image_width, camera_->image_height});
+        const bounds2i extent({.x=0, .y=0}, {.x=camera_->image_width, .y=camera_->image_height});
 
         for (int y = 0; y < camera_->image_height; y += tile_size_)
         {
             for (int x = 0; x < camera_->image_width; x += tile_size_)
             {
-                bounds2i tile_bounds({x, y},
-                    {std::min(x + tile_size_, camera_->image_width),
-                        std::min(y + tile_size_, camera_->image_height)});
+                bounds2i tile_bounds({.x=x, .y=y},
+                    {.x=std::min(x + tile_size_, camera_->image_width),
+                        .y=std::min(y + tile_size_, camera_->image_height)});
 
                 tile_bounds = intersect(tile_bounds, extent);
 
@@ -77,15 +77,16 @@ public:
         return tiles;
     }
 
-    static double power_heuristic(const double fPdf, const double gPdf) {
-        if (sqrt(fPdf) == infinity)
+    static auto power_heuristic(const double f_pdf, const double g_pdf) -> double {
+        if (sqrt(f_pdf) == infinity) {
             return 1;
-        return sqrt(fPdf) / (sqrt(fPdf) + sqrt(gPdf));
+        }
+        return sqrt(f_pdf) / (sqrt(f_pdf) + sqrt(g_pdf));
     }
 
-    static double power_heuristic(double nf, double fPdf, double ng, double gPdf) {
-        double f = nf * fPdf;
-        double g = ng * gPdf;
+    static auto power_heuristic(double nf, double f_pdf, double ng, double g_pdf) -> double {
+        double const f = nf * f_pdf;
+        double const g = ng * g_pdf;
         return (f * f) / (f * f + g * g);
     }
 
@@ -101,30 +102,30 @@ protected:
     int tile_size_ = 32;
 };
 
-class random_walk_integrator : public integrator
+class RandomWalkIntegrator : public Integrator
 {
 public:
-    explicit random_walk_integrator(
+    explicit RandomWalkIntegrator(
         const std::shared_ptr<camera>&camera,
         const std::shared_ptr<sampler>& sampler,
         const std::vector<std::shared_ptr<light>>& lights,
         const std::shared_ptr<Accelerator>& accelerator
-        ) : integrator(camera, sampler, lights, accelerator) {}
+        ) : Integrator(camera, sampler, lights, accelerator) {}
 
-    [[nodiscard]] vec3d Li(ray &r, sampler& samp, int depth) const override;
+    [[nodiscard]] vec3d li(ray &r, sampler& samp, int depth) const override;
 };
 
-class path_integrator: public integrator
+class PathIntegrator: public Integrator
 {
 public:
-    explicit path_integrator(
+    explicit PathIntegrator(
         const std::shared_ptr<camera>&camera,
         const std::shared_ptr<sampler>& sampler,
         const std::vector<std::shared_ptr<light>>& lights,
         const std::shared_ptr<Accelerator>& accelerator
-        ) : integrator(camera, sampler, lights, accelerator) {}
+        ) : Integrator(camera, sampler, lights, accelerator) {}
 
-    [[nodiscard]] vec3d Li(ray &r, sampler& samp, int depth) const override;
+    [[nodiscard]] vec3d li(ray &r, sampler& samp, int depth) const override;
 };
 
 #endif //INTEGRATORS_H

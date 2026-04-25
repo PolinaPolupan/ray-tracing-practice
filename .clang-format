@@ -1,0 +1,79 @@
+BasedOnStyle: LLVM
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+ColumnLimit: 100
+
+BreakBeforeBraces: Attach
+
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
+
+IndentCaseLabels: true
+IndentCaseBlocks: true
+IndentWrappedFunctionNames: false
+IndentPPDirectives: None
+
+ContinuationIndentWidth: 4
+
+NamespaceIndentation: None
+
+SpaceBeforeParens: ControlStatements
+SpaceBeforeAssignmentOperators: true
+SpaceInEmptyParentheses: false
+
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpacesInAngles: false
+
+SpaceAfterCStyleCast: true
+SpaceBeforeCpp11BracedList: false
+
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeCtorInitializerColon: true
+
+SpaceAfterLogicalNot: false
+
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignOperands: false
+AlignTrailingComments: false
+
+SortIncludes: true
+IncludeBlocks: Regroup
+
+IncludeCategories:
+  - Regex: '^".*"'
+    Priority: 1
+  - Regex: '^<.*>'
+    Priority: 2
+
+AlwaysBreakAfterReturnType: None
+AlwaysBreakTemplateDeclarations: Yes
+
+BinPackArguments: false
+BinPackParameters: false
+
+BreakBeforeBinaryOperators: NonAssignment
+BreakBeforeTernaryOperators: true
+
+PointerAlignment: Left
+ReferenceAlignment: Left
+DerivePointerAlignment: false
+
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+BreakConstructorInitializers: BeforeComma
+
+Cpp11BracedListStyle: true
+
+FixNamespaceComments: true
+Standard: Latest
+
+MaxEmptyLinesToKeep: 1
+KeepEmptyLinesAtTheStartOfBlocks: false

@@ -19,7 +19,7 @@ void update_display(const std::vector<pixel>& buffer) {
 
     for (int i = 0; i < g_width * g_height; i++) {
         pixel c = buffer[i];
-        pixels[i] = (255 << 24) | (c.b << 16) | (c.g << 8) | c.r;
+        pixels[i] = (255 << 24) | (c.b_ << 16) | (c.g_ << 8) | c.r_;
     }
 
     SDL_UpdateTexture(g_texture, nullptr, pixels.data(), g_width * sizeof(uint32_t));
@@ -39,9 +39,9 @@ void update_display(const std::vector<pixel>& buffer) {
 void cornell_box() {
     std::vector<std::shared_ptr<shape>> world;
 
-    auto red   = make_shared<lambertian>(color(.65, .05, .05));
-    auto white = make_shared<lambertian>(color(.73, .73, .73));
-    auto green = make_shared<lambertian>(color(.12, .45, .15));
+    auto red   = make_shared<Lambertian>(color(.65, .05, .05));
+    auto white = make_shared<Lambertian>(color(.73, .73, .73));
+    auto green = make_shared<Lambertian>(color(.12, .45, .15));
 
     auto append_mesh = [&](std::vector<std::shared_ptr<shape>> mesh) {
         world.insert(world.end(), mesh.begin(), mesh.end());
@@ -63,14 +63,14 @@ void cornell_box() {
     }
 
     // Glass Sphere
-    auto glass = make_shared<dielectric>(1.1);
+    auto glass = make_shared<Dielectric>(1.1);
     world.push_back(make_shared<sphere>(point3d(190,90,190), 90, glass));
 
     auto empty_material = shared_ptr<material>();
 
     const auto samp = std::make_shared<independent_sampler>(100);
 
-    film film(g_width, g_height, samp->get_spp());
+    Film film(g_width, g_height, samp->get_spp());
     const auto cam = std::make_shared<camera>(&film);
 
     cam->aspect_ratio      = 1.0;
@@ -88,7 +88,7 @@ void cornell_box() {
 
     std::shared_ptr<Accelerator> accelerator = std::make_shared<Bvh>(world);
 
-    const auto integrator_ptr = std::make_shared<path_integrator>(cam, samp, lights, accelerator);
+    const auto integrator_ptr = std::make_shared<PathIntegrator>(cam, samp, lights, accelerator);
 
     integrator_ptr->render_debug(update_display);
 }
@@ -108,7 +108,7 @@ void nebula()
 
     const auto samp = std::make_shared<stratified_sampler>(100);
 
-    film film(g_width, g_height, samp->get_spp());
+    Film film(g_width, g_height, samp->get_spp());
     const auto cam = std::make_shared<camera>(&film);
 
     cam->aspect_ratio      = 1.0;
@@ -121,8 +121,8 @@ void nebula()
 
     cam->defocus_angle = 0;
 
-    auto white = make_shared<lambertian>(color(.73, .73, .73));
-    const auto bunny_mat = make_shared<dielectric>(1.3);
+    auto white = make_shared<Lambertian>(color(.73, .73, .73));
+    const auto bunny_mat = make_shared<Dielectric>(1.3);
     const auto bunny_mesh = load_obj("./objects/nebula_front1.obj", point3d(278, 0, 278), 14, white);
     auto dragon_tris = make_mesh_triangles(bunny_mesh);
     for (auto& s : dragon_tris) {
@@ -132,14 +132,11 @@ void nebula()
         world.push_back(obj);
     }
 
-    auto append_mesh = [&](std::vector<std::shared_ptr<shape>> mesh) {
-        world.insert(world.end(), mesh.begin(), mesh.end());
-    };
 
     std::vector<std::shared_ptr<light>> lights;
    // append_mesh(make_quad_mesh(point3d(-200,0,-100),     vec3d(1000,0,0),    vec3d(0,0,1000),   white));
 
-    auto light_mat = std::make_shared<diffuse_light>(color(1.0));
+    auto light_mat = std::make_shared<DiffuseLight>(color(1.0));
 
     auto light_quad = std::make_shared<quad>(
         point3d(400, 600, 0),
@@ -156,7 +153,7 @@ void nebula()
 
     lights.push_back(std::make_shared<environment_light>("./images/studio_small_03_4k.hdr", accelerator->bounds(), 0.5));
 
-    const auto integrator_ptr = std::make_shared<path_integrator>(cam, samp, lights, accelerator);
+    const auto integrator_ptr = std::make_shared<PathIntegrator>(cam, samp, lights, accelerator);
 
     integrator_ptr->render(update_display);
 }
@@ -167,7 +164,7 @@ void bunny()
 
     const auto samp = std::make_shared<independent_sampler>(100);
 
-    film film(g_width, g_height, samp->get_spp());
+    Film film(g_width, g_height, samp->get_spp());
     const auto cam = std::make_shared<camera>(&film);
 
     cam->aspect_ratio      = 1.0;
@@ -180,7 +177,7 @@ void bunny()
 
     cam->defocus_angle = 0;
 
-    const auto bunny_mat = make_shared<dielectric>(1.3);
+    const auto bunny_mat = make_shared<Dielectric>(1.3);
     const auto bunny_mesh = load_obj("../objects/bunny.obj", point3d(278, 0, 278), 300.0, bunny_mat);
     auto dragon_tris = make_mesh_triangles(bunny_mesh);
     for (auto& s : dragon_tris) {
@@ -194,10 +191,10 @@ void bunny()
         world.insert(world.end(), mesh.begin(), mesh.end());
     };
 
-    auto white = make_shared<lambertian>(color(.73, .73, .73));
+    auto white = make_shared<Lambertian>(color(.73, .73, .73));
     append_mesh(make_quad_mesh(point3d(-200,0,-100),     vec3d(1000,0,0),    vec3d(0,0,1000),   white));
 
-    auto light_mat = std::make_shared<diffuse_light>(color(40.0));
+    auto light_mat = std::make_shared<DiffuseLight>(color(40.0));
 
     auto light_quad = std::make_shared<quad>(
         point3d(200, 600, 278), vec3d(200, 0, 0), vec3d(0, 0, 200), light_mat
@@ -214,7 +211,7 @@ void bunny()
 
     lights.push_back(std::make_shared<environment_light>("../images/studio_small_03_4k.hdr", accelerator->bounds(), 1));
 
-    const auto integrator_ptr = std::make_shared<path_integrator>(cam, samp, lights, accelerator);
+    const auto integrator_ptr = std::make_shared<PathIntegrator>(cam, samp, lights, accelerator);
 
     integrator_ptr->render_debug(update_display);
 }
